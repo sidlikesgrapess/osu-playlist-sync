@@ -1,31 +1,31 @@
-# osu! Playlist Sync 🎵
+# osu! Playlist Sync
 
 > A production-ready Next.js web application to sync YouTube & YouTube Music playlists directly to **osu! beatmaps** with automatic title cleaning, official osu! API search, and one-click `.osz` / ZIP downloads via community mirrors.
 
 ---
 
-## ✨ Features
+## Features
 
-- 🔐 **Zero Key Exposure (OAuth 2.0)**:
+- **Zero Key Exposure (OAuth 2.0)**:
   - Users sign in securely with **Google OAuth** to access their YouTube playlists without sharing API keys.
   - Server-side **osu! OAuth Client Credentials** for querying beatmap metadata without exposing secrets to the browser.
-- 🧹 **Intelligent Title Cleaner**:
+- **Intelligent Title Cleaner**:
   - Automatically cleans noisy YouTube video titles (`[MV]`, `(Official Audio)`, `[HQ]`, `【...】`, `(4K 60FPS)`) into precise `Artist - Title` queries.
-- 🎯 **Accurate osu! API v2 Matching**:
+- **Accurate osu! API v2 Matching**:
   - Fetches ranked, loved, and approved beatmaps with cover art, creator info, BPM, and star difficulty ratings.
   - Interactive **Alternative Beatmap Picker** to pick different mapset versions.
-- 🎧 **Live Audio Previews**:
+- **Live Audio Previews**:
   - In-browser MP3 preview player with dynamic visualizer animation.
-- 📦 **Fast Batch Downloads**:
+- **Fast Batch Downloads**:
   - Single `.osz` download per beatmap.
   - Instant **"Bundle as .ZIP"** with client-side packaging (`JSZip`) and celebratory confetti (`canvas-confetti`).
   - Powered by high-speed community mirrors (`catboy.best`, `nerinyan.moe`, `beatconnect.io`) with automatic failover.
-- ⚡ **Vercel Serverless Ready**:
+- **Vercel Serverless Ready**:
   - Deploys instantly to Vercel with zero server maintenance.
 
 ---
 
-## 🚀 Quick Start (Local Development)
+## Quick Start (Local Development)
 
 ### 1. Prerequisites
 - Node.js 18+ installed
@@ -62,7 +62,7 @@ Open [http://localhost:3000](http://localhost:3000) in your browser.
 
 ---
 
-## 🌐 Production Deployment (Vercel)
+## Production Deployment (Vercel)
 
 1. Push this repository to GitHub.
 2. Import the repo on [Vercel](https://vercel.com).
@@ -80,7 +80,7 @@ Open [http://localhost:3000](http://localhost:3000) in your browser.
 
 ---
 
-## 🛠️ Architecture & Data Flow
+## Architecture & Data Flow
 
 ```mermaid
 graph LR
@@ -94,5 +94,5 @@ graph LR
 
 ---
 
-## 📜 License
+## License
 MIT License. Built for rhythm gamers worldwide!
