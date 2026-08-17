@@ -10,7 +10,7 @@ import { osuAudio } from '@/lib/soundEffects';
  * Click the logo = tap a hit circle.
  * - Approach circle shrinks inward
  * - Logo pulses with a bright flash
- * - "300" judgment floats upward (or "PERFECT" on rapid clicks, "X" on miss)
+ * - "100" (light green) / "300" (osu! blue) / "FC!" (gold) judgments
  * - Combo fire particles scatter outward
  * - Combo counter increments and resets after timeout
  */
@@ -19,22 +19,22 @@ import { osuAudio } from '@/lib/soundEffects';
 function playHitSound(ctx, type = '300') {
   if (!ctx) return;
   try {
-    if (type === 'miss') {
-      // Combobreak buzz
+    if (type === '100') {
+      // Slightly lower pitched, softer tick for 100
       const osc = ctx.createOscillator();
       const gain = ctx.createGain();
-      osc.type = 'sawtooth';
-      osc.frequency.setValueAtTime(180, ctx.currentTime);
-      osc.frequency.exponentialRampToValueAtTime(60, ctx.currentTime + 0.18);
-      gain.gain.setValueAtTime(0.15, ctx.currentTime);
-      gain.gain.exponentialRampToValueAtTime(0.001, ctx.currentTime + 0.18);
+      osc.type = 'sine';
+      osc.frequency.setValueAtTime(720, ctx.currentTime);
+      osc.frequency.exponentialRampToValueAtTime(360, ctx.currentTime + 0.1);
+      gain.gain.setValueAtTime(0.12, ctx.currentTime);
+      gain.gain.exponentialRampToValueAtTime(0.001, ctx.currentTime + 0.1);
       osc.connect(gain);
       gain.connect(ctx.destination);
       osc.start();
-      osc.stop(ctx.currentTime + 0.18);
+      osc.stop(ctx.currentTime + 0.1);
     } else {
-      // Crisp hit circle "don" — pitched higher for better judgments
-      const baseFreq = type === 'perfect' ? 1400 : type === '300' ? 1050 : 700;
+      // Crisp hit circle "don" — pitched higher for FC! / 300
+      const baseFreq = type === 'fc' ? 1400 : 1050;
       const osc = ctx.createOscillator();
       const gain = ctx.createGain();
       osc.type = 'sine';
@@ -47,7 +47,7 @@ function playHitSound(ctx, type = '300') {
       osc.start();
       osc.stop(ctx.currentTime + 0.12);
 
-      // Layered noise burst for impact
+      // Layered noise burst for tactile impact
       const bufferSize = ctx.sampleRate * 0.06;
       const buffer = ctx.createBuffer(1, bufferSize, ctx.sampleRate);
       const data = buffer.getChannelData(0);
@@ -57,13 +57,13 @@ function playHitSound(ctx, type = '300') {
       const noise = ctx.createBufferSource();
       noise.buffer = buffer;
       const noiseGain = ctx.createGain();
-      noiseGain.gain.setValueAtTime(type === 'perfect' ? 0.08 : 0.05, ctx.currentTime);
+      noiseGain.gain.setValueAtTime(type === 'fc' ? 0.08 : 0.05, ctx.currentTime);
       noiseGain.gain.exponentialRampToValueAtTime(0.001, ctx.currentTime + 0.06);
       noise.connect(noiseGain);
       noiseGain.connect(ctx.destination);
       noise.start();
     }
-  } catch (e) {}
+  } catch (e) { }
 }
 
 // Individual fire particle
@@ -116,7 +116,7 @@ function Particle({ x, y, angle, speed, color, delay }) {
   );
 }
 
-// Judgment text popup ("300", "PERFECT!", "X")
+// Judgment text popup ("100", "300", "FC!")
 function JudgmentPopup({ x, y, text, color, glowColor }) {
   const [state, setState] = useState({ y, opacity: 1, scale: 1.6 });
   const startRef = useRef(null);
@@ -150,12 +150,12 @@ function JudgmentPopup({ x, y, text, color, glowColor }) {
       position: 'fixed',
       left: `${x}px`,
       top: `${state.y}px`,
-      transform: `translate(-50%, -50%) scale(${state.scale})`,
+      transform: `translate(-50%, -50%) scale(${state.scale * 0.7})`,
       opacity: state.opacity,
       color,
-      fontSize: text === 'X' ? '2rem' : '1.5rem',
+      fontSize: text === 'FC!' ? '1.75rem' : '1.5rem',
       fontWeight: 900,
-      fontStyle: text === 'PERFECT!' ? 'italic' : 'normal',
+      fontStyle: text === 'FC!' ? 'italic' : 'normal',
       letterSpacing: '0.02em',
       textShadow: `0 0 20px ${glowColor}, 0 0 40px ${glowColor}, 0 2px 4px rgba(0,0,0,0.8)`,
       pointerEvents: 'none',
@@ -197,7 +197,7 @@ function ApproachCircle({ x, y, size }) {
       width: `${size}px`,
       height: `${size}px`,
       transform: `translate(-50%, -50%) scale(${scale})`,
-      border: '3px solid #ff66aa',
+      border: '3px solid #b3b3b3ff',
       borderRadius: '50%',
       opacity,
       boxShadow: '0 0 16px rgba(255, 102, 170, 0.6)',
@@ -236,7 +236,7 @@ function ComboBadge({ x, y, combo }) {
     <div style={{
       position: 'fixed',
       left: `${x}px`,
-      top: `${y + 42}px`,
+      top: `${y + 30}px`,
       transform: `translate(-50%, 0) scale(${state.scale})`,
       opacity: state.opacity,
       color: '#ffcc22',
@@ -311,28 +311,27 @@ const HitCircleEaster = forwardRef(function HitCircleEaster(props, ref) {
     const timeSinceLast = now - lastClickRef.current;
     lastClickRef.current = now;
 
-    // Determine judgment based on click speed
+    // Determine judgment based on click speed:
+    // - FC! for 5+ rapid hits (<350ms)
+    // - 300 for regular hits (<600ms or starting tap)
+    // - 100 in light green for slower hits
     let judgment, color, glowColor;
     if (comboRef.current >= 5 && timeSinceLast < 350) {
-      judgment = 'PERFECT!';
+      judgment = 'FC!';
       color = '#ffcc22';
-      glowColor = 'rgba(255, 204, 34, 0.8)';
+      glowColor = 'rgba(255, 204, 34, 0.85)';
     } else if (timeSinceLast < 600 || comboRef.current === 0) {
       judgment = '300';
       color = '#44bbee';
-      glowColor = 'rgba(68, 187, 238, 0.7)';
+      glowColor = 'rgba(68, 187, 238, 0.75)';
     } else {
-      judgment = 'X';
-      color = '#ff4444';
-      glowColor = 'rgba(255, 68, 68, 0.7)';
+      judgment = '100';
+      color = '#66ff99';
+      glowColor = 'rgba(102, 255, 153, 0.75)';
     }
 
-    // Update combo
-    if (judgment === 'X') {
-      comboRef.current = 0;
-    } else {
-      comboRef.current += 1;
-    }
+    // Increment combo
+    comboRef.current += 1;
 
     // Reset combo after 1.5s of no clicks
     clearTimeout(comboTimerRef.current);
@@ -345,16 +344,16 @@ const HitCircleEaster = forwardRef(function HitCircleEaster(props, ref) {
 
     // Play hit sound
     osuAudio.init();
-    const soundType = judgment === 'X' ? 'miss' : judgment === 'PERFECT!' ? 'perfect' : '300';
+    const soundType = judgment === '100' ? '100' : judgment === 'FC!' ? 'fc' : '300';
     playHitSound(osuAudio.ctx, soundType);
 
     // Create particles
-    const particleCount = judgment === 'PERFECT!' ? 20 : judgment === '300' ? 14 : 6;
-    const particleColors = judgment === 'PERFECT!'
+    const particleCount = judgment === 'FC!' ? 20 : judgment === '300' ? 14 : 8;
+    const particleColors = judgment === 'FC!'
       ? ['#ffcc22', '#ff66aa', '#ffee88', '#ff88bb']
       : judgment === '300'
-      ? ['#ff66aa', '#44bbee', '#ff88cc', '#66ccff']
-      : ['#ff4444', '#ff6666'];
+        ? ['#ff66aa', '#44bbee', '#ff88cc', '#66ccff']
+        : ['#66ff99', '#88ffaa', '#44dd88', '#aaffcc'];
 
     const particles = Array.from({ length: particleCount }, (_, i) => ({
       key: `${id}-p-${i}`,
