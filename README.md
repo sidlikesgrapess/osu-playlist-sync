@@ -1,6 +1,6 @@
 # osu! Playlist Sync
 
-> A production-ready Next.js web application to sync YouTube & YouTube Music playlists directly to **osu! beatmaps** with automatic title cleaning, official osu! API search, and one-click `.osz` / ZIP downloads via community mirrors.
+> A Next.js web application to sync YouTube & YouTube Music playlists directly to **osu! beatmaps** with automatic title cleaning, official osu! API search, and one-click `.osz` / ZIP downloads via community mirrors.
 
 ---
 
