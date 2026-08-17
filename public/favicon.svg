@@ -1,0 +1,10 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 64 64" width="64" height="64">
+  <circle cx="32" cy="32" r="30" fill="url(#grad)" stroke="#ffffff" stroke-width="2.5" />
+  <text x="32" y="39" font-family="'Nunito', sans-serif, system-ui" font-size="22" font-weight="900" fill="#ffffff" text-anchor="middle" letter-spacing="-1">osu!</text>
+  <defs>
+    <linearGradient id="grad" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" stop-color="#ff66aa" />
+      <stop offset="100%" stop-color="#d82b79" />
+    </linearGradient>
+  </defs>
+</svg>
