@@ -375,6 +375,27 @@ export default function SongRow({
               )}
             </div>
           </div>
+        ) : song.hasSearched === false ? (
+          <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
+            <span style={{ color: '#8b7d95', fontSize: '0.76rem', fontWeight: 600 }}>
+              Not searched yet
+            </span>
+            <button
+              onClick={() => onManualSearch(song.id, song.cleanQuery || song.title)}
+              className="osu-btn-interactive osu-glass-card"
+              style={{
+                color: '#ff66aa',
+                fontSize: '0.72rem',
+                fontWeight: 700,
+                padding: '2px 8px',
+                borderRadius: '4px',
+                cursor: 'pointer',
+                fontFamily: 'inherit',
+              }}
+            >
+              Search
+            </button>
+          </div>
         ) : (
           <div style={{ display: 'flex', alignItems: 'center', gap: '6px' }}>
             <span style={{ color: '#8b7d95', fontSize: '0.78rem', fontWeight: 600 }}>

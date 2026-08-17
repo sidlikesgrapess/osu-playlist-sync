@@ -2,11 +2,18 @@
 
 import { useState, useRef, useEffect } from 'react';
 import SongRow from './SongRow';
-import { X, Check, Search } from 'lucide-react';
+import { X, Check, Search, ChevronLeft, ChevronRight, Sparkles } from 'lucide-react';
 import { osuAudio } from '@/lib/soundEffects';
 
 export default function SongTable({
   songs,
+  currentPage = 1,
+  onPageChange,
+  pageSize = 10,
+  onPageSizeChange,
+  unsearchedCount = 0,
+  onSearchAllRemaining,
+  isSearching = false,
   selectedIds,
   onToggleSelect,
   onSelectAll,
@@ -55,6 +62,7 @@ export default function SongTable({
   const allSelected = matchedSongs.length > 0 && matchedSongs.every(s => selectedIds.has(s.id));
   const isIndeterminate = matchedSongs.some(s => selectedIds.has(s.id)) && !allSelected;
 
+  // Filter songs by search term
   const filteredSongs = filterText.trim()
     ? songs.filter(s =>
         s.title.toLowerCase().includes(filterText.toLowerCase()) ||
@@ -65,6 +73,28 @@ export default function SongTable({
         ))
       )
     : songs;
+
+  // Calculate Pagination Slicing
+  const totalItems = filteredSongs.length;
+  const numericPageSize = pageSize === 'all' ? totalItems : Number(pageSize);
+  const totalPages = pageSize === 'all' || totalItems === 0 ? 1 : Math.ceil(totalItems / numericPageSize);
+  const validCurrentPage = Math.min(Math.max(1, currentPage), Math.max(1, totalPages));
+  const startIndex = pageSize === 'all' ? 0 : (validCurrentPage - 1) * numericPageSize;
+  const paginatedSongs = pageSize === 'all' ? filteredSongs : filteredSongs.slice(startIndex, startIndex + numericPageSize);
+
+  // Generate page numbers for navigation (e.g. 1, 2, 3...)
+  const getPageNumbers = () => {
+    if (totalPages <= 5) {
+      return Array.from({ length: totalPages }, (_, i) => i + 1);
+    }
+    if (validCurrentPage <= 3) {
+      return [1, 2, 3, 4, '...', totalPages];
+    }
+    if (validCurrentPage >= totalPages - 2) {
+      return [1, '...', totalPages - 3, totalPages - 2, totalPages - 1, totalPages];
+    }
+    return [1, '...', validCurrentPage - 1, validCurrentPage, validCurrentPage + 1, '...', totalPages];
+  };
 
   return (
     <div style={{ maxWidth: '1240px', margin: '0 auto 40px' }}>
@@ -138,10 +168,9 @@ export default function SongTable({
                 color: '#8b7d95',
                 cursor: 'pointer',
                 padding: 0,
-                display: 'flex',
               }}
             >
-              <X size={11} />
+              <X size={12} />
             </button>
           )}
         </div>
@@ -186,7 +215,7 @@ export default function SongTable({
               </tr>
             </thead>
             <tbody>
-              {filteredSongs.map((song) => (
+              {paginatedSongs.map((song) => (
                 <SongRow
                   key={song.id || song.index || song.position}
                   song={song}
@@ -204,6 +233,183 @@ export default function SongTable({
           </table>
         </div>
       </div>
+
+      {/* Frosted Glass Pagination Bar */}
+      {totalItems > 0 && (
+        <div style={{
+          display: 'flex',
+          alignItems: 'center',
+          justifyContent: 'space-between',
+          flexWrap: 'wrap',
+          gap: '12px',
+          marginTop: '12px',
+          padding: '10px 16px',
+          background: 'rgba(28, 25, 36, 0.65)',
+          backdropFilter: 'blur(16px)',
+          WebkitBackdropFilter: 'blur(16px)',
+          border: '1px solid rgba(255, 255, 255, 0.08)',
+          borderRadius: '8px',
+          boxShadow: '0 4px 16px rgba(0, 0, 0, 0.25)',
+        }}>
+          {/* Left: Summary & Unsearched Helper */}
+          <div style={{ display: 'flex', alignItems: 'center', gap: '10px', flexWrap: 'wrap' }}>
+            <span style={{ fontSize: '0.78rem', color: '#c6b8ce', fontWeight: 600 }}>
+              Showing <strong style={{ color: '#ffffff' }}>{totalItems === 0 ? 0 : startIndex + 1} - {Math.min(startIndex + (pageSize === 'all' ? totalItems : numericPageSize), totalItems)}</strong> of <strong style={{ color: '#ffffff' }}>{totalItems}</strong> songs
+            </span>
+
+            {unsearchedCount > 0 && onSearchAllRemaining && (
+              <button
+                className="osu-btn-interactive"
+                onClick={() => {
+                  osuAudio.playClick();
+                  onSearchAllRemaining();
+                }}
+                disabled={isSearching}
+                style={{
+                  background: 'rgba(255, 102, 170, 0.15)',
+                  border: '1px solid rgba(255, 102, 170, 0.35)',
+                  color: '#ff66aa',
+                  fontSize: '0.72rem',
+                  fontWeight: 800,
+                  padding: '3px 10px',
+                  borderRadius: '5px',
+                  cursor: isSearching ? 'not-allowed' : 'pointer',
+                  display: 'inline-flex',
+                  alignItems: 'center',
+                  gap: '4px',
+                  opacity: isSearching ? 0.6 : 1,
+                  fontFamily: 'inherit',
+                }}
+                title="Query beatmaps for all unsearched pages"
+              >
+                <Sparkles size={11} />
+                <span>Search all remaining ({unsearchedCount})</span>
+              </button>
+            )}
+          </div>
+
+          {/* Center: Page Number Tabs */}
+          {totalPages > 1 && (
+            <div style={{ display: 'flex', alignItems: 'center', gap: '4px' }}>
+              <button
+                id="pagination-prev-btn"
+                className="osu-btn-interactive"
+                onClick={() => {
+                  if (validCurrentPage > 1) {
+                    osuAudio.playClick();
+                    onPageChange(validCurrentPage - 1);
+                  }
+                }}
+                disabled={validCurrentPage <= 1}
+                style={{
+                  background: 'rgba(255, 255, 255, 0.05)',
+                  border: '1px solid rgba(255, 255, 255, 0.08)',
+                  color: validCurrentPage <= 1 ? '#554d60' : '#c6b8ce',
+                  borderRadius: '5px',
+                  padding: '4px 8px',
+                  cursor: validCurrentPage <= 1 ? 'not-allowed' : 'pointer',
+                  display: 'flex',
+                  alignItems: 'center',
+                  fontFamily: 'inherit',
+                }}
+              >
+                <ChevronLeft size={14} />
+              </button>
+
+              {getPageNumbers().map((p, idx) => (
+                typeof p === 'number' ? (
+                  <button
+                    key={p}
+                    id={`pagination-page-${p}`}
+                    className="osu-btn-interactive"
+                    onClick={() => {
+                      osuAudio.playClick();
+                      onPageChange(p);
+                    }}
+                    style={{
+                      background: validCurrentPage === p ? '#ff66aa' : 'rgba(255, 255, 255, 0.05)',
+                      border: `1px solid ${validCurrentPage === p ? '#ff66aa' : 'rgba(255, 255, 255, 0.08)'}`,
+                      color: validCurrentPage === p ? '#ffffff' : '#c6b8ce',
+                      borderRadius: '5px',
+                      minWidth: '28px',
+                      height: '28px',
+                      padding: '0 6px',
+                      fontSize: '0.76rem',
+                      fontWeight: 800,
+                      cursor: 'pointer',
+                      boxShadow: validCurrentPage === p ? '0 0 12px rgba(255, 102, 170, 0.5)' : 'none',
+                      fontFamily: 'inherit',
+                    }}
+                  >
+                    {p}
+                  </button>
+                ) : (
+                  <span key={`dots_${idx}`} style={{ color: '#8b7d95', padding: '0 4px', fontSize: '0.74rem' }}>
+                    ...
+                  </span>
+                )
+              ))}
+
+              <button
+                id="pagination-next-btn"
+                className="osu-btn-interactive"
+                onClick={() => {
+                  if (validCurrentPage < totalPages) {
+                    osuAudio.playClick();
+                    onPageChange(validCurrentPage + 1);
+                  }
+                }}
+                disabled={validCurrentPage >= totalPages}
+                style={{
+                  background: 'rgba(255, 255, 255, 0.05)',
+                  border: '1px solid rgba(255, 255, 255, 0.08)',
+                  color: validCurrentPage >= totalPages ? '#554d60' : '#c6b8ce',
+                  borderRadius: '5px',
+                  padding: '4px 8px',
+                  cursor: validCurrentPage >= totalPages ? 'not-allowed' : 'pointer',
+                  display: 'flex',
+                  alignItems: 'center',
+                  fontFamily: 'inherit',
+                }}
+              >
+                <ChevronRight size={14} />
+              </button>
+            </div>
+          )}
+
+          {/* Right: Page Size Selector */}
+          <div style={{ display: 'flex', alignItems: 'center', gap: '5px' }}>
+            <span style={{ fontSize: '0.72rem', color: '#8b7d95', fontWeight: 800, textTransform: 'uppercase' }}>
+              Per page:
+            </span>
+            {[10, 25, 50, 'all'].map((size) => (
+              <button
+                key={size}
+                id={`page-size-${size}`}
+                className="osu-pill-tab"
+                onClick={() => {
+                  osuAudio.playClick();
+                  onPageSizeChange(size);
+                }}
+                style={{
+                  background: pageSize === size ? '#3399ff' : 'rgba(255, 255, 255, 0.05)',
+                  color: pageSize === size ? '#ffffff' : '#c6b8ce',
+                  border: `1px solid ${pageSize === size ? '#3399ff' : 'rgba(255, 255, 255, 0.08)'}`,
+                  borderRadius: '5px',
+                  padding: '3px 8px',
+                  fontSize: '0.72rem',
+                  fontWeight: 800,
+                  cursor: 'pointer',
+                  boxShadow: pageSize === size ? '0 0 10px rgba(51, 153, 255, 0.5)' : 'none',
+                  fontFamily: 'inherit',
+                }}
+              >
+                {size === 'all' ? 'All' : size}
+              </button>
+            ))}
+          </div>
+        </div>
+      )}
 
       {/* Frosted Alternative Beatmap Picker Modal */}
       {altPickerSong && (
@@ -248,65 +454,59 @@ export default function SongTable({
                 </p>
               </div>
               <button
-                className="osu-btn-interactive"
                 onClick={() => {
                   osuAudio.playClick();
                   setAltPickerSong(null);
                 }}
-                style={{
-                  background: 'none',
-                  border: 'none',
-                  color: '#8b7d95',
-                }}
+                style={{ background: 'none', border: 'none', color: '#8b7d95', cursor: 'pointer', padding: '4px' }}
               >
                 <X size={18} />
               </button>
             </div>
 
             {/* Modal List */}
-            <div style={{ padding: '12px 18px', overflowY: 'auto', display: 'flex', flexDirection: 'column', gap: '8px' }}>
-              {(altPickerSong.allMatches || []).map((bms) => {
-                const isSelected = altPickerSong.matchedBeatmap?.id === bms.id;
+            <div style={{ padding: '12px', overflowY: 'auto', display: 'flex', flexDirection: 'column', gap: '8px' }}>
+              {(altPickerSong.allMatches || []).map((match) => {
+                const isSelected = altPickerSong.matchedBeatmap?.id === match.id;
                 return (
                   <div
-                    key={bms.id}
+                    key={match.id}
                     className="osu-btn-interactive osu-glass-card"
                     onClick={() => {
                       osuAudio.playClick();
-                      onSelectAlternativeMatch(altPickerSong.id, bms);
+                      onSelectAlternativeMatch(altPickerSong.id, match);
                       setAltPickerSong(null);
                     }}
-                    onMouseEnter={() => osuAudio.playHover()}
                     style={{
                       display: 'flex',
                       alignItems: 'center',
                       gap: '12px',
-                      padding: '10px 14px',
+                      padding: '8px 12px',
                       borderRadius: '8px',
-                      background: isSelected ? 'rgba(255, 102, 170, 0.2)' : 'rgba(34, 30, 44, 0.5)',
-                      border: `1px solid ${isSelected ? '#ff66aa' : 'rgba(255, 255, 255, 0.08)'}`,
+                      cursor: 'pointer',
+                      border: isSelected ? '1px solid #ff66aa' : '1px solid rgba(255, 255, 255, 0.08)',
+                      background: isSelected ? 'rgba(255, 102, 170, 0.15)' : 'rgba(28, 25, 36, 0.6)',
                     }}
                   >
                     <img
-                      src={bms.covers?.list || bms.covers?.cover || `https://assets.ppy.sh/beatmaps/${bms.id}/covers/list.jpg`}
-                      alt={bms.title}
-                      onError={(e) => {
-                        e.currentTarget.style.display = 'none';
-                      }}
-                      style={{ width: '56px', height: '36px', borderRadius: '4px', objectFit: 'cover' }}
+                      src={match.covers?.list || match.covers?.cover || `https://assets.ppy.sh/beatmaps/${match.id}/covers/list.jpg`}
+                      alt={match.title}
+                      style={{ width: '60px', height: '38px', borderRadius: '4px', objectFit: 'cover' }}
                     />
                     <div style={{ flex: 1, minWidth: 0 }}>
-                      <div style={{ fontSize: '0.84rem', fontWeight: 800, color: '#ffffff' }}>
-                        {bms.artist} - {bms.title}
+                      <div style={{ fontSize: '0.84rem', fontWeight: 800, color: '#ffffff', whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>
+                        {match.artist} - {match.title}
                       </div>
-                      <div style={{ fontSize: '0.72rem', color: '#c6b8ce', marginTop: '2px' }}>
-                        mapped by {bms.creator} • {bms.status} • {bms.bpm} BPM • ★ {bms.starRange?.min?.toFixed(1)}-{bms.starRange?.max?.toFixed(1)}
+                      <div style={{ fontSize: '0.72rem', color: '#c6b8ce', display: 'flex', gap: '8px' }}>
+                        <span>mapped by {match.creator}</span>
+                        <span>•</span>
+                        <span>{match.bpm} BPM</span>
                       </div>
                     </div>
                     {isSelected && (
-                      <div style={{ color: '#ff66aa', display: 'flex', alignItems: 'center', gap: '4px', fontSize: '0.76rem', fontWeight: 800 }}>
-                        <Check size={14} /> Selected
-                      </div>
+                      <span style={{ color: '#ff66aa', fontSize: '0.74rem', fontWeight: 800, display: 'flex', alignItems: 'center', gap: '4px' }}>
+                        <Check size={14} /> Active
+                      </span>
                     )}
                   </div>
                 );

@@ -6,6 +6,7 @@ import { osuAudio } from '@/lib/soundEffects';
 export default function StatsBar({
   totalSongs,
   matchedCount,
+  searchedCount,
   selectedCount,
   onDownloadAction,
   onDownloadZipAction,
@@ -16,7 +17,8 @@ export default function StatsBar({
   onOpenExport,
   onClearList,
 }) {
-  const matchPercentage = totalSongs > 0 ? Math.round((matchedCount / totalSongs) * 100) : 0;
+  const effectiveTotal = searchedCount !== undefined && searchedCount > 0 ? searchedCount : totalSongs;
+  const matchPercentage = effectiveTotal > 0 ? Math.round((matchedCount / effectiveTotal) * 100) : 0;
   const isSelective = selectedCount > 0 && selectedCount < matchedCount;
   const targetCount = isSelective ? selectedCount : matchedCount;
 
@@ -50,7 +52,11 @@ export default function StatsBar({
             Beatmap Matches
           </div>
           <div style={{ fontSize: '1.2rem', fontWeight: 900, color: '#00dd88', textShadow: '0 0 14px rgba(0, 221, 136, 0.4)' }}>
-            {matchedCount} <span style={{ fontSize: '0.74rem', color: '#8b7d95' }}>({matchPercentage}%)</span>
+            {matchedCount} <span style={{ fontSize: '0.74rem', color: '#8b7d95' }}>
+              {searchedCount !== undefined && searchedCount < totalSongs
+                ? `(${searchedCount}/${totalSongs} checked)`
+                : `(${matchPercentage}%)`}
+            </span>
           </div>
         </div>
 
