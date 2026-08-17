@@ -1,6 +1,7 @@
 'use client';
 
 import { useState, useEffect, useRef } from 'react';
+import { createPortal } from 'react-dom';
 import { Loader2, Sparkles, ArrowRight, ChevronDown } from 'lucide-react';
 import { YouTubeIcon, SpotifyIcon, AppleMusicIcon, MusicNoteIcon } from './Icons';
 import { osuAudio } from '@/lib/soundEffects';
@@ -10,7 +11,20 @@ export default function PlaylistInput({ onFetch, isLoading, mode, setMode, statu
   const [isDocked, setIsDocked] = useState(false);
   const [selectedPlatform, setSelectedPlatform] = useState('auto');
   const [isPlatformMenuOpen, setIsPlatformMenuOpen] = useState(false);
+  const [menuPos, setMenuPos] = useState({ top: 0, left: 0 });
+  const [mounted, setMounted] = useState(false);
   const menuRef = useRef(null);
+
+  useEffect(() => {
+    setMounted(true);
+  }, []);
+
+  const updateMenuPos = () => {
+    if (menuRef.current) {
+      const rect = menuRef.current.getBoundingClientRect();
+      setMenuPos({ top: rect.bottom + 8, left: rect.left });
+    }
+  };
 
   useEffect(() => {
     let ticking = false;
@@ -18,20 +32,30 @@ export default function PlaylistInput({ onFetch, isLoading, mode, setMode, statu
       if (!ticking) {
         window.requestAnimationFrame(() => {
           setIsDocked(window.scrollY > 180);
+          if (isPlatformMenuOpen) updateMenuPos();
           ticking = false;
         });
         ticking = true;
       }
     };
     window.addEventListener('scroll', handleScroll, { passive: true });
+    window.addEventListener('resize', handleScroll, { passive: true });
     handleScroll();
-    return () => window.removeEventListener('scroll', handleScroll);
-  }, []);
+    return () => {
+      window.removeEventListener('scroll', handleScroll);
+      window.removeEventListener('resize', handleScroll);
+    };
+  }, [isPlatformMenuOpen]);
 
   // Close dropdown on outside click
   useEffect(() => {
     const handleClickOutside = (e) => {
-      if (menuRef.current && !menuRef.current.contains(e.target)) {
+      const portalEl = document.getElementById('platform-dropdown-portal-menu');
+      if (
+        menuRef.current &&
+        !menuRef.current.contains(e.target) &&
+        (!portalEl || !portalEl.contains(e.target))
+      ) {
         setIsPlatformMenuOpen(false);
       }
     };
@@ -317,6 +341,7 @@ export default function PlaylistInput({ onFetch, isLoading, mode, setMode, statu
                 className="osu-btn-interactive"
                 onClick={() => {
                   osuAudio.playClick();
+                  updateMenuPos();
                   setIsPlatformMenuOpen(prev => !prev);
                 }}
                 style={{
@@ -340,23 +365,29 @@ export default function PlaylistInput({ onFetch, isLoading, mode, setMode, statu
                 <ChevronDown size={12} color="#8b7d95" />
               </button>
 
-              {/* Dropdown Menu */}
-              {isPlatformMenuOpen && (
-                <div style={{
-                  position: 'absolute',
-                  top: 'calc(100% + 8px)',
-                  left: 0,
-                  width: '220px',
-                  background: '#191522',
-                  border: '1.5px solid rgba(255, 102, 170, 0.65)',
-                  borderRadius: '10px',
-                  boxShadow: '0 20px 60px rgba(0, 0, 0, 0.98), 0 0 24px rgba(255, 102, 170, 0.35)',
-                  padding: '6px',
-                  zIndex: 9999,
-                  display: 'flex',
-                  flexDirection: 'column',
-                  gap: '4px',
-                }}>
+              {/* Frosted Glass Dropdown Menu rendered via Portal */}
+              {isPlatformMenuOpen && mounted && createPortal(
+                <div
+                  id="platform-dropdown-portal-menu"
+                  style={{
+                    position: 'fixed',
+                    top: `${menuPos.top}px`,
+                    left: `${menuPos.left}px`,
+                    width: '228px',
+                    background: 'rgba(20, 16, 28, 0.72)',
+                    backdropFilter: 'blur(28px) saturate(190%)',
+                    WebkitBackdropFilter: 'blur(28px) saturate(190%)',
+                    border: '1.5px solid rgba(255, 102, 170, 0.65)',
+                    borderRadius: '10px',
+                    boxShadow: '0 20px 60px rgba(0, 0, 0, 0.9), 0 0 24px rgba(255, 102, 170, 0.35)',
+                    padding: '6px',
+                    zIndex: 999999,
+                    display: 'flex',
+                    flexDirection: 'column',
+                    gap: '4px',
+                    animation: 'scaleIn 0.15s cubic-bezier(0.16, 1, 0.3, 1)',
+                  }}
+                >
                   {[
                     { id: 'auto', label: 'Auto Detect (Any Link)', icon: 'auto' },
                     { id: 'youtube', label: 'YouTube (Playlist/Track)', icon: 'youtube' },
@@ -374,7 +405,7 @@ export default function PlaylistInput({ onFetch, isLoading, mode, setMode, statu
                         osuAudio.playClick();
                       }}
                       style={{
-                        background: selectedPlatform === item.id ? 'rgba(255, 102, 170, 0.2)' : 'transparent',
+                        background: selectedPlatform === item.id ? 'rgba(255, 102, 170, 0.22)' : 'transparent',
                         border: selectedPlatform === item.id ? '1px solid #ff66aa' : '1px solid transparent',
                         borderRadius: '6px',
                         padding: '6px 10px',
@@ -393,7 +424,8 @@ export default function PlaylistInput({ onFetch, isLoading, mode, setMode, statu
                       <span>{item.label}</span>
                     </button>
                   ))}
-                </div>
+                </div>,
+                document.body
               )}
             </div>
 
