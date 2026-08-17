@@ -1,12 +1,14 @@
 'use client';
 
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useRef } from 'react';
 import { Search, Download } from 'lucide-react';
 import { YouTubeIcon } from './Icons';
 import { osuAudio } from '@/lib/soundEffects';
+import HitCircleEaster from './HitCircleEaster';
 
 export default function Hero({ onTryDemo }) {
   const [scrollY, setScrollY] = useState(0);
+  const easterRef = useRef(null);
 
   useEffect(() => {
     let ticking = false;
@@ -30,6 +32,12 @@ export default function Hero({ onTryDemo }) {
   const heroBrandY = -scrollY * 0.5;
   const heroBrandScale = 1 - progress * 0.22;
 
+  const handleLogoClick = (e) => {
+    if (easterRef.current) {
+      easterRef.current.triggerHit(e);
+    }
+  };
+
   return (
     <section style={{
       textAlign: 'center',
@@ -37,6 +45,9 @@ export default function Hero({ onTryDemo }) {
       maxWidth: '960px',
       margin: '0 auto',
     }}>
+      {/* Hit Circle Easter Egg Controller */}
+      <HitCircleEaster ref={easterRef} />
+
       {/* Prominent OSU Logo + Project Name - Linearly glides towards top header on scroll */}
       <div style={{
         display: 'flex',
@@ -56,7 +67,7 @@ export default function Hero({ onTryDemo }) {
           alt="osu! logo"
           className="osu-btn-interactive"
           onMouseEnter={() => osuAudio.playHover()}
-          onClick={() => osuAudio.playClick()}
+          onClick={handleLogoClick}
           style={{
             width: '64px',
             height: '64px',

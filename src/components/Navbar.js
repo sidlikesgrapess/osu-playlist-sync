@@ -1,12 +1,14 @@
 'use client';
 
 import { Settings2, Volume2, VolumeX } from 'lucide-react';
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useRef } from 'react';
 import { osuAudio } from '@/lib/soundEffects';
+import HitCircleEaster from './HitCircleEaster';
 
 export default function Navbar({ onOpenSetupGuide, systemStatus }) {
   const [soundOn, setSoundOn] = useState(true);
   const [scrollY, setScrollY] = useState(0);
+  const easterRef = useRef(null);
 
   useEffect(() => {
     let ticking = false;
@@ -40,6 +42,13 @@ export default function Navbar({ onOpenSetupGuide, systemStatus }) {
     window.scrollTo({ top: 0, behavior: 'smooth' });
   };
 
+  const handleLogoClick = (e) => {
+    e.stopPropagation();
+    if (easterRef.current) {
+      easterRef.current.triggerHit(e);
+    }
+  };
+
   return (
     <header style={{
       position: 'sticky',
@@ -53,6 +62,9 @@ export default function Navbar({ onOpenSetupGuide, systemStatus }) {
       padding: '8px 20px',
       transition: 'background 0.08s linear, border 0.08s linear, box-shadow 0.08s linear',
     }}>
+      {/* Hit Circle Easter Egg for Navbar logo */}
+      <HitCircleEaster ref={easterRef} />
+
       <div style={{
         maxWidth: '1240px',
         margin: '0 auto',
@@ -84,7 +96,7 @@ export default function Navbar({ onOpenSetupGuide, systemStatus }) {
             alt="osu! logo"
             className="osu-btn-interactive"
             onMouseEnter={() => osuAudio.playHover()}
-            onClick={() => osuAudio.playClick()}
+            onClick={handleLogoClick}
             style={{
               width: '34px',
               height: '34px',
