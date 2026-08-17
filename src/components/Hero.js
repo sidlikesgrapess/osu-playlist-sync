@@ -11,11 +11,17 @@ export default function Hero({ onTryDemo }) {
   const easterRef = useRef(null);
 
   useEffect(() => {
+    let lastScroll = -1;
     let ticking = false;
     const handleScroll = () => {
       if (!ticking) {
         window.requestAnimationFrame(() => {
-          setScrollY(window.scrollY);
+          const currentY = window.scrollY;
+          // Only update state while in active top transition zone (0 to 150px)
+          if (currentY <= 150 || lastScroll <= 150) {
+            setScrollY(Math.min(150, currentY));
+            lastScroll = currentY;
+          }
           ticking = false;
         });
         ticking = true;

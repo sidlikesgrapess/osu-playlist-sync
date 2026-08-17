@@ -545,7 +545,9 @@ export default function SongTable({
                       borderRadius: '8px',
                       cursor: 'pointer',
                       border: isSelected ? '1px solid #ff66aa' : '1px solid rgba(255, 255, 255, 0.08)',
-                      background: isSelected ? 'rgba(255, 102, 170, 0.15)' : 'rgba(28, 25, 36, 0.6)',
+                      background: isSelected ? 'rgba(255, 102, 170, 0.18)' : 'rgba(32, 28, 42, 0.8)',
+                      contentVisibility: 'auto',
+                      containIntrinsicSize: '0 62px',
                     }}
                   >
                     {/* Beatmap Cover with Play Preview Overlay */}

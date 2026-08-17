@@ -8,6 +8,7 @@ class OsuSoundEffects {
   constructor() {
     this.ctx = null;
     this.enabled = true;
+    this.lastHoverTime = 0;
   }
 
   init() {
@@ -22,9 +23,13 @@ class OsuSoundEffects {
     }
   }
 
-  // osu! menu hover sound (crisp subtle high tick)
+  // osu! menu hover sound (crisp subtle high tick, throttled for smooth 60fps scrolling)
   playHover() {
     if (!this.enabled) return;
+    const now = Date.now();
+    if (now - this.lastHoverTime < 50) return;
+    this.lastHoverTime = now;
+
     try {
       this.init();
       if (!this.ctx) return;

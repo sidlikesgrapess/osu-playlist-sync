@@ -11,11 +11,17 @@ export default function Navbar({ onOpenSetupGuide, systemStatus }) {
   const easterRef = useRef(null);
 
   useEffect(() => {
+    let lastScroll = -1;
     let ticking = false;
     const handleScroll = () => {
       if (!ticking) {
         window.requestAnimationFrame(() => {
-          setScrollY(window.scrollY);
+          const currentY = window.scrollY;
+          // Only update state while in active transition zone (0 to 140px)
+          if (currentY <= 140 || lastScroll <= 140) {
+            setScrollY(Math.min(140, currentY));
+            lastScroll = currentY;
+          }
           ticking = false;
         });
         ticking = true;
