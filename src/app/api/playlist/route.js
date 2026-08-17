@@ -18,7 +18,7 @@ export async function GET(request) {
     const musicData = await extractMusicData(queryOrUrl);
     return NextResponse.json(musicData);
   } catch (error) {
-    console.error('[Playlist API Error]:', error);
+    console.error('[Music Extractor Error]:', error);
     return NextResponse.json(
       { error: error.message || 'Failed to extract playlist or track data' },
       { status: 500 }

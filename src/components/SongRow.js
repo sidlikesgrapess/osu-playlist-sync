@@ -3,6 +3,7 @@
 import { useState } from 'react';
 import { Play, Download, ExternalLink, Loader2, Music, Layers, Edit3, Check, X } from 'lucide-react';
 import { osuAudio } from '@/lib/soundEffects';
+import OsuCheckbox from './OsuCheckbox';
 
 export default function SongRow({
   song,
@@ -16,7 +17,7 @@ export default function SongRow({
   onManualSearch,
 }) {
   const [isEditingQuery, setIsEditingQuery] = useState(false);
-  const [customQuery, setCustomQuery] = useState(song.cleanQuery || song.title);
+  const [customQuery, setCustomQuery] = useState(song.cleanQuery || song.title || '');
   const [imgError, setImgError] = useState(false);
   const [thumbError, setThumbError] = useState(false);
 
@@ -46,25 +47,23 @@ export default function SongRow({
       className="osu-table-row"
       style={{
         borderBottom: '1px solid rgba(255, 255, 255, 0.05)',
-        background: isSelected ? 'rgba(255, 102, 170, 0.08)' : '#282532',
+        background: isSelected && hasMatch ? 'rgba(255, 102, 170, 0.08)' : '#282532',
       }}
       onMouseEnter={() => osuAudio.playHover()}
     >
-      {/* Checkbox Column */}
+      {/* osu! Lazer Checkbox Column */}
       <td style={{ padding: '8px 6px 8px 14px', textAlign: 'center', width: '32px' }}>
-        <input
-          type="checkbox"
-          checked={isSelected}
+        <OsuCheckbox
+          id={`checkbox-song-${song.id}`}
+          checked={isSelected && hasMatch}
+          disabled={!hasMatch}
           onChange={() => {
-            osuAudio.playClick();
-            onToggleSelect(song.id);
+            if (hasMatch) {
+              osuAudio.playClick();
+              onToggleSelect(song.id);
+            }
           }}
-          style={{
-            accentColor: '#ff66aa',
-            width: '14px',
-            height: '14px',
-            cursor: 'pointer',
-          }}
+          title={hasMatch ? 'Select beatmap' : 'Beatmap match required to select'}
         />
       </td>
 

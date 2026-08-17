@@ -2,6 +2,7 @@
 
 import { useState, useRef, useEffect } from 'react';
 import SongRow from './SongRow';
+import OsuCheckbox from './OsuCheckbox';
 import { X, Check, Search, ChevronLeft, ChevronRight, Sparkles } from 'lucide-react';
 import { osuAudio } from '@/lib/soundEffects';
 
@@ -194,22 +195,20 @@ export default function SongTable({
                 fontWeight: 800,
               }}>
                 <th style={{ padding: '12px 6px 12px 14px', textAlign: 'center', width: '32px' }}>
-                  <input
-                    type="checkbox"
+                  <OsuCheckbox
+                    id="select-all-header-checkbox"
                     checked={allSelected}
-                    ref={(el) => {
-                      if (el) el.indeterminate = isIndeterminate;
-                    }}
+                    indeterminate={isIndeterminate}
+                    disabled={matchedSongs.length === 0}
                     onChange={() => {
-                      osuAudio.playClick();
                       if (allSelected) onDeselectAll();
                       else onSelectAll();
                     }}
-                    style={{ accentColor: '#ff66aa', width: '14px', height: '14px', cursor: 'pointer' }}
+                    title={allSelected ? 'Deselect all beatmaps' : 'Select all matched beatmaps'}
                   />
                 </th>
                 <th style={{ padding: '12px 6px', textAlign: 'center', width: '32px' }}>#</th>
-                <th style={{ padding: '12px 12px' }}>YouTube Song</th>
+                <th style={{ padding: '12px 12px' }}>Track / Song</th>
                 <th style={{ padding: '12px 12px' }}>osu! Beatmapset Match</th>
                 <th style={{ padding: '12px 14px', textAlign: 'right', width: '130px' }}>Action</th>
               </tr>

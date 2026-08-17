@@ -65,7 +65,7 @@ export default function Home() {
     setCurrentPage(1);
 
     try {
-      const fetchUrl = `/api/youtube/playlist?url=${encodeURIComponent(url)}`;
+      const fetchUrl = `/api/playlist?url=${encodeURIComponent(url)}`;
       const res = await fetch(fetchUrl);
       const data = await res.json();
 
@@ -76,6 +76,8 @@ export default function Home() {
       setPlaylistMeta({
         id: data.playlistId,
         title: data.playlistTitle,
+        platform: data.platform,
+        isSingleTrack: data.isSingleTrack,
         isDemo: data.isDemo,
       });
 
@@ -488,11 +490,36 @@ export default function Home() {
           <>
             {/* Playlist Title & Meta */}
             {playlistMeta?.title && (
-              <div style={{ maxWidth: '1240px', margin: '0 auto 10px', display: 'flex', alignItems: 'center', gap: '8px' }}>
+              <div style={{ maxWidth: '1240px', margin: '0 auto 10px', display: 'flex', alignItems: 'center', gap: '8px', flexWrap: 'wrap' }}>
                 <span style={{ fontSize: '1.05rem', color: '#ff66aa' }}>♪</span>
                 <h2 style={{ fontSize: '1.05rem', fontWeight: 900, color: '#ffffff', margin: 0 }}>
                   {playlistMeta.title}
                 </h2>
+                {playlistMeta.platform && (
+                  <span style={{
+                    background: playlistMeta.platform === 'spotify' ? 'rgba(29, 185, 84, 0.15)' :
+                                playlistMeta.platform === 'apple' ? 'rgba(252, 60, 68, 0.15)' :
+                                playlistMeta.platform === 'youtube' ? 'rgba(255, 51, 51, 0.15)' :
+                                'rgba(255, 102, 170, 0.15)',
+                    color: playlistMeta.platform === 'spotify' ? '#1db954' :
+                           playlistMeta.platform === 'apple' ? '#fc3c44' :
+                           playlistMeta.platform === 'youtube' ? '#ff4444' :
+                           '#ff66aa',
+                    border: `1px solid ${
+                      playlistMeta.platform === 'spotify' ? 'rgba(29, 185, 84, 0.35)' :
+                      playlistMeta.platform === 'apple' ? 'rgba(252, 60, 68, 0.35)' :
+                      playlistMeta.platform === 'youtube' ? 'rgba(255, 51, 51, 0.35)' :
+                      'rgba(255, 102, 170, 0.35)'
+                    }`,
+                    padding: '2px 8px',
+                    borderRadius: '4px',
+                    fontSize: '0.68rem',
+                    fontWeight: 800,
+                    textTransform: 'uppercase',
+                  }}>
+                    {playlistMeta.isSingleTrack ? 'Single Song' : playlistMeta.platform}
+                  </span>
+                )}
                 {playlistMeta.isDemo && (
                   <span style={{
                     background: 'rgba(255, 102, 170, 0.15)',

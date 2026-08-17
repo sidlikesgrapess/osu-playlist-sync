@@ -1,13 +1,16 @@
 'use client';
 
-import { useState, useEffect } from 'react';
-import { Loader2, Sparkles, ArrowRight } from 'lucide-react';
-import { YouTubeIcon } from './Icons';
+import { useState, useEffect, useRef } from 'react';
+import { Loader2, Sparkles, ArrowRight, ChevronDown } from 'lucide-react';
+import { YouTubeIcon, SpotifyIcon, AppleMusicIcon, MusicNoteIcon } from './Icons';
 import { osuAudio } from '@/lib/soundEffects';
 
 export default function PlaylistInput({ onFetch, isLoading, mode, setMode, statusFilter, setStatusFilter }) {
   const [url, setUrl] = useState('');
   const [isDocked, setIsDocked] = useState(false);
+  const [selectedPlatform, setSelectedPlatform] = useState('auto');
+  const [isPlatformMenuOpen, setIsPlatformMenuOpen] = useState(false);
+  const menuRef = useRef(null);
 
   useEffect(() => {
     let ticking = false;
@@ -25,6 +28,65 @@ export default function PlaylistInput({ onFetch, isLoading, mode, setMode, statu
     return () => window.removeEventListener('scroll', handleScroll);
   }, []);
 
+  // Close dropdown on outside click
+  useEffect(() => {
+    const handleClickOutside = (e) => {
+      if (menuRef.current && !menuRef.current.contains(e.target)) {
+        setIsPlatformMenuOpen(false);
+      }
+    };
+    document.addEventListener('mousedown', handleClickOutside);
+    return () => document.removeEventListener('mousedown', handleClickOutside);
+  }, []);
+
+  // Determine active display icon based on user selection or auto-detection
+  const detectPlatform = () => {
+    if (selectedPlatform !== 'auto') return selectedPlatform;
+    const lower = url.toLowerCase().trim();
+    if (lower.includes('spotify.com')) return 'spotify';
+    if (lower.includes('music.apple.com')) return 'apple';
+    if (lower.includes('youtube.com') || lower.includes('youtu.be')) return 'youtube';
+    if (lower.length > 0 && !lower.startsWith('http')) return 'query';
+    return 'auto';
+  };
+
+  const activePlatform = detectPlatform();
+
+  const getPlatformIcon = (plat, size = 18) => {
+    switch (plat) {
+      case 'youtube':
+        return <YouTubeIcon size={size} color="#ff3333" />;
+      case 'spotify':
+        return <SpotifyIcon size={size} color="#1db954" />;
+      case 'apple':
+        return <AppleMusicIcon size={size} color="#fc3c44" />;
+      case 'query':
+        return <MusicNoteIcon size={size} color="#ff66aa" />;
+      default:
+        return <Sparkles size={size} color="#ff66aa" />;
+    }
+  };
+
+  const getPlatformName = (plat) => {
+    switch (plat) {
+      case 'youtube': return 'YouTube';
+      case 'spotify': return 'Spotify';
+      case 'apple': return 'Apple Music';
+      case 'query': return 'Single Song';
+      default: return 'Auto Detect';
+    }
+  };
+
+  const getPlaceholder = () => {
+    switch (selectedPlatform) {
+      case 'youtube': return 'Paste YouTube playlist link or video URL...';
+      case 'spotify': return 'Paste Spotify playlist, album, or track link...';
+      case 'apple': return 'Paste Apple Music playlist, album, or song link...';
+      case 'query': return 'Type song and artist name (e.g. YOASOBI - Idol)...';
+      default: return 'Paste YouTube, Spotify, Apple Music link, or type song title...';
+    }
+  };
+
   const handleSubmit = (e) => {
     if (e && e.preventDefault) e.preventDefault();
     const inputVal = url.trim() || (typeof document !== 'undefined' ? document.getElementById('playlist-url-input')?.value?.trim() : '');
@@ -33,10 +95,10 @@ export default function PlaylistInput({ onFetch, isLoading, mode, setMode, statu
     onFetch(inputVal);
   };
 
-  const handleQuickSample = (sampleUrl) => {
-    setUrl(sampleUrl);
+  const handleQuickSample = (sampleVal) => {
+    setUrl(sampleVal);
     osuAudio.playClick();
-    onFetch(sampleUrl);
+    onFetch(sampleVal);
   };
 
   const handleModeChange = (newMode) => {
@@ -72,7 +134,7 @@ export default function PlaylistInput({ onFetch, isLoading, mode, setMode, statu
       }}>
         <form onSubmit={handleSubmit} style={{ display: 'flex', flexDirection: 'column', gap: isDocked ? '8px' : '12px' }}>
           
-          {/* Mode Selector Tabs (official osu!web / lazer frosted style) */}
+          {/* Mode Selector & Status Tabs */}
           <div style={{
             display: 'flex',
             alignItems: 'center',
@@ -83,6 +145,7 @@ export default function PlaylistInput({ onFetch, isLoading, mode, setMode, statu
             paddingBottom: isDocked ? '0' : '10px',
             transition: 'all 0.25s ease',
           }}>
+            {/* Game Modes */}
             <div style={{ display: 'flex', alignItems: 'center', gap: '4px', flexWrap: 'wrap' }}>
               <span style={{ fontSize: '0.72rem', color: '#8b7d95', fontWeight: 800, textTransform: 'uppercase', marginRight: '4px' }}>
                 Mode:
@@ -231,7 +294,7 @@ export default function PlaylistInput({ onFetch, isLoading, mode, setMode, statu
             </div>
           </div>
 
-          {/* Frosted Liquid Glass Search URL Input Bar */}
+          {/* Frosted Liquid Glass Search Bar with Platform Dropdown */}
           <div style={{
             display: 'flex',
             alignItems: 'center',
@@ -240,15 +303,107 @@ export default function PlaylistInput({ onFetch, isLoading, mode, setMode, statu
             WebkitBackdropFilter: 'blur(16px)',
             border: '2px solid rgba(255, 102, 170, 0.85)',
             borderRadius: '8px',
-            padding: '4px 6px 4px 12px',
-            gap: '10px',
+            padding: '4px 6px 4px 8px',
+            gap: '8px',
             boxShadow: '0 0 16px rgba(255, 102, 170, 0.35)',
+            position: 'relative',
           }}>
-            <YouTubeIcon size={18} color="#ff3333" style={{ flexShrink: 0 }} />
+            {/* Platform Dropdown Trigger */}
+            <div ref={menuRef} style={{ position: 'relative' }}>
+              <button
+                type="button"
+                id="platform-dropdown-btn"
+                className="osu-btn-interactive"
+                onClick={() => {
+                  osuAudio.playClick();
+                  setIsPlatformMenuOpen(prev => !prev);
+                }}
+                style={{
+                  background: 'rgba(255, 255, 255, 0.06)',
+                  border: '1px solid rgba(255, 255, 255, 0.1)',
+                  borderRadius: '6px',
+                  padding: '4px 8px',
+                  display: 'flex',
+                  alignItems: 'center',
+                  gap: '6px',
+                  cursor: 'pointer',
+                  color: '#ffffff',
+                  fontSize: '0.76rem',
+                  fontWeight: 800,
+                  fontFamily: 'inherit',
+                }}
+                title="Select source platform"
+              >
+                {getPlatformIcon(activePlatform, 16)}
+                <span style={{ fontSize: '0.74rem' }}>{getPlatformName(selectedPlatform)}</span>
+                <ChevronDown size={12} color="#8b7d95" />
+              </button>
+
+              {/* Dropdown Menu */}
+              {isPlatformMenuOpen && (
+                <div style={{
+                  position: 'absolute',
+                  top: '100%',
+                  left: 0,
+                  marginTop: '6px',
+                  width: '210px',
+                  background: 'rgba(20, 17, 26, 0.95)',
+                  backdropFilter: 'blur(20px)',
+                  WebkitBackdropFilter: 'blur(20px)',
+                  border: '1px solid rgba(255, 102, 170, 0.5)',
+                  borderRadius: '8px',
+                  boxShadow: '0 12px 36px rgba(0,0,0,0.8), 0 0 16px rgba(255, 102, 170, 0.2)',
+                  padding: '6px',
+                  zIndex: 100,
+                  display: 'flex',
+                  flexDirection: 'column',
+                  gap: '4px',
+                }}>
+                  {[
+                    { id: 'auto', label: 'Auto Detect (Any Link)', icon: 'auto' },
+                    { id: 'youtube', label: 'YouTube (Playlist/Track)', icon: 'youtube' },
+                    { id: 'spotify', label: 'Spotify (Playlist/Track)', icon: 'spotify' },
+                    { id: 'apple', label: 'Apple Music (Playlist/Song)', icon: 'apple' },
+                    { id: 'query', label: 'Single Song Search', icon: 'query' },
+                  ].map((item) => (
+                    <button
+                      key={item.id}
+                      type="button"
+                      className="osu-btn-interactive"
+                      onClick={() => {
+                        setSelectedPlatform(item.id);
+                        setIsPlatformMenuOpen(false);
+                        osuAudio.playClick();
+                      }}
+                      style={{
+                        background: selectedPlatform === item.id ? 'rgba(255, 102, 170, 0.2)' : 'transparent',
+                        border: selectedPlatform === item.id ? '1px solid #ff66aa' : '1px solid transparent',
+                        borderRadius: '6px',
+                        padding: '6px 10px',
+                        display: 'flex',
+                        alignItems: 'center',
+                        gap: '8px',
+                        cursor: 'pointer',
+                        color: selectedPlatform === item.id ? '#ffffff' : '#c6b8ce',
+                        fontSize: '0.76rem',
+                        fontWeight: 700,
+                        textAlign: 'left',
+                        fontFamily: 'inherit',
+                      }}
+                    >
+                      {getPlatformIcon(item.icon, 16)}
+                      <span>{item.label}</span>
+                    </button>
+                  ))}
+                </div>
+              )}
+            </div>
+
+            {/* URL / Query Input */}
             <input
               id="playlist-url-input"
               type="text"
-              placeholder="Paste any YouTube playlist link..."
+              placeholder={getPlaceholder()}
               value={url}
               onChange={(e) => setUrl(e.target.value)}
               onKeyDown={(e) => {
@@ -336,9 +491,10 @@ export default function PlaylistInput({ onFetch, isLoading, mode, setMode, statu
             flexWrap: 'wrap',
           }}>
             <span style={{ fontSize: '0.74rem', color: '#8b7d95', fontWeight: 800 }}>
-              Try sample playlists:
+              Try sample presets:
             </span>
             <button
+              id="preset-youtube-banger"
               type="button"
               className="osu-btn-interactive osu-glass-card"
               onClick={() => handleQuickSample('https://www.youtube.com/playlist?list=PLosu_banger_showcase_01')}
@@ -356,14 +512,14 @@ export default function PlaylistInput({ onFetch, isLoading, mode, setMode, statu
                 fontFamily: 'inherit',
               }}
             >
-              <Sparkles size={11} color="#ff66aa" />
+              <YouTubeIcon size={13} color="#ff3333" />
               <span>osu! Banger Showcase</span>
             </button>
             <button
-              id="preset-metal-rock"
+              id="preset-spotify-top"
               type="button"
               className="osu-btn-interactive osu-glass-card"
-              onClick={() => handleQuickSample('https://youtube.com/playlist?list=PLJU2iuLr5pzw3qUnvmxiOaY2dwBxGSMSM')}
+              onClick={() => handleQuickSample('https://open.spotify.com/playlist/37i9dQZF1DXcBWIGoYBM5M')}
               onMouseEnter={() => osuAudio.playHover()}
               style={{
                 borderRadius: '6px',
@@ -378,8 +534,30 @@ export default function PlaylistInput({ onFetch, isLoading, mode, setMode, statu
                 fontFamily: 'inherit',
               }}
             >
-              <Sparkles size={11} color="#3399ff" />
-              <span>metal scratches rock (16 songs)</span>
+              <SpotifyIcon size={13} color="#1db954" />
+              <span>Today’s Top Hits (Spotify)</span>
+            </button>
+            <button
+              id="preset-single-song"
+              type="button"
+              className="osu-btn-interactive osu-glass-card"
+              onClick={() => handleQuickSample('YOASOBI - Idol')}
+              onMouseEnter={() => osuAudio.playHover()}
+              style={{
+                borderRadius: '6px',
+                color: '#ffffff',
+                fontSize: '0.74rem',
+                fontWeight: 800,
+                padding: '4px 10px',
+                cursor: 'pointer',
+                display: 'inline-flex',
+                alignItems: 'center',
+                gap: '5px',
+                fontFamily: 'inherit',
+              }}
+            >
+              <MusicNoteIcon size={12} color="#ff66aa" />
+              <span>YOASOBI - Idol (Single Song)</span>
             </button>
           </div>
 
