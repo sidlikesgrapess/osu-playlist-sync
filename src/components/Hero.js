@@ -41,7 +41,7 @@ export default function Hero({ onTryDemo }) {
   return (
     <section style={{
       textAlign: 'center',
-      padding: '30px 16px 16px',
+      padding: 'clamp(16px, 4vw, 30px) clamp(10px, 3vw, 16px) 12px',
       maxWidth: '960px',
       margin: '0 auto',
     }}>
@@ -53,8 +53,8 @@ export default function Hero({ onTryDemo }) {
         display: 'flex',
         alignItems: 'center',
         justifyContent: 'center',
-        gap: '16px',
-        marginBottom: '14px',
+        gap: 'clamp(10px, 3vw, 16px)',
+        marginBottom: '10px',
         flexWrap: 'wrap',
         transform: `translate3d(0, ${heroBrandY}px, 0) scale(${heroBrandScale})`,
         opacity: heroBrandOpacity,
@@ -69,18 +69,20 @@ export default function Hero({ onTryDemo }) {
           onMouseEnter={() => osuAudio.playHover()}
           onClick={handleLogoClick}
           style={{
-            width: '64px',
-            height: '64px',
+            width: 'clamp(48px, 12vw, 64px)',
+            height: 'clamp(48px, 12vw, 64px)',
             objectFit: 'contain',
             filter: 'drop-shadow(0 0 22px rgba(255, 102, 170, 0.75))',
             cursor: 'pointer',
             userSelect: 'none',
+            flexShrink: 0,
+            touchAction: 'manipulation',
           }}
         />
         <div style={{ textAlign: 'left' }}>
-          <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
+          <div style={{ display: 'flex', alignItems: 'center', gap: '8px', flexWrap: 'wrap' }}>
             <h1 style={{
-              fontSize: 'clamp(2rem, 4vw, 2.7rem)',
+              fontSize: 'clamp(1.7rem, 6vw, 2.7rem)',
               fontWeight: 900,
               letterSpacing: '-0.02em',
               color: '#ffffff',
@@ -93,9 +95,9 @@ export default function Hero({ onTryDemo }) {
               background: 'rgba(255, 102, 170, 0.15)',
               color: '#ff66aa',
               border: '1px solid rgba(255, 102, 170, 0.35)',
-              padding: '2px 8px',
+              padding: '2px 7px',
               borderRadius: '6px',
-              fontSize: '0.72rem',
+              fontSize: '0.68rem',
               fontWeight: 800,
               textTransform: 'uppercase',
               letterSpacing: '0.04em',
@@ -108,22 +110,23 @@ export default function Hero({ onTryDemo }) {
 
       {/* Main Tagline */}
       <h2 style={{
-        fontSize: 'clamp(1.15rem, 2.2vw, 1.45rem)',
+        fontSize: 'clamp(0.95rem, 3.5vw, 1.45rem)',
         fontWeight: 800,
         color: '#ffffff',
-        marginBottom: '16px',
+        marginBottom: '14px',
         letterSpacing: '-0.01em',
+        lineHeight: 1.35,
       }}>
         Sync your <span style={{ color: '#ff66aa', textShadow: '0 0 16px rgba(255, 102, 170, 0.4)' }}>YouTube Playlists</span> to{' '}
         <span style={{ color: '#3399ff', textShadow: '0 0 16px rgba(51, 153, 255, 0.4)' }}>osu! Beatmaps</span>
       </h2>
 
-      {/* 3 Frosted Glass Step Cards */}
+      {/* 3 Frosted Glass Step Cards - Responsive Grid */}
       <div style={{
         display: 'grid',
-        gridTemplateColumns: 'repeat(auto-fit, minmax(200px, 1fr))',
-        gap: '12px',
-        margin: '16px 0 10px',
+        gridTemplateColumns: 'repeat(auto-fit, minmax(min(100%, 200px), 1fr))',
+        gap: '8px',
+        margin: '10px 0',
         textAlign: 'left',
       }}>
         <div
@@ -131,15 +134,15 @@ export default function Hero({ onTryDemo }) {
           onMouseEnter={() => osuAudio.playHover()}
           style={{
             borderRadius: '10px',
-            padding: '12px 16px',
+            padding: '10px 14px',
             display: 'flex',
-            gap: '12px',
+            gap: '10px',
             alignItems: 'center',
           }}
         >
           <div style={{
-            width: '32px',
-            height: '32px',
+            width: '28px',
+            height: '28px',
             borderRadius: '6px',
             background: 'rgba(255, 0, 0, 0.2)',
             boxShadow: '0 0 12px rgba(255, 0, 0, 0.3)',
@@ -148,11 +151,11 @@ export default function Hero({ onTryDemo }) {
             justifyContent: 'center',
             flexShrink: 0,
           }}>
-            <YouTubeIcon size={18} color="#ff3333" />
+            <YouTubeIcon size={16} color="#ff3333" />
           </div>
           <div>
-            <div style={{ fontSize: '0.84rem', fontWeight: 800, color: '#ffffff' }}>1. Paste Playlist</div>
-            <div style={{ fontSize: '0.72rem', color: '#8b7d95', fontWeight: 600 }}>Grab any YouTube playlist</div>
+            <div style={{ fontSize: '0.8rem', fontWeight: 800, color: '#ffffff' }}>1. Paste Playlist</div>
+            <div style={{ fontSize: '0.68rem', color: '#8b7d95', fontWeight: 600 }}>YouTube, Spotify, Apple</div>
           </div>
         </div>
 
@@ -161,15 +164,15 @@ export default function Hero({ onTryDemo }) {
           onMouseEnter={() => osuAudio.playHover()}
           style={{
             borderRadius: '10px',
-            padding: '12px 16px',
+            padding: '10px 14px',
             display: 'flex',
-            gap: '12px',
+            gap: '10px',
             alignItems: 'center',
           }}
         >
           <div style={{
-            width: '32px',
-            height: '32px',
+            width: '28px',
+            height: '28px',
             borderRadius: '6px',
             background: 'rgba(255, 102, 170, 0.2)',
             boxShadow: '0 0 12px rgba(255, 102, 170, 0.3)',
@@ -178,11 +181,11 @@ export default function Hero({ onTryDemo }) {
             justifyContent: 'center',
             flexShrink: 0,
           }}>
-            <Search size={16} color="#ff66aa" />
+            <Search size={15} color="#ff66aa" />
           </div>
           <div>
-            <div style={{ fontSize: '0.84rem', fontWeight: 800, color: '#ffffff' }}>2. Auto Match</div>
-            <div style={{ fontSize: '0.72rem', color: '#8b7d95', fontWeight: 600 }}>Finds official beatmaps</div>
+            <div style={{ fontSize: '0.8rem', fontWeight: 800, color: '#ffffff' }}>2. Auto Match</div>
+            <div style={{ fontSize: '0.68rem', color: '#8b7d95', fontWeight: 600 }}>Official osu! beatmaps</div>
           </div>
         </div>
 
@@ -191,15 +194,15 @@ export default function Hero({ onTryDemo }) {
           onMouseEnter={() => osuAudio.playHover()}
           style={{
             borderRadius: '10px',
-            padding: '12px 16px',
+            padding: '10px 14px',
             display: 'flex',
-            gap: '12px',
+            gap: '10px',
             alignItems: 'center',
           }}
         >
           <div style={{
-            width: '32px',
-            height: '32px',
+            width: '28px',
+            height: '28px',
             borderRadius: '6px',
             background: 'rgba(51, 153, 255, 0.2)',
             boxShadow: '0 0 12px rgba(51, 153, 255, 0.3)',
@@ -208,11 +211,11 @@ export default function Hero({ onTryDemo }) {
             justifyContent: 'center',
             flexShrink: 0,
           }}>
-            <Download size={16} color="#3399ff" />
+            <Download size={15} color="#3399ff" />
           </div>
           <div>
-            <div style={{ fontSize: '0.84rem', fontWeight: 800, color: '#ffffff' }}>3. Download & Play</div>
-            <div style={{ fontSize: '0.72rem', color: '#8b7d95', fontWeight: 600 }}>Get .osz files or 1 ZIP</div>
+            <div style={{ fontSize: '0.8rem', fontWeight: 800, color: '#ffffff' }}>3. Download & Play</div>
+            <div style={{ fontSize: '0.68rem', color: '#8b7d95', fontWeight: 600 }}>Get .osz files or 1 ZIP</div>
           </div>
         </div>
       </div>

@@ -25,53 +25,53 @@ export default function StatsBar({
   return (
     <div className="osu-glass" style={{
       maxWidth: '1240px',
-      margin: '0 auto 14px',
-      padding: '12px 18px',
+      margin: '0 auto 12px',
+      padding: '10px 14px',
       display: 'flex',
       alignItems: 'center',
       justifyContent: 'space-between',
       flexWrap: 'wrap',
-      gap: '12px',
+      gap: '10px',
       borderRadius: '10px',
     }}>
       {/* Metrics Row */}
-      <div style={{ display: 'flex', alignItems: 'center', gap: '18px', flexWrap: 'wrap' }}>
+      <div style={{ display: 'flex', alignItems: 'center', gap: 'clamp(10px, 3vw, 18px)', flexWrap: 'wrap' }}>
         <div>
-          <div style={{ fontSize: '0.68rem', color: '#8b7d95', textTransform: 'uppercase', fontWeight: 800 }}>
+          <div style={{ fontSize: '0.66rem', color: '#8b7d95', textTransform: 'uppercase', fontWeight: 800 }}>
             Playlist Songs
           </div>
-          <div style={{ fontSize: '1.2rem', fontWeight: 900, color: '#ffffff' }}>
+          <div style={{ fontSize: '1.15rem', fontWeight: 900, color: '#ffffff' }}>
             {totalSongs}
           </div>
         </div>
 
-        <div style={{ width: '1px', height: '24px', background: 'rgba(255, 255, 255, 0.08)' }} />
+        <div style={{ width: '1px', height: '22px', background: 'rgba(255, 255, 255, 0.08)' }} />
 
         <div>
-          <div style={{ fontSize: '0.68rem', color: '#8b7d95', textTransform: 'uppercase', fontWeight: 800 }}>
+          <div style={{ fontSize: '0.66rem', color: '#8b7d95', textTransform: 'uppercase', fontWeight: 800 }}>
             Beatmap Matches
           </div>
-          <div style={{ fontSize: '1.2rem', fontWeight: 900, color: '#00dd88', textShadow: '0 0 14px rgba(0, 221, 136, 0.4)' }}>
-            {matchedCount} <span style={{ fontSize: '0.74rem', color: '#8b7d95' }}>
+          <div style={{ fontSize: '1.15rem', fontWeight: 900, color: '#00dd88', textShadow: '0 0 14px rgba(0, 221, 136, 0.4)' }}>
+            {matchedCount} <span style={{ fontSize: '0.72rem', color: '#8b7d95' }}>
               {searchedCount !== undefined && searchedCount < totalSongs
-                ? `(${searchedCount}/${totalSongs} checked)`
+                ? `(${searchedCount}/${totalSongs})`
                 : `(${matchPercentage}%)`}
             </span>
           </div>
         </div>
 
-        <div style={{ width: '1px', height: '24px', background: 'rgba(255, 255, 255, 0.08)' }} />
+        <div style={{ width: '1px', height: '22px', background: 'rgba(255, 255, 255, 0.08)' }} />
 
         <div>
-          <div style={{ fontSize: '0.68rem', color: '#8b7d95', textTransform: 'uppercase', fontWeight: 800 }}>
+          <div style={{ fontSize: '0.66rem', color: '#8b7d95', textTransform: 'uppercase', fontWeight: 800 }}>
             Status
           </div>
-          <div style={{ fontSize: '0.78rem', fontWeight: 800 }}>
+          <div style={{ fontSize: '0.76rem', fontWeight: 800 }}>
             {isSearching ? (
-              <span style={{ color: '#ffcc22' }}>Searching beatmaps ({searchProgress}%)...</span>
+              <span style={{ color: '#ffcc22' }}>Searching ({searchProgress}%)...</span>
             ) : matchedCount > 0 ? (
               <span style={{ color: '#44bbee', display: 'flex', alignItems: 'center', gap: '4px', textShadow: '0 0 10px rgba(68, 187, 238, 0.4)' }}>
-                <CheckCircle2 size={14} /> Ready for download
+                <CheckCircle2 size={13} /> Ready
               </span>
             ) : (
               <span style={{ color: '#8b7d95' }}>Idle</span>
@@ -81,7 +81,7 @@ export default function StatsBar({
       </div>
 
       {/* Action Buttons */}
-      <div style={{ display: 'flex', alignItems: 'center', gap: '8px', flexWrap: 'wrap' }}>
+      <div style={{ display: 'flex', alignItems: 'center', gap: '6px', flexWrap: 'wrap', width: 'auto' }}>
         {/* Export Links button */}
         <button
           className="osu-btn-interactive osu-glass-card"
@@ -95,18 +95,19 @@ export default function StatsBar({
             borderRadius: '6px',
             color: '#c6b8ce',
             fontWeight: 800,
-            fontSize: '0.76rem',
-            padding: '7px 12px',
+            fontSize: '0.75rem',
+            padding: '6px 10px',
             cursor: matchedCount === 0 || isSearching ? 'not-allowed' : 'pointer',
             opacity: matchedCount === 0 || isSearching ? 0.5 : 1,
             display: 'inline-flex',
             alignItems: 'center',
-            gap: '5px',
+            gap: '4px',
             fontFamily: 'inherit',
+            minHeight: '34px',
           }}
           title="Export URLs or osu! Direct links"
         >
-          <Share2 size={13} />
+          <Share2 size={12} />
           <span>Export</span>
         </button>
 
@@ -120,17 +121,18 @@ export default function StatsBar({
             borderRadius: '6px',
             color: '#ffffff',
             fontWeight: 800,
-            fontSize: '0.78rem',
-            padding: '7px 14px',
+            fontSize: '0.75rem',
+            padding: '6px 12px',
             cursor: targetCount === 0 || isSearching ? 'not-allowed' : 'pointer',
             opacity: targetCount === 0 || isSearching ? 0.5 : 1,
             display: 'inline-flex',
             alignItems: 'center',
-            gap: '6px',
+            gap: '5px',
             fontFamily: 'inherit',
+            minHeight: '34px',
           }}
         >
-          <Download size={14} />
+          <Download size={13} />
           <span>
             {isSelective ? `Download (${selectedCount})` : `Download All (${matchedCount})`}
           </span>
@@ -145,18 +147,19 @@ export default function StatsBar({
           style={{
             border: 'none',
             fontWeight: 800,
-            fontSize: '0.78rem',
-            padding: '7px 16px',
+            fontSize: '0.76rem',
+            padding: '6px 14px',
             borderRadius: '6px',
             cursor: targetCount === 0 || isDownloadingZip || isSearching ? 'not-allowed' : 'pointer',
             opacity: targetCount === 0 || isDownloadingZip || isSearching ? 0.5 : 1,
             display: 'inline-flex',
             alignItems: 'center',
-            gap: '6px',
+            gap: '5px',
             fontFamily: 'inherit',
+            minHeight: '34px',
           }}
         >
-          <Archive size={14} />
+          <Archive size={13} />
           <span>
             {isDownloadingZip
               ? `Zipping (${zipProgress}%)...`
@@ -185,10 +188,12 @@ export default function StatsBar({
             display: 'flex',
             alignItems: 'center',
             justifyContent: 'center',
+            minHeight: '34px',
+            minWidth: '34px',
           }}
           title="Clear playlist results"
         >
-          <Trash2 size={15} />
+          <Trash2 size={14} />
         </button>
       </div>
     </div>

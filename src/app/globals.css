@@ -58,6 +58,13 @@ html {
   letter-spacing: -0.01em;
   scrollbar-width: thin;
   scrollbar-color: #4a445b #121116;
+  -webkit-text-size-adjust: 100%;
+}
+
+@media (max-width: 640px) {
+  html {
+    font-size: 14px;
+  }
 }
 
 body {
@@ -73,8 +80,14 @@ body {
   color: #ffffff !important;
   font-family: 'Nunito', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
   overflow-x: hidden;
+  max-width: 100vw;
   -webkit-font-smoothing: antialiased;
   -moz-osx-font-smoothing: grayscale;
+  -webkit-tap-highlight-color: transparent;
+}
+
+button, a, input, select {
+  touch-action: manipulation;
 }
 
 .mono-font {
@@ -262,3 +275,42 @@ body {
 ::-webkit-scrollbar-corner {
   background: rgba(18, 17, 22, 0.8);
 }
+
+/* Mobile Specific Responsive Tweaks */
+@media (max-width: 768px) {
+  /* Hide scrollbars on mobile pills / demo presets for ultra-sleek touch scrolling */
+  .no-scrollbar::-webkit-scrollbar {
+    display: none;
+  }
+  .no-scrollbar {
+    -ms-overflow-style: none;
+    scrollbar-width: none;
+  }
+
+  /* Touch-friendly min hit-box */
+  .touch-target {
+    min-height: 44px;
+    min-width: 44px;
+  }
+
+  .osu-table-desktop {
+    display: none !important;
+  }
+
+  .osu-table-mobile {
+    display: flex !important;
+    flex-direction: column;
+    gap: 8px;
+  }
+}
+
+@media (min-width: 769px) {
+  .osu-table-desktop {
+    display: block !important;
+  }
+
+  .osu-table-mobile {
+    display: none !important;
+  }
+}
+

@@ -22,7 +22,10 @@ export default function PlaylistInput({ onFetch, isLoading, mode, setMode, statu
   const updateMenuPos = () => {
     if (menuRef.current) {
       const rect = menuRef.current.getBoundingClientRect();
-      setMenuPos({ top: rect.bottom + 8, left: rect.left });
+      const menuWidth = 228;
+      const maxLeft = typeof window !== 'undefined' ? Math.max(8, window.innerWidth - menuWidth - 10) : rect.left;
+      const left = Math.max(8, Math.min(rect.left, maxLeft));
+      setMenuPos({ top: rect.bottom + 6, left });
     }
   };
 
@@ -327,14 +330,17 @@ export default function PlaylistInput({ onFetch, isLoading, mode, setMode, statu
             WebkitBackdropFilter: 'blur(16px)',
             border: '2px solid rgba(255, 102, 170, 0.85)',
             borderRadius: '8px',
-            padding: '4px 6px 4px 8px',
-            gap: '8px',
+            padding: '4px 6px 4px 6px',
+            gap: '6px',
             boxShadow: '0 0 16px rgba(255, 102, 170, 0.35)',
             position: 'relative',
             zIndex: 40,
+            width: '100%',
+            maxWidth: '100%',
+            boxSizing: 'border-box',
           }}>
             {/* Platform Dropdown Trigger */}
-            <div ref={menuRef} style={{ position: 'relative', zIndex: 50 }}>
+            <div ref={menuRef} style={{ position: 'relative', zIndex: 50, flexShrink: 0 }}>
               <button
                 type="button"
                 id="platform-dropdown-btn"
@@ -348,21 +354,22 @@ export default function PlaylistInput({ onFetch, isLoading, mode, setMode, statu
                   background: 'rgba(255, 255, 255, 0.06)',
                   border: '1px solid rgba(255, 255, 255, 0.1)',
                   borderRadius: '6px',
-                  padding: '4px 8px',
+                  padding: '4px 6px',
                   display: 'flex',
                   alignItems: 'center',
-                  gap: '6px',
+                  gap: '4px',
                   cursor: 'pointer',
                   color: '#ffffff',
-                  fontSize: '0.76rem',
+                  fontSize: '0.74rem',
                   fontWeight: 800,
                   fontFamily: 'inherit',
+                  minHeight: '34px',
                 }}
                 title="Select source platform"
               >
-                {getPlatformIcon(activePlatform, 16)}
-                <span style={{ fontSize: '0.74rem' }}>{getPlatformName(selectedPlatform)}</span>
-                <ChevronDown size={12} color="#8b7d95" />
+                {getPlatformIcon(activePlatform, 15)}
+                <span style={{ fontSize: '0.72rem', display: 'inline-block' }}>{getPlatformName(selectedPlatform)}</span>
+                <ChevronDown size={11} color="#8b7d95" />
               </button>
 
               {/* Frosted Glass Dropdown Menu rendered via Portal */}
@@ -374,7 +381,8 @@ export default function PlaylistInput({ onFetch, isLoading, mode, setMode, statu
                     top: `${menuPos.top}px`,
                     left: `${menuPos.left}px`,
                     width: '228px',
-                    background: 'rgba(20, 16, 28, 0.72)',
+                    maxWidth: 'calc(100vw - 16px)',
+                    background: 'rgba(20, 16, 28, 0.85)',
                     backdropFilter: 'blur(28px) saturate(190%)',
                     WebkitBackdropFilter: 'blur(28px) saturate(190%)',
                     border: '1.5px solid rgba(255, 102, 170, 0.65)',
@@ -445,13 +453,15 @@ export default function PlaylistInput({ onFetch, isLoading, mode, setMode, statu
               disabled={isLoading}
               style={{
                 flex: 1,
+                minWidth: 0,
                 background: 'transparent',
                 border: 'none',
                 color: '#ffffff',
-                fontSize: '0.88rem',
+                fontSize: '0.84rem',
                 outline: 'none',
                 fontFamily: 'inherit',
                 fontWeight: 600,
+                padding: '4px 2px',
               }}
             />
             {url && (
@@ -463,10 +473,11 @@ export default function PlaylistInput({ onFetch, isLoading, mode, setMode, statu
                   border: 'none',
                   color: '#8b7d95',
                   cursor: 'pointer',
-                  fontSize: '0.74rem',
+                  fontSize: '0.72rem',
                   fontWeight: 700,
-                  padding: '2px 6px',
+                  padding: '2px 4px',
                   fontFamily: 'inherit',
+                  flexShrink: 0,
                 }}
               >
                 Clear
@@ -481,47 +492,56 @@ export default function PlaylistInput({ onFetch, isLoading, mode, setMode, statu
               style={{
                 border: 'none',
                 fontWeight: 800,
-                fontSize: '0.82rem',
-                padding: '7px 16px',
-                borderRadius: '5px',
+                fontSize: '0.78rem',
+                padding: '6px 12px',
+                borderRadius: '6px',
                 cursor: isLoading || !url.trim() ? 'not-allowed' : 'pointer',
                 display: 'inline-flex',
                 alignItems: 'center',
-                gap: '6px',
+                gap: '5px',
                 opacity: isLoading || !url.trim() ? 0.6 : 1,
                 fontFamily: 'inherit',
+                flexShrink: 0,
+                minHeight: '34px',
+                whiteSpace: 'nowrap',
               }}
             >
               {isLoading ? (
                 <>
-                  <Loader2 size={14} className="spin-slow" />
+                  <Loader2 size={13} className="spin-slow" />
                   <span>Searching...</span>
                 </>
               ) : (
                 <>
-                  <span>Find Beatmaps</span>
-                  <ArrowRight size={14} />
+                  <span>Find</span>
+                  <ArrowRight size={13} />
                 </>
               )}
             </button>
           </div>
 
-          {/* Smooth Collapsible Sample Playlists Bar */}
-          <div style={{
-            maxHeight: isDocked ? '0px' : '44px',
-            opacity: isDocked ? 0 : 1,
-            transform: isDocked ? 'translateY(-6px)' : 'translateY(0)',
-            marginTop: isDocked ? '0px' : '2px',
-            overflow: 'hidden',
-            pointerEvents: isDocked ? 'none' : 'auto',
-            transition: 'max-height 0.32s cubic-bezier(0.16, 1, 0.3, 1), opacity 0.22s ease, transform 0.25s ease, margin 0.32s ease',
-            display: 'flex',
-            alignItems: 'center',
-            gap: '8px',
-            flexWrap: 'wrap',
-          }}>
-            <span style={{ fontSize: '0.74rem', color: '#8b7d95', fontWeight: 800 }}>
-              Try sample presets:
+          {/* Smooth Collapsible Sample Playlists Bar - Touch Scrollable on Mobile */}
+          <div 
+            className="no-scrollbar"
+            style={{
+              maxHeight: isDocked ? '0px' : '52px',
+              opacity: isDocked ? 0 : 1,
+              transform: isDocked ? 'translateY(-6px)' : 'translateY(0)',
+              marginTop: isDocked ? '0px' : '4px',
+              overflowX: 'auto',
+              overflowY: 'hidden',
+              WebkitOverflowScrolling: 'touch',
+              pointerEvents: isDocked ? 'none' : 'auto',
+              transition: 'max-height 0.32s cubic-bezier(0.16, 1, 0.3, 1), opacity 0.22s ease, transform 0.25s ease, margin 0.32s ease',
+              display: 'flex',
+              alignItems: 'center',
+              gap: '6px',
+              flexWrap: 'nowrap',
+              paddingBottom: '2px',
+            }}
+          >
+            <span style={{ fontSize: '0.72rem', color: '#8b7d95', fontWeight: 800, flexShrink: 0 }}>
+              Try sample:
             </span>
             <button
               id="preset-youtube-banger"
@@ -532,17 +552,19 @@ export default function PlaylistInput({ onFetch, isLoading, mode, setMode, statu
               style={{
                 borderRadius: '6px',
                 color: '#ffffff',
-                fontSize: '0.74rem',
+                fontSize: '0.72rem',
                 fontWeight: 800,
-                padding: '4px 10px',
+                padding: '4px 8px',
                 cursor: 'pointer',
                 display: 'inline-flex',
                 alignItems: 'center',
-                gap: '5px',
+                gap: '4px',
                 fontFamily: 'inherit',
+                flexShrink: 0,
+                whiteSpace: 'nowrap',
               }}
             >
-              <YouTubeIcon size={13} color="#ff3333" />
+              <YouTubeIcon size={12} color="#ff3333" />
               <span>osu! Banger Showcase</span>
             </button>
             <button
@@ -554,18 +576,20 @@ export default function PlaylistInput({ onFetch, isLoading, mode, setMode, statu
               style={{
                 borderRadius: '6px',
                 color: '#ffffff',
-                fontSize: '0.74rem',
+                fontSize: '0.72rem',
                 fontWeight: 800,
-                padding: '4px 10px',
+                padding: '4px 8px',
                 cursor: 'pointer',
                 display: 'inline-flex',
                 alignItems: 'center',
-                gap: '5px',
+                gap: '4px',
                 fontFamily: 'inherit',
+                flexShrink: 0,
+                whiteSpace: 'nowrap',
               }}
             >
-              <SpotifyIcon size={13} color="#1db954" />
-              <span>Today’s Top Hits (Spotify)</span>
+              <SpotifyIcon size={12} color="#1db954" />
+              <span>Today’s Top Hits</span>
             </button>
             <button
               id="preset-single-song"
@@ -576,18 +600,20 @@ export default function PlaylistInput({ onFetch, isLoading, mode, setMode, statu
               style={{
                 borderRadius: '6px',
                 color: '#ffffff',
-                fontSize: '0.74rem',
+                fontSize: '0.72rem',
                 fontWeight: 800,
-                padding: '4px 10px',
+                padding: '4px 8px',
                 cursor: 'pointer',
                 display: 'inline-flex',
                 alignItems: 'center',
-                gap: '5px',
+                gap: '4px',
                 fontFamily: 'inherit',
+                flexShrink: 0,
+                whiteSpace: 'nowrap',
               }}
             >
-              <MusicNoteIcon size={12} color="#ff66aa" />
-              <span>YOASOBI - Idol (Single Song)</span>
+              <MusicNoteIcon size={11} color="#ff66aa" />
+              <span>YOASOBI - Idol</span>
             </button>
           </div>
 

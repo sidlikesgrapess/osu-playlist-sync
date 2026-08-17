@@ -2,6 +2,7 @@
 
 import { useState, useRef, useEffect } from 'react';
 import SongRow from './SongRow';
+import SongCardMobile from './SongCardMobile';
 import OsuCheckbox from './OsuCheckbox';
 import { X, Check, Search, ChevronLeft, ChevronRight, Sparkles } from 'lucide-react';
 import { osuAudio } from '@/lib/soundEffects';
@@ -177,8 +178,8 @@ export default function SongTable({
         </div>
       </div>
 
-      {/* Frosted Glass Table Container */}
-      <div className="osu-glass" style={{
+      {/* Frosted Glass Table Container (Desktop / Tablet) */}
+      <div className="osu-glass osu-table-desktop" style={{
         borderRadius: '10px',
         overflow: 'hidden',
       }}>
@@ -231,6 +232,24 @@ export default function SongTable({
             </tbody>
           </table>
         </div>
+      </div>
+
+      {/* Frosted Glass Mobile Card List (Mobile Screens <= 768px) */}
+      <div className="osu-table-mobile">
+        {paginatedSongs.map((song) => (
+          <SongCardMobile
+            key={`mobile-${song.id || song.index || song.position}`}
+            song={song}
+            isSelected={selectedIds.has(song.id)}
+            onToggleSelect={onToggleSelect}
+            activeAudio={activeAudio}
+            onToggleAudio={handleToggleAudio}
+            onDownloadSingle={onDownloadSingle}
+            isDownloading={downloadingIds.has(song.id)}
+            onOpenAltPicker={(s) => setAltPickerSong(s)}
+            onManualSearch={onManualSearch}
+          />
+        ))}
       </div>
 
       {/* Frosted Glass Pagination Bar */}
@@ -415,25 +434,26 @@ export default function SongTable({
         <div style={{
           position: 'fixed',
           inset: 0,
-          background: 'rgba(10, 8, 14, 0.75)',
+          background: 'rgba(10, 8, 14, 0.8)',
           backdropFilter: 'blur(12px)',
           WebkitBackdropFilter: 'blur(12px)',
           display: 'flex',
           alignItems: 'center',
           justifyContent: 'center',
           zIndex: 100,
-          padding: '16px',
+          padding: '12px',
+          boxSizing: 'border-box',
         }}>
           <div className="osu-glass" style={{
             maxWidth: '600px',
             width: '100%',
-            maxHeight: '80vh',
+            maxHeight: '88vh',
             display: 'flex',
             flexDirection: 'column',
             overflow: 'hidden',
             borderRadius: '12px',
             border: '2px solid rgba(255, 102, 170, 0.6)',
-            boxShadow: '0 20px 60px rgba(0,0,0,0.8), 0 0 30px rgba(255, 102, 170, 0.25)',
+            boxShadow: '0 20px 60px rgba(0,0,0,0.85), 0 0 30px rgba(255, 102, 170, 0.25)',
           }}>
             {/* Modal Header */}
             <div style={{
