@@ -6,9 +6,6 @@
 
 ## Features
 
-- **Zero Key Exposure (OAuth 2.0)**:
-  - Users sign in securely with **Google OAuth** to access their YouTube playlists without sharing API keys.
-  - Server-side **osu! OAuth Client Credentials** for querying beatmap metadata without exposing secrets to the browser.
 - **Intelligent Title Cleaner**:
   - Automatically cleans noisy YouTube video titles (`[MV]`, `(Official Audio)`, `[HQ]`, `【...】`, `(4K 60FPS)`) into precise `Artist - Title` queries.
 - **Accurate osu! API v2 Matching**:
@@ -94,5 +91,3 @@ graph LR
 
 ---
 
-## License
-MIT License. Built for rhythm gamers worldwide!
