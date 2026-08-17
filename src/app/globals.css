@@ -70,6 +70,13 @@ html {
 body {
   min-height: 100vh;
   background-color: #131217 !important;
+  /* Ambient glowing neon orbs behind frosted glass */
+  background-image: 
+    radial-gradient(circle at 12% 18%, rgba(255, 102, 170, 0.14) 0%, transparent 45%),
+    radial-gradient(circle at 88% 25%, rgba(51, 153, 255, 0.13) 0%, transparent 48%),
+    radial-gradient(circle at 50% 75%, rgba(153, 68, 255, 0.12) 0%, transparent 50%),
+    radial-gradient(circle at 20% 85%, rgba(0, 221, 136, 0.1) 0%, transparent 44%) !important;
+  background-attachment: fixed !important;
   color: #ffffff !important;
   font-family: 'Nunito', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
   overflow-x: hidden;
@@ -77,22 +84,6 @@ body {
   -webkit-font-smoothing: antialiased;
   -moz-osx-font-smoothing: grayscale;
   -webkit-tap-highlight-color: transparent;
-}
-
-/* Hardware-accelerated fixed ambient background layer (eliminates scroll repaints) */
-body::before {
-  content: '';
-  position: fixed;
-  inset: 0;
-  z-index: -1;
-  pointer-events: none;
-  background-image: 
-    radial-gradient(circle at 12% 18%, rgba(255, 102, 170, 0.1) 0%, transparent 42%),
-    radial-gradient(circle at 88% 25%, rgba(51, 153, 255, 0.09) 0%, transparent 45%),
-    radial-gradient(circle at 50% 75%, rgba(153, 68, 255, 0.08) 0%, transparent 48%),
-    radial-gradient(circle at 20% 85%, rgba(0, 221, 136, 0.06) 0%, transparent 40%);
-  transform: translateZ(0);
-  will-change: transform;
 }
 
 button, a, input, select {
@@ -103,18 +94,19 @@ button, a, input, select {
   font-family: 'JetBrains Mono', monospace;
 }
 
-/* Frosted Glass Panel Utility - Hardware Accelerated */
+/* Frosted Glass Panel Utility */
 .osu-glass {
-  background: rgba(26, 23, 34, 0.85) !important;
-  backdrop-filter: blur(12px) saturate(130%) !important;
-  -webkit-backdrop-filter: blur(12px) saturate(130%) !important;
+  background: rgba(28, 25, 36, 0.68) !important;
+  backdrop-filter: blur(14px) saturate(140%) !important;
+  -webkit-backdrop-filter: blur(14px) saturate(140%) !important;
   border: 1px solid rgba(255, 255, 255, 0.09) !important;
   box-shadow: 0 8px 32px 0 rgba(0, 0, 0, 0.37) !important;
-  transform: translateZ(0);
 }
 
 .osu-glass-card {
-  background: rgba(34, 30, 44, 0.75) !important;
+  background: rgba(34, 30, 44, 0.55) !important;
+  backdrop-filter: blur(8px) saturate(130%) !important;
+  -webkit-backdrop-filter: blur(8px) saturate(130%) !important;
   border: 1px solid rgba(255, 255, 255, 0.08) !important;
   box-shadow: 0 4px 20px rgba(0, 0, 0, 0.25) !important;
 }
