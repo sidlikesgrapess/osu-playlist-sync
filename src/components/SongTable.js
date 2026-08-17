@@ -4,8 +4,39 @@ import { useState, useRef, useEffect } from 'react';
 import SongRow from './SongRow';
 import SongCardMobile from './SongCardMobile';
 import OsuCheckbox from './OsuCheckbox';
-import { X, Check, Search, ChevronLeft, ChevronRight, Sparkles } from 'lucide-react';
+import { X, Check, Search, ChevronLeft, ChevronRight, Sparkles, Heart, Play, Star } from 'lucide-react';
 import { osuAudio } from '@/lib/soundEffects';
+
+const getStarColor = (stars) => {
+  if (!stars) return '#c6b8ce';
+  if (stars < 2.5) return '#4fc3f7';
+  if (stars < 4.0) return '#81c784';
+  if (stars < 5.3) return '#ffb74d';
+  if (stars < 6.5) return '#ff8a80';
+  return '#ba68c8';
+};
+
+const formatCompactNumber = (num) => {
+  if (num === null || num === undefined || isNaN(Number(num))) return '0';
+  const val = Number(num);
+  if (val >= 1_000_000) {
+    return (val / 1_000_000).toFixed(1).replace(/\.0$/, '') + 'M';
+  }
+  if (val >= 1_000) {
+    return (val / 1_000).toFixed(1).replace(/\.0$/, '') + 'K';
+  }
+  return val.toLocaleString();
+};
+
+const getStatusBadgeStyle = (status = '') => {
+  const s = status.toLowerCase();
+  if (s === 'ranked') return { bg: '#44bbee', color: '#081a24' };
+  if (s === 'loved') return { bg: '#ff66aa', color: '#ffffff' };
+  if (s === 'qualified') return { bg: '#3399ff', color: '#ffffff' };
+  if (s === 'pending') return { bg: '#ffcc22', color: '#081a24' };
+  if (s === 'wip') return { bg: '#ff9944', color: '#081a24' };
+  return { bg: '#5a5266', color: '#ffffff' };
+};
 
 export default function SongTable({
   songs,
@@ -445,7 +476,7 @@ export default function SongTable({
           boxSizing: 'border-box',
         }}>
           <div className="osu-glass" style={{
-            maxWidth: '600px',
+            maxWidth: '640px',
             width: '100%',
             maxHeight: '88vh',
             display: 'flex',
@@ -487,6 +518,16 @@ export default function SongTable({
             <div style={{ padding: '12px', overflowY: 'auto', display: 'flex', flexDirection: 'column', gap: '8px' }}>
               {(altPickerSong.allMatches || []).map((match) => {
                 const isSelected = altPickerSong.matchedBeatmap?.id === match.id;
+                const minStars = match.starRange?.min ?? (match.difficulties?.length ? Math.min(...match.difficulties.map(d => d.difficultyRating || 0)) : null);
+                const maxStars = match.starRange?.max ?? (match.difficulties?.length ? Math.max(...match.difficulties.map(d => d.difficultyRating || 0)) : null);
+                const starRatingText = minStars !== null && maxStars !== null
+                  ? (Math.abs(minStars - maxStars) < 0.05 ? `★ ${minStars.toFixed(1)}` : `★ ${minStars.toFixed(1)} - ${maxStars.toFixed(1)}`)
+                  : null;
+                const playCount = match.playCount ?? match.play_count ?? 0;
+                const favouriteCount = match.favouriteCount ?? match.favourite_count ?? 0;
+                const statusStyle = getStatusBadgeStyle(match.status || '');
+                const isPreviewPlaying = activeAudio === `alt-${match.id}`;
+
                 return (
                   <div
                     key={match.id}
@@ -500,30 +541,166 @@ export default function SongTable({
                       display: 'flex',
                       alignItems: 'center',
                       gap: '12px',
-                      padding: '8px 12px',
+                      padding: '10px 12px',
                       borderRadius: '8px',
                       cursor: 'pointer',
                       border: isSelected ? '1px solid #ff66aa' : '1px solid rgba(255, 255, 255, 0.08)',
                       background: isSelected ? 'rgba(255, 102, 170, 0.15)' : 'rgba(28, 25, 36, 0.6)',
                     }}
                   >
-                    <img
-                      src={match.covers?.list || match.covers?.cover || `https://assets.ppy.sh/beatmaps/${match.id}/covers/list.jpg`}
-                      alt={match.title}
-                      style={{ width: '60px', height: '38px', borderRadius: '4px', objectFit: 'cover' }}
-                    />
-                    <div style={{ flex: 1, minWidth: 0 }}>
-                      <div style={{ fontSize: '0.84rem', fontWeight: 800, color: '#ffffff', whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>
-                        {match.artist} - {match.title}
+                    {/* Beatmap Cover with Play Preview Overlay */}
+                    <div style={{
+                      position: 'relative',
+                      width: '64px',
+                      height: '42px',
+                      borderRadius: '5px',
+                      flexShrink: 0,
+                      overflow: 'hidden',
+                      background: '#343040',
+                    }}>
+                      <img
+                        src={match.covers?.list || match.covers?.cover || `https://assets.ppy.sh/beatmaps/${match.id}/covers/list.jpg`}
+                        alt={match.title}
+                        style={{ width: '100%', height: '100%', objectFit: 'cover' }}
+                      />
+                      {match.previewUrl && (
+                        <button
+                          type="button"
+                          onClick={(e) => {
+                            e.stopPropagation();
+                            osuAudio.playClick();
+                            handleToggleAudio(`alt-${match.id}`, match.previewUrl);
+                          }}
+                          title={isPreviewPlaying ? 'Pause audio preview' : 'Play audio preview'}
+                          style={{
+                            position: 'absolute',
+                            inset: 0,
+                            background: isPreviewPlaying ? 'rgba(16, 14, 22, 0.75)' : 'rgba(0, 0, 0, 0.35)',
+                            border: 'none',
+                            display: 'flex',
+                            alignItems: 'center',
+                            justifyContent: 'center',
+                            cursor: 'pointer',
+                            transition: 'background 0.2s ease',
+                          }}
+                        >
+                          {isPreviewPlaying ? (
+                            <div style={{ display: 'flex', alignItems: 'center', gap: '2px' }}>
+                              <div className="osu-wave-bar" style={{ width: '2.5px' }} />
+                              <div className="osu-wave-bar" style={{ width: '2.5px' }} />
+                              <div className="osu-wave-bar" style={{ width: '2.5px' }} />
+                            </div>
+                          ) : (
+                            <Play size={13} color="#ffffff" style={{ fill: '#ffffff' }} />
+                          )}
+                        </button>
+                      )}
+                    </div>
+
+                    {/* Beatmap Details */}
+                    <div style={{ flex: 1, minWidth: 0, display: 'flex', flexDirection: 'column', gap: '3px' }}>
+                      <div style={{ display: 'flex', alignItems: 'center', gap: '6px' }}>
+                        <span style={{
+                          fontSize: '0.84rem',
+                          fontWeight: 800,
+                          color: '#ffffff',
+                          whiteSpace: 'nowrap',
+                          overflow: 'hidden',
+                          textOverflow: 'ellipsis',
+                        }}>
+                          {match.artist} - {match.title}
+                        </span>
+
+                        {/* Status Badge */}
+                        {match.status && (
+                          <span style={{
+                            fontSize: '0.62rem',
+                            fontWeight: 800,
+                            textTransform: 'uppercase',
+                            padding: '1px 5px',
+                            borderRadius: '3px',
+                            background: statusStyle.bg,
+                            color: statusStyle.color,
+                            flexShrink: 0,
+                          }}>
+                            {match.status}
+                          </span>
+                        )}
                       </div>
-                      <div style={{ fontSize: '0.72rem', color: '#c6b8ce', display: 'flex', gap: '8px' }}>
-                        <span>mapped by {match.creator}</span>
+
+                      {/* Stats & Mapper */}
+                      <div style={{
+                        fontSize: '0.72rem',
+                        color: '#c6b8ce',
+                        display: 'flex',
+                        alignItems: 'center',
+                        gap: '6px',
+                        flexWrap: 'wrap',
+                      }}>
+                        <span>mapped by <strong style={{ color: '#ffffff' }}>{match.creator}</strong></span>
                         <span>•</span>
                         <span>{match.bpm} BPM</span>
+
+                        {/* Star Rating Badge */}
+                        {starRatingText && (
+                          <>
+                            <span>•</span>
+                            <span
+                              title={`Difficulty: ${starRatingText}`}
+                              style={{
+                                fontFamily: 'JetBrains Mono, monospace',
+                                fontWeight: 700,
+                                fontSize: '0.68rem',
+                                padding: '1px 5px',
+                                borderRadius: '3px',
+                                background: 'rgba(0, 0, 0, 0.45)',
+                                color: getStarColor(maxStars),
+                              }}
+                            >
+                              {starRatingText}
+                            </span>
+                          </>
+                        )}
+
+                        {/* Play Count */}
+                        <span>•</span>
+                        <span
+                          title={`${Number(playCount).toLocaleString()} plays`}
+                          style={{
+                            display: 'inline-flex',
+                            alignItems: 'center',
+                            gap: '3px',
+                            color: '#c6b8ce',
+                            fontSize: '0.70rem',
+                            fontWeight: 600,
+                          }}
+                        >
+                          <Play size={10} style={{ fill: '#c6b8ce', flexShrink: 0 }} />
+                          <span>{formatCompactNumber(playCount)}</span>
+                        </span>
+
+                        {/* Likes / Favorites */}
+                        <span>•</span>
+                        <span
+                          title={`${Number(favouriteCount).toLocaleString()} favourites / likes`}
+                          style={{
+                            display: 'inline-flex',
+                            alignItems: 'center',
+                            gap: '3px',
+                            color: '#ff66aa',
+                            fontSize: '0.70rem',
+                            fontWeight: 700,
+                          }}
+                        >
+                          <Heart size={10} style={{ fill: '#ff66aa', flexShrink: 0 }} />
+                          <span>{formatCompactNumber(favouriteCount)}</span>
+                        </span>
                       </div>
                     </div>
+
+                    {/* Active Match Badge */}
                     {isSelected && (
-                      <span style={{ color: '#ff66aa', fontSize: '0.74rem', fontWeight: 800, display: 'flex', alignItems: 'center', gap: '4px' }}>
+                      <span style={{ color: '#ff66aa', fontSize: '0.74rem', fontWeight: 800, display: 'flex', alignItems: 'center', gap: '4px', flexShrink: 0 }}>
                         <Check size={14} /> Active
                       </span>
                     )}
