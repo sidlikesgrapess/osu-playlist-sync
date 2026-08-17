@@ -111,24 +111,12 @@ export default function Hero({ onTryDemo }) {
         fontSize: 'clamp(1.15rem, 2.2vw, 1.45rem)',
         fontWeight: 800,
         color: '#ffffff',
-        marginBottom: '6px',
+        marginBottom: '16px',
         letterSpacing: '-0.01em',
       }}>
         Sync your <span style={{ color: '#ff66aa', textShadow: '0 0 16px rgba(255, 102, 170, 0.4)' }}>YouTube Playlists</span> to{' '}
         <span style={{ color: '#3399ff', textShadow: '0 0 16px rgba(51, 153, 255, 0.4)' }}>osu! Beatmaps</span>
       </h2>
-
-      {/* Subtitle */}
-      <p style={{
-        fontSize: '0.9rem',
-        color: '#c6b8ce',
-        maxWidth: '580px',
-        margin: '0 auto 16px',
-        lineHeight: 1.5,
-        fontWeight: 600,
-      }}>
-        Paste any YouTube music playlist. We match each song to its beatmaps on osu! and package ready-to-play <span className="mono-font" style={{ color: '#44bbee', fontWeight: 700 }}>.osz</span> files in one click.
-      </p>
 
       {/* 3 Frosted Glass Step Cards */}
       <div style={{
