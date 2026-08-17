@@ -307,9 +307,10 @@ export default function PlaylistInput({ onFetch, isLoading, mode, setMode, statu
             gap: '8px',
             boxShadow: '0 0 16px rgba(255, 102, 170, 0.35)',
             position: 'relative',
+            zIndex: 40,
           }}>
             {/* Platform Dropdown Trigger */}
-            <div ref={menuRef} style={{ position: 'relative' }}>
+            <div ref={menuRef} style={{ position: 'relative', zIndex: 50 }}>
               <button
                 type="button"
                 id="platform-dropdown-btn"
@@ -343,18 +344,15 @@ export default function PlaylistInput({ onFetch, isLoading, mode, setMode, statu
               {isPlatformMenuOpen && (
                 <div style={{
                   position: 'absolute',
-                  top: '100%',
+                  top: 'calc(100% + 8px)',
                   left: 0,
-                  marginTop: '6px',
-                  width: '210px',
-                  background: 'rgba(20, 17, 26, 0.95)',
-                  backdropFilter: 'blur(20px)',
-                  WebkitBackdropFilter: 'blur(20px)',
-                  border: '1px solid rgba(255, 102, 170, 0.5)',
-                  borderRadius: '8px',
-                  boxShadow: '0 12px 36px rgba(0,0,0,0.8), 0 0 16px rgba(255, 102, 170, 0.2)',
+                  width: '220px',
+                  background: '#191522',
+                  border: '1.5px solid rgba(255, 102, 170, 0.65)',
+                  borderRadius: '10px',
+                  boxShadow: '0 20px 60px rgba(0, 0, 0, 0.98), 0 0 24px rgba(255, 102, 170, 0.35)',
                   padding: '6px',
-                  zIndex: 100,
+                  zIndex: 9999,
                   display: 'flex',
                   flexDirection: 'column',
                   gap: '4px',
