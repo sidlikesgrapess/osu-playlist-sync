@@ -229,6 +229,29 @@ button, a, input, select {
   animation: spinSlow 3s linear infinite;
 }
 
+/* Lightweight Logo Easter Egg Animations */
+@keyframes osu-simple-ripple {
+  0% {
+    transform: translate(-50%, -50%) scale(0.85);
+    opacity: 0.9;
+  }
+  100% {
+    transform: translate(-50%, -50%) scale(1.6);
+    opacity: 0;
+  }
+}
+
+@keyframes osu-simple-judgment {
+  0% {
+    transform: translate(-50%, 0) scale(0.9);
+    opacity: 1;
+  }
+  100% {
+    transform: translate(-50%, -18px) scale(1);
+    opacity: 0;
+  }
+}
+
 /* Custom osu! Theme Clean Scrollbars */
 ::-webkit-scrollbar {
   width: 7px;
