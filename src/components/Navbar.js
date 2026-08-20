@@ -6,9 +6,23 @@ import { osuAudio } from '@/lib/soundEffects';
 import HitCircleEaster from './HitCircleEaster';
 
 export default function Navbar({ onOpenSetupGuide, systemStatus }) {
-  const [soundOn, setSoundOn] = useState(true);
+  const [soundOn, setSoundOn] = useState(false);
   const [scrollY, setScrollY] = useState(0);
   const easterRef = useRef(null);
+
+  useEffect(() => {
+    try {
+      const saved = localStorage.getItem('osu_sfx_enabled');
+      if (saved !== null) {
+        const isEnabled = saved === 'true';
+        setSoundOn(isEnabled);
+        osuAudio.enabled = isEnabled;
+      } else {
+        setSoundOn(false);
+        osuAudio.enabled = false;
+      }
+    } catch (e) {}
+  }, []);
 
   useEffect(() => {
     let lastScroll = -1;
@@ -41,6 +55,9 @@ export default function Navbar({ onOpenSetupGuide, systemStatus }) {
     const nextState = !soundOn;
     setSoundOn(nextState);
     osuAudio.enabled = nextState;
+    try {
+      localStorage.setItem('osu_sfx_enabled', String(nextState));
+    } catch (e) {}
     if (nextState) osuAudio.playClick();
   };
 

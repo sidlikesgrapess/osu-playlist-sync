@@ -7,7 +7,7 @@
 class OsuSoundEffects {
   constructor() {
     this.ctx = null;
-    this.enabled = true;
+    this.enabled = false;
     this.lastHoverTime = 0;
   }
 
