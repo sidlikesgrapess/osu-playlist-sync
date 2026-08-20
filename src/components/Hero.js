@@ -106,7 +106,7 @@ export default function Hero({ onTryDemo }) {
         lineHeight: 1.45,
         maxWidth: '580px',
       }}>
-        Sync your <span style={{ color: '#ff66aa', fontWeight: 800 }}>Spotify</span>, <span style={{ color: '#ff5555', fontWeight: 800 }}>YouTube</span> &amp; <span style={{ color: '#fc3c44', fontWeight: 800 }}>Apple Music</span> playlists to <span style={{ color: '#44bbee', fontWeight: 800 }}>osu! Beatmaps</span>
+        Sync your <span style={{ color: '#1db954', fontWeight: 800 }}>Spotify</span>, <span style={{ color: '#ff5555', fontWeight: 800 }}>YouTube</span> &amp; <span style={{ color: '#fc3c44', fontWeight: 800 }}>Apple Music</span> playlists to <span style={{ color: '#ff66aa', fontWeight: 800 }}>osu! Beatmaps</span>
       </h2>
     </section>
   );
