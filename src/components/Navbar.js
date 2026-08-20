@@ -130,8 +130,8 @@ export default function Navbar({ onOpenSetupGuide, systemStatus }) {
             }}
           />
           <div style={{ display: 'flex', alignItems: 'center', gap: '6px', whiteSpace: 'nowrap' }}>
-            <span style={{ fontSize: '0.95rem', fontWeight: 900, color: '#ffffff', letterSpacing: '-0.01em' }}>
-              osu! <span style={{ color: '#ff66aa' }}>Sync</span>
+            <span style={{ fontSize: '1rem', fontWeight: 900, color: '#ff66aa', letterSpacing: '-0.01em' }}>
+              Sync
             </span>
           </div>
         </div>

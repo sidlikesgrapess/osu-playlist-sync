@@ -87,11 +87,11 @@ export default function Hero({ onTryDemo }) {
             fontSize: 'clamp(1.8rem, 6vw, 2.8rem)',
             fontWeight: 900,
             letterSpacing: '-0.02em',
-            color: '#ffffff',
+            color: '#ff66aa',
             margin: 0,
             lineHeight: 1.1,
           }}>
-            osu! <span style={{ color: '#ff66aa' }}>Sync</span>
+            Sync
           </h1>
         </div>
       </div>
