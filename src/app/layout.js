@@ -2,8 +2,8 @@ import './globals.css';
 import Providers from '@/components/Providers';
 
 export const metadata = {
-  title: 'osu! Playlist Sync — Convert YouTube Playlists to Beatmaps',
-  description: 'Convert YouTube playlists directly into playable osu! beatmaps with official osu!web design.',
+  title: 'osu! Sync — Music Playlists to osu! Beatmaps',
+  description: 'Convert Spotify, YouTube, and Apple Music playlists directly into playable osu! beatmaps.',
   icons: {
     icon: '/favicon.svg',
   },

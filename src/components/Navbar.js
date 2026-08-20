@@ -114,19 +114,7 @@ export default function Navbar({ onOpenSetupGuide, systemStatus }) {
           />
           <div style={{ display: 'flex', alignItems: 'center', gap: '6px', whiteSpace: 'nowrap' }}>
             <span style={{ fontSize: '0.95rem', fontWeight: 900, color: '#ffffff', letterSpacing: '-0.01em' }}>
-              osu! <span style={{ color: '#ff66aa' }}>Playlist Sync</span>
-            </span>
-            <span style={{
-              background: '#2c2536',
-              color: '#ff66aa',
-              border: '1px solid rgba(255, 102, 170, 0.25)',
-              padding: '1px 5px',
-              borderRadius: '4px',
-              fontSize: '0.62rem',
-              fontWeight: 800,
-              textTransform: 'uppercase',
-            }}>
-              lazer
+              osu! <span style={{ color: '#ff66aa' }}>Sync</span>
             </span>
           </div>
         </div>

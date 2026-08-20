@@ -532,19 +532,21 @@ export default function PlaylistInput({ onFetch, isLoading, mode, setMode, statu
             <button
               id="preset-youtube-banger"
               type="button"
-              className="osu-btn-interactive osu-glass-card"
+              className="osu-btn-interactive"
               onClick={() => handleQuickSample('https://www.youtube.com/playlist?list=PLosu_banger_showcase_01')}
               onMouseEnter={() => osuAudio.playHover()}
               style={{
+                background: '#231f2d',
+                border: '1px solid rgba(255, 255, 255, 0.08)',
                 borderRadius: '6px',
                 color: '#ffffff',
                 fontSize: '0.72rem',
                 fontWeight: 800,
-                padding: '4px 8px',
+                padding: '4px 9px',
                 cursor: 'pointer',
                 display: 'inline-flex',
                 alignItems: 'center',
-                gap: '4px',
+                gap: '5px',
                 fontFamily: 'inherit',
                 flexShrink: 0,
                 whiteSpace: 'nowrap',
@@ -556,19 +558,21 @@ export default function PlaylistInput({ onFetch, isLoading, mode, setMode, statu
             <button
               id="preset-spotify-top"
               type="button"
-              className="osu-btn-interactive osu-glass-card"
+              className="osu-btn-interactive"
               onClick={() => handleQuickSample('https://open.spotify.com/playlist/37i9dQZF1DXcBWIGoYBM5M')}
               onMouseEnter={() => osuAudio.playHover()}
               style={{
+                background: '#231f2d',
+                border: '1px solid rgba(255, 255, 255, 0.08)',
                 borderRadius: '6px',
                 color: '#ffffff',
                 fontSize: '0.72rem',
                 fontWeight: 800,
-                padding: '4px 8px',
+                padding: '4px 9px',
                 cursor: 'pointer',
                 display: 'inline-flex',
                 alignItems: 'center',
-                gap: '4px',
+                gap: '5px',
                 fontFamily: 'inherit',
                 flexShrink: 0,
                 whiteSpace: 'nowrap',
@@ -580,19 +584,21 @@ export default function PlaylistInput({ onFetch, isLoading, mode, setMode, statu
             <button
               id="preset-single-song"
               type="button"
-              className="osu-btn-interactive osu-glass-card"
+              className="osu-btn-interactive"
               onClick={() => handleQuickSample('YOASOBI - Idol')}
               onMouseEnter={() => osuAudio.playHover()}
               style={{
+                background: '#231f2d',
+                border: '1px solid rgba(255, 255, 255, 0.08)',
                 borderRadius: '6px',
                 color: '#ffffff',
                 fontSize: '0.72rem',
                 fontWeight: 800,
-                padding: '4px 8px',
+                padding: '4px 9px',
                 cursor: 'pointer',
                 display: 'inline-flex',
                 alignItems: 'center',
-                gap: '4px',
+                gap: '5px',
                 fontFamily: 'inherit',
                 flexShrink: 0,
                 whiteSpace: 'nowrap',

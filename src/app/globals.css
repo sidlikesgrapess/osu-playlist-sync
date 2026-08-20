@@ -48,6 +48,13 @@
   padding: 0;
 }
 
+button {
+  font-family: inherit;
+  border: none;
+  background: none;
+  color: inherit;
+}
+
 html {
   font-size: 15px;
   letter-spacing: -0.01em;

@@ -1,8 +1,6 @@
 'use client';
 
 import { useState, useEffect, useRef } from 'react';
-import { Search, Download } from 'lucide-react';
-import { YouTubeIcon } from './Icons';
 import { osuAudio } from '@/lib/soundEffects';
 import HitCircleEaster from './HitCircleEaster';
 
@@ -85,142 +83,31 @@ export default function Hero({ onTryDemo }) {
           }}
         />
         <div style={{ textAlign: 'left' }}>
-          <div style={{ display: 'flex', alignItems: 'center', gap: '8px', flexWrap: 'wrap' }}>
-            <h1 style={{
-              fontSize: 'clamp(1.7rem, 6vw, 2.7rem)',
-              fontWeight: 900,
-              letterSpacing: '-0.02em',
-              color: '#ffffff',
-              margin: 0,
-              lineHeight: 1.1,
-            }}>
-              osu! <span style={{ color: '#ff66aa' }}>Playlist Sync</span>
-            </h1>
-            <span style={{
-              background: '#2c2536',
-              color: '#ff66aa',
-              border: '1px solid rgba(255, 102, 170, 0.25)',
-              padding: '2px 7px',
-              borderRadius: '6px',
-              fontSize: '0.68rem',
-              fontWeight: 800,
-              textTransform: 'uppercase',
-              letterSpacing: '0.04em',
-            }}>
-              lazer
-            </span>
-          </div>
+          <h1 style={{
+            fontSize: 'clamp(1.8rem, 6vw, 2.8rem)',
+            fontWeight: 900,
+            letterSpacing: '-0.02em',
+            color: '#ffffff',
+            margin: 0,
+            lineHeight: 1.1,
+          }}>
+            osu! <span style={{ color: '#ff66aa' }}>Sync</span>
+          </h1>
         </div>
       </div>
 
-      {/* Main Tagline */}
+      {/* Clean Tagline */}
       <h2 style={{
-        fontSize: 'clamp(0.95rem, 3.5vw, 1.45rem)',
-        fontWeight: 800,
-        color: '#ffffff',
-        marginBottom: '14px',
+        fontSize: 'clamp(0.92rem, 2.8vw, 1.2rem)',
+        fontWeight: 600,
+        color: '#c0b4c8',
+        margin: '0 auto 6px',
         letterSpacing: '-0.01em',
-        lineHeight: 1.35,
+        lineHeight: 1.45,
+        maxWidth: '580px',
       }}>
-        Sync your <span style={{ color: '#ff66aa' }}>Music Playlists</span> to{' '}
-        <span style={{ color: '#44bbee' }}>osu! Beatmaps</span>
+        Sync your <span style={{ color: '#ff66aa', fontWeight: 800 }}>Spotify</span>, <span style={{ color: '#ff5555', fontWeight: 800 }}>YouTube</span> &amp; <span style={{ color: '#fc3c44', fontWeight: 800 }}>Apple Music</span> playlists to <span style={{ color: '#44bbee', fontWeight: 800 }}>osu! Beatmaps</span>
       </h2>
-
-      {/* 3 Step Cards - Clean Solid Grid */}
-      <div style={{
-        display: 'grid',
-        gridTemplateColumns: 'repeat(auto-fit, minmax(min(100%, 200px), 1fr))',
-        gap: '8px',
-        margin: '10px 0',
-        textAlign: 'left',
-      }}>
-        <div
-          className="osu-btn-interactive osu-glass-card"
-          onMouseEnter={() => osuAudio.playHover()}
-          style={{
-            borderRadius: '10px',
-            padding: '10px 14px',
-            display: 'flex',
-            gap: '10px',
-            alignItems: 'center',
-          }}
-        >
-          <div style={{
-            width: '28px',
-            height: '28px',
-            borderRadius: '6px',
-            background: 'rgba(255, 68, 68, 0.15)',
-            display: 'flex',
-            alignItems: 'center',
-            justifyContent: 'center',
-            flexShrink: 0,
-          }}>
-            <YouTubeIcon size={16} color="#ff4444" />
-          </div>
-          <div>
-            <div style={{ fontSize: '0.8rem', fontWeight: 800, color: '#ffffff' }}>1. Paste Playlist</div>
-            <div style={{ fontSize: '0.68rem', color: '#887c93', fontWeight: 600 }}>YouTube, Spotify, Apple</div>
-          </div>
-        </div>
-
-        <div
-          className="osu-btn-interactive osu-glass-card"
-          onMouseEnter={() => osuAudio.playHover()}
-          style={{
-            borderRadius: '10px',
-            padding: '10px 14px',
-            display: 'flex',
-            gap: '10px',
-            alignItems: 'center',
-          }}
-        >
-          <div style={{
-            width: '28px',
-            height: '28px',
-            borderRadius: '6px',
-            background: 'rgba(255, 102, 170, 0.15)',
-            display: 'flex',
-            alignItems: 'center',
-            justifyContent: 'center',
-            flexShrink: 0,
-          }}>
-            <Search size={15} color="#ff66aa" />
-          </div>
-          <div>
-            <div style={{ fontSize: '0.8rem', fontWeight: 800, color: '#ffffff' }}>2. Auto Match</div>
-            <div style={{ fontSize: '0.68rem', color: '#887c93', fontWeight: 600 }}>Official osu! beatmaps</div>
-          </div>
-        </div>
-
-        <div
-          className="osu-btn-interactive osu-glass-card"
-          onMouseEnter={() => osuAudio.playHover()}
-          style={{
-            borderRadius: '10px',
-            padding: '10px 14px',
-            display: 'flex',
-            gap: '10px',
-            alignItems: 'center',
-          }}
-        >
-          <div style={{
-            width: '28px',
-            height: '28px',
-            borderRadius: '6px',
-            background: 'rgba(68, 187, 238, 0.15)',
-            display: 'flex',
-            alignItems: 'center',
-            justifyContent: 'center',
-            flexShrink: 0,
-          }}>
-            <Download size={15} color="#44bbee" />
-          </div>
-          <div>
-            <div style={{ fontSize: '0.8rem', fontWeight: 800, color: '#ffffff' }}>3. Download & Play</div>
-            <div style={{ fontSize: '0.68rem', color: '#887c93', fontWeight: 600 }}>Get .osz files or 1 ZIP</div>
-          </div>
-        </div>
-      </div>
     </section>
   );
 }
