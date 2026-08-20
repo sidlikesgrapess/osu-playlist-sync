@@ -66,14 +66,7 @@ function normalizeForComparison(str = '') {
 }
 
 const KNOWN_SONG_ARTISTS = {
-  'the kill': '30 seconds to mars',
-  'the kill bury me': '30 seconds to mars',
-  'kill': '30 seconds to mars',
-  'kill bury me': '30 seconds to mars',
-  'i hate everything about you': 'three days grace',
-  'hate everything about you': 'three days grace',
-  'iris': 'goo goo dolls',
-  'all i wanted': 'paramore',
+
 };
 
 /**
@@ -263,7 +256,7 @@ function formatBeatmapset(set) {
     playCount: set.play_count || 0,
     previewUrl: `https://b.ppy.sh/preview/${set.id}.mp3`,
     difficulties: diffs,
-    starRange: diffs.length > 0 
+    starRange: diffs.length > 0
       ? { min: diffs[0].difficultyRating, max: diffs[diffs.length - 1].difficultyRating }
       : { min: 0, max: 0 },
     downloadUrl: `/api/download?beatmapsetId=${set.id}`,
