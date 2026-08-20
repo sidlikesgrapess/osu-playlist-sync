@@ -92,13 +92,13 @@ export function scoreBeatmapMatch(beatmap, targetTitle = '', targetArtist = '') 
   const isTitleContained = (tTitle && bmTitle.includes(tTitle)) || (bmTitle && tTitle.includes(bmTitle));
 
   if (isExactTitle) {
-    score += 80;
+    score += 100;
   } else if (isTitleContained && tTitle) {
     const lenRatio = Math.min(bmTitle.length, tTitle.length) / Math.max(bmTitle.length, tTitle.length);
-    score += 50 * lenRatio;
+    score += 60 * lenRatio;
   } else {
     // No title overlap at all
-    score -= 50;
+    score -= 60;
   }
 
   // 2. Artist matching (including known original band for covers)
@@ -119,14 +119,16 @@ export function scoreBeatmapMatch(beatmap, targetTitle = '', targetArtist = '') 
     }
   }
 
-  // If target has a clear artist specified and the beatmap artist does NOT match, heavily penalize
+  // If artist does not match:
+  // - If title is exact, apply mild penalty (-25) so channel name differences don't drop exact song matches
+  // - If title is only partial or fuzzy, apply heavy penalty (-80)
   if (tArtist && !isArtistMatch) {
-    score -= 80;
+    score -= isExactTitle ? 25 : 80;
   }
 
   // Bonus for ranked or loved maps
   if (beatmap.status === 'ranked' || beatmap.status === 'loved') {
-    score += 10;
+    score += 15;
   }
 
   return score;
