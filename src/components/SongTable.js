@@ -241,7 +241,7 @@ export default function SongTable({
                 </th>
                 <th style={{ padding: '12px 6px', textAlign: 'center', width: '32px' }}>#</th>
                 <th style={{ padding: '12px 12px' }}>Track / Song</th>
-                <th style={{ padding: '12px 12px' }}>osu! Beatmapset Match</th>
+                <th style={{ padding: '12px 12px' }}>Match</th>
                 <th style={{ padding: '12px 14px', textAlign: 'right', width: '130px' }}>Action</th>
               </tr>
             </thead>
