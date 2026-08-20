@@ -78,7 +78,6 @@ export default function Hero({ onTryDemo }) {
             width: 'clamp(48px, 12vw, 64px)',
             height: 'clamp(48px, 12vw, 64px)',
             objectFit: 'contain',
-            filter: 'drop-shadow(0 0 22px rgba(255, 102, 170, 0.75))',
             cursor: 'pointer',
             userSelect: 'none',
             flexShrink: 0,
@@ -95,12 +94,12 @@ export default function Hero({ onTryDemo }) {
               margin: 0,
               lineHeight: 1.1,
             }}>
-              osu! <span style={{ color: '#ff66aa', textShadow: '0 0 24px rgba(255, 102, 170, 0.55)' }}>Playlist Sync</span>
+              osu! <span style={{ color: '#ff66aa' }}>Playlist Sync</span>
             </h1>
             <span style={{
-              background: 'rgba(255, 102, 170, 0.15)',
+              background: '#2c2536',
               color: '#ff66aa',
-              border: '1px solid rgba(255, 102, 170, 0.35)',
+              border: '1px solid rgba(255, 102, 170, 0.25)',
               padding: '2px 7px',
               borderRadius: '6px',
               fontSize: '0.68rem',
@@ -123,11 +122,11 @@ export default function Hero({ onTryDemo }) {
         letterSpacing: '-0.01em',
         lineHeight: 1.35,
       }}>
-        Sync your <span style={{ color: '#ff66aa', textShadow: '0 0 16px rgba(255, 102, 170, 0.4)' }}>YouTube Playlists</span> to{' '}
-        <span style={{ color: '#3399ff', textShadow: '0 0 16px rgba(51, 153, 255, 0.4)' }}>osu! Beatmaps</span>
+        Sync your <span style={{ color: '#ff66aa' }}>Music Playlists</span> to{' '}
+        <span style={{ color: '#44bbee' }}>osu! Beatmaps</span>
       </h2>
 
-      {/* 3 Frosted Glass Step Cards - Responsive Grid */}
+      {/* 3 Step Cards - Clean Solid Grid */}
       <div style={{
         display: 'grid',
         gridTemplateColumns: 'repeat(auto-fit, minmax(min(100%, 200px), 1fr))',
@@ -150,18 +149,17 @@ export default function Hero({ onTryDemo }) {
             width: '28px',
             height: '28px',
             borderRadius: '6px',
-            background: 'rgba(255, 0, 0, 0.2)',
-            boxShadow: '0 0 12px rgba(255, 0, 0, 0.3)',
+            background: 'rgba(255, 68, 68, 0.15)',
             display: 'flex',
             alignItems: 'center',
             justifyContent: 'center',
             flexShrink: 0,
           }}>
-            <YouTubeIcon size={16} color="#ff3333" />
+            <YouTubeIcon size={16} color="#ff4444" />
           </div>
           <div>
             <div style={{ fontSize: '0.8rem', fontWeight: 800, color: '#ffffff' }}>1. Paste Playlist</div>
-            <div style={{ fontSize: '0.68rem', color: '#8b7d95', fontWeight: 600 }}>YouTube, Spotify, Apple</div>
+            <div style={{ fontSize: '0.68rem', color: '#887c93', fontWeight: 600 }}>YouTube, Spotify, Apple</div>
           </div>
         </div>
 
@@ -180,8 +178,7 @@ export default function Hero({ onTryDemo }) {
             width: '28px',
             height: '28px',
             borderRadius: '6px',
-            background: 'rgba(255, 102, 170, 0.2)',
-            boxShadow: '0 0 12px rgba(255, 102, 170, 0.3)',
+            background: 'rgba(255, 102, 170, 0.15)',
             display: 'flex',
             alignItems: 'center',
             justifyContent: 'center',
@@ -191,7 +188,7 @@ export default function Hero({ onTryDemo }) {
           </div>
           <div>
             <div style={{ fontSize: '0.8rem', fontWeight: 800, color: '#ffffff' }}>2. Auto Match</div>
-            <div style={{ fontSize: '0.68rem', color: '#8b7d95', fontWeight: 600 }}>Official osu! beatmaps</div>
+            <div style={{ fontSize: '0.68rem', color: '#887c93', fontWeight: 600 }}>Official osu! beatmaps</div>
           </div>
         </div>
 
@@ -210,18 +207,17 @@ export default function Hero({ onTryDemo }) {
             width: '28px',
             height: '28px',
             borderRadius: '6px',
-            background: 'rgba(51, 153, 255, 0.2)',
-            boxShadow: '0 0 12px rgba(51, 153, 255, 0.3)',
+            background: 'rgba(68, 187, 238, 0.15)',
             display: 'flex',
             alignItems: 'center',
             justifyContent: 'center',
             flexShrink: 0,
           }}>
-            <Download size={15} color="#3399ff" />
+            <Download size={15} color="#44bbee" />
           </div>
           <div>
             <div style={{ fontSize: '0.8rem', fontWeight: 800, color: '#ffffff' }}>3. Download & Play</div>
-            <div style={{ fontSize: '0.68rem', color: '#8b7d95', fontWeight: 600 }}>Get .osz files or 1 ZIP</div>
+            <div style={{ fontSize: '0.68rem', color: '#887c93', fontWeight: 600 }}>Get .osz files or 1 ZIP</div>
           </div>
         </div>
       </div>

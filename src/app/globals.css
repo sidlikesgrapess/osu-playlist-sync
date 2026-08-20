@@ -1,50 +1,45 @@
 @import url('https://fonts.googleapis.com/css2?family=Nunito:wght@400;600;700;800;900&family=JetBrains+Mono:wght@400;600;700&display=swap');
 
 :root {
-  /* osu! Frosted Glass Theme Palette */
-  --osu-bg-darkest: #121116;
+  /* Clean Solid Dark Theme Palette (osu! & osu! lazer native styling) */
+  --osu-bg-darkest: #111015;
   --osu-bg-dark: #16151c;
-  --osu-bg-glass: rgba(28, 25, 36, 0.65);
-  --osu-bg-glass-hover: rgba(46, 40, 60, 0.75);
-  --osu-bg-glass-card: rgba(34, 30, 44, 0.55);
+  --osu-bg-surface: #1f1d27;
+  --osu-bg-surface-hover: #2a2735;
+  --osu-bg-card: #252230;
+  --osu-bg-card-hover: #2f2b3d;
   
-  --osu-glass-border: rgba(255, 255, 255, 0.09);
-  --osu-glass-border-hover: rgba(255, 102, 170, 0.4);
-  --osu-glass-blur: blur(16px);
+  --osu-border: rgba(255, 255, 255, 0.08);
+  --osu-border-hover: rgba(255, 102, 170, 0.5);
 
   --osu-pink: #ff66aa;
   --osu-pink-hover: #ff7ebb;
   --osu-pink-dark: #cc3377;
-  --osu-pink-glow: rgba(255, 102, 170, 0.5);
 
   /* Mode Colors */
   --mode-osu: #ff66aa;
   --mode-taiko: #3399ff;
-  --mode-fruits: #00dd88;
+  --mode-fruits: #00cc77;
   --mode-mania: #9944ff;
 
   /* Status Colors */
   --status-ranked: #44bbee;
   --status-loved: #ff66aa;
   --status-qualified: #3399ff;
-  --status-pending: #ffcc22;
-  --status-graveyard: #7a708a;
+  --status-pending: #ffbb22;
+  --status-graveyard: #6e657a;
   --status-wip: #ff9944;
 
   /* Typography Colors */
   --osu-text-primary: #ffffff;
-  --osu-text-secondary: #c6b8ce;
-  --osu-text-muted: #8b7d95;
-  --osu-text-dim: #65586f;
+  --osu-text-secondary: #c0b4c8;
+  --osu-text-muted: #887c93;
+  --osu-text-dim: #5c5267;
 
   --radius-sm: 6px;
   --radius-md: 10px;
   --radius-lg: 14px;
   --radius-pill: 9999px;
-
-  /* Spring Physics Easing */
-  --spring-bounce: cubic-bezier(0.34, 1.56, 0.64, 1);
-  --smooth-out: cubic-bezier(0.16, 1, 0.3, 1);
 }
 
 * {
@@ -54,10 +49,10 @@
 }
 
 html {
-  font-size: 15px; /* Optimal balanced DPI */
+  font-size: 15px;
   letter-spacing: -0.01em;
   scrollbar-width: thin;
-  scrollbar-color: #4a445b #121116;
+  scrollbar-color: #3b3648 #111015;
   -webkit-text-size-adjust: 100%;
 }
 
@@ -69,14 +64,7 @@ html {
 
 body {
   min-height: 100vh;
-  background-color: #131217 !important;
-  /* Ambient glowing neon orbs behind frosted glass */
-  background-image: 
-    radial-gradient(circle at 12% 18%, rgba(255, 102, 170, 0.14) 0%, transparent 45%),
-    radial-gradient(circle at 88% 25%, rgba(51, 153, 255, 0.13) 0%, transparent 48%),
-    radial-gradient(circle at 50% 75%, rgba(153, 68, 255, 0.12) 0%, transparent 50%),
-    radial-gradient(circle at 20% 85%, rgba(0, 221, 136, 0.1) 0%, transparent 44%) !important;
-  background-attachment: fixed !important;
+  background-color: #141318 !important;
   color: #ffffff !important;
   font-family: 'Nunito', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
   overflow-x: hidden;
@@ -94,111 +82,103 @@ button, a, input, select {
   font-family: 'JetBrains Mono', monospace;
 }
 
-/* Frosted Glass Panel Utility */
+/* Clean Solid Panel Utilities */
 .osu-glass {
-  background: rgba(28, 25, 36, 0.68) !important;
-  backdrop-filter: blur(14px) saturate(140%) !important;
-  -webkit-backdrop-filter: blur(14px) saturate(140%) !important;
-  border: 1px solid rgba(255, 255, 255, 0.09) !important;
-  box-shadow: 0 8px 32px 0 rgba(0, 0, 0, 0.37) !important;
+  background: #1e1c26 !important;
+  border: 1px solid rgba(255, 255, 255, 0.08) !important;
+  box-shadow: 0 4px 20px rgba(0, 0, 0, 0.35) !important;
 }
 
 .osu-glass-card {
-  background: rgba(34, 30, 44, 0.55) !important;
-  backdrop-filter: blur(8px) saturate(130%) !important;
-  -webkit-backdrop-filter: blur(8px) saturate(130%) !important;
-  border: 1px solid rgba(255, 255, 255, 0.08) !important;
-  box-shadow: 0 4px 20px rgba(0, 0, 0, 0.25) !important;
+  background: #252230 !important;
+  border: 1px solid rgba(255, 255, 255, 0.07) !important;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.2) !important;
 }
 
-/* Tactile osu! Interactive Button Physics */
+/* Tactile osu! Interactive Button Transitions */
 .osu-btn-interactive {
-  transition: transform 0.18s cubic-bezier(0.34, 1.56, 0.64, 1), box-shadow 0.18s ease, background 0.15s ease, color 0.15s ease !important;
+  transition: transform 0.15s ease, background-color 0.15s ease, border-color 0.15s ease, color 0.15s ease !important;
   cursor: pointer;
   user-select: none;
 }
 
 .osu-btn-interactive:hover {
-  transform: translateY(-2px) scale(1.03);
+  transform: translateY(-1px);
 }
 
 .osu-btn-interactive:active {
-  transform: translateY(1px) scale(0.96) !important;
+  transform: translateY(1px) !important;
 }
 
-/* Pink Glow Primary Button */
+/* Primary Pink Action Button */
 .osu-btn-pink {
   background: #ff66aa !important;
   color: #ffffff !important;
-  box-shadow: 0 4px 16px rgba(255, 102, 170, 0.45) !important;
+  border: none !important;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.25) !important;
 }
 
 .osu-btn-pink:hover {
   background: #ff7bbb !important;
-  box-shadow: 0 6px 22px rgba(255, 102, 170, 0.65) !important;
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.35) !important;
 }
 
-/* Glass Pill Buttons (Modes / Status) */
+.osu-btn-pink:active {
+  background: #eb5597 !important;
+}
+
+/* Mode and Status Pill Tabs */
 .osu-pill-tab {
-  transition: transform 0.18s cubic-bezier(0.34, 1.56, 0.64, 1), background 0.15s ease, border-color 0.15s ease !important;
+  transition: transform 0.15s ease, background-color 0.15s ease, border-color 0.15s ease, color 0.15s ease !important;
   cursor: pointer;
   user-select: none;
 }
 
 .osu-pill-tab:hover {
-  transform: translateY(-1.5px) scale(1.04);
+  transform: translateY(-1px);
 }
 
 .osu-pill-tab:active {
-  transform: scale(0.95) !important;
+  transform: translateY(0) !important;
 }
 
-/* Frosted Glass Table Row - Hardware Accelerated 60+ FPS */
+/* Clean Solid Table Row */
 .osu-table-row {
   position: relative;
-  background: rgba(30, 27, 38, 0.8) !important;
-  transition: transform 0.18s cubic-bezier(0.34, 1.56, 0.64, 1), background-color 0.15s ease, box-shadow 0.18s ease !important;
+  background: #211e2b !important;
+  transition: background-color 0.12s ease !important;
   z-index: 1;
   content-visibility: auto;
   contain-intrinsic-size: 0 52px;
 }
 
 .osu-table-row:hover {
-  background: rgba(50, 44, 65, 0.95) !important;
-  transform: translateY(-2px);
-  box-shadow: inset 4px 0 0 #ff66aa, 0 6px 20px rgba(0, 0, 0, 0.4) !important;
-  z-index: 10;
+  background: #2c2838 !important;
 }
 
-.osu-table-row:active {
-  transform: translateY(0);
-}
-
-/* Internal Row Bouncy Element Physics */
+/* Internal Row Elements */
 .osu-table-row .osu-thumb-container {
-  transition: transform 0.24s cubic-bezier(0.34, 1.56, 0.64, 1), box-shadow 0.2s ease;
+  transition: transform 0.2s ease;
 }
 
 .osu-table-row:hover .osu-thumb-container {
-  transform: scale(1.08);
-  box-shadow: 0 4px 14px rgba(0, 0, 0, 0.4);
+  transform: scale(1.04);
 }
 
 .osu-table-row .osu-song-title {
-  transition: transform 0.22s cubic-bezier(0.34, 1.56, 0.64, 1), color 0.15s ease;
+  transition: color 0.12s ease;
 }
 
 .osu-table-row:hover .osu-song-title {
-  transform: translateX(3px);
   color: #ffffff;
 }
 
 .osu-table-row .osu-play-btn {
-  transition: transform 0.22s cubic-bezier(0.34, 1.56, 0.64, 1), background-color 0.15s ease;
+  transition: transform 0.15s ease, background-color 0.15s ease;
 }
 
 .osu-table-row .osu-play-btn:hover {
-  transform: scale(1.2);
+  transform: scale(1.1);
 }
 
 /* Thumbnail Zoom */
@@ -208,24 +188,23 @@ button, a, input, select {
 }
 
 .osu-thumb-container img {
-  transition: transform 0.3s cubic-bezier(0.16, 1, 0.3, 1);
+  transition: transform 0.2s ease;
 }
 
 .osu-thumb-container:hover img {
-  transform: scale(1.12);
+  transform: scale(1.06);
 }
 
-/* Audio Waveform Bars - Radiant osu! Pink & White Neon Equalizer on dark glass */
+/* Audio Waveform Bars - Clean Solid Equalizer */
 @keyframes waveAnim {
   0%, 100% { height: 4px; }
-  50% { height: 20px; }
+  50% { height: 18px; }
 }
 
 .osu-wave-bar {
-  width: 3.5px;
-  background: linear-gradient(180deg, #ffffff 0%, #ff66aa 100%);
-  border-radius: 2px;
-  box-shadow: 0 0 8px rgba(255, 102, 170, 0.9), 0 0 2px #ffffff;
+  width: 3px;
+  background: #ff66aa;
+  border-radius: 1.5px;
   animation: waveAnim 0.6s ease-in-out infinite alternate;
 }
 
@@ -243,33 +222,30 @@ button, a, input, select {
   animation: spinSlow 3s linear infinite;
 }
 
-/* Custom osu! Theme Frosted Scrollbars */
+/* Custom osu! Theme Clean Scrollbars */
 ::-webkit-scrollbar {
   width: 7px;
   height: 7px;
 }
 
 ::-webkit-scrollbar-track {
-  background: rgba(18, 17, 22, 0.8);
-  backdrop-filter: blur(8px);
+  background: #141318;
   border-radius: 4px;
 }
 
 ::-webkit-scrollbar-thumb {
-  background: rgba(62, 57, 77, 0.7);
-  backdrop-filter: blur(8px);
+  background: #383344;
   border-radius: 4px;
-  border: 1px solid rgba(255, 255, 255, 0.08);
-  transition: background 0.2s ease;
+  border: 1px solid rgba(255, 255, 255, 0.05);
+  transition: background 0.15s ease;
 }
 
 ::-webkit-scrollbar-thumb:hover {
   background: #ff66aa;
-  box-shadow: 0 0 10px rgba(255, 102, 170, 0.6);
 }
 
 ::-webkit-scrollbar-corner {
-  background: rgba(18, 17, 22, 0.8);
+  background: #141318;
 }
 
 /* Mobile Specific Responsive Tweaks */

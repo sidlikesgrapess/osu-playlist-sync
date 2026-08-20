@@ -258,15 +258,13 @@ export default function SongRow({
                 style={{
                   position: 'absolute',
                   inset: 0,
-                  background: isPlaying ? 'rgba(16, 14, 22, 0.72)' : 'rgba(0, 0, 0, 0.38)',
-                  backdropFilter: isPlaying ? 'blur(2px)' : 'none',
-                  WebkitBackdropFilter: isPlaying ? 'blur(2px)' : 'none',
+                  background: isPlaying ? 'rgba(16, 14, 22, 0.85)' : 'rgba(0, 0, 0, 0.4)',
                   border: 'none',
                   display: 'flex',
                   alignItems: 'center',
                   justifyContent: 'center',
                   cursor: 'pointer',
-                  transition: 'all 0.2s ease',
+                  transition: 'background 0.15s ease',
                 }}
                 title={isPlaying ? 'Pause audio preview' : 'Play audio preview'}
               >

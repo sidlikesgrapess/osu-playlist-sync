@@ -44,9 +44,7 @@ export default function ExportModal({ isOpen, onClose, songs }) {
     <div style={{
       position: 'fixed',
       inset: 0,
-      background: 'rgba(10, 8, 14, 0.8)',
-      backdropFilter: 'blur(14px)',
-      WebkitBackdropFilter: 'blur(14px)',
+      background: 'rgba(0, 0, 0, 0.75)',
       display: 'flex',
       alignItems: 'center',
       justifyContent: 'center',
@@ -61,15 +59,16 @@ export default function ExportModal({ isOpen, onClose, songs }) {
         display: 'flex',
         flexDirection: 'column',
         overflow: 'hidden',
-        border: '2px solid rgba(255, 102, 170, 0.6)',
-        borderRadius: '12px',
-        boxShadow: '0 20px 60px rgba(0, 0, 0, 0.85), 0 0 30px rgba(255, 102, 170, 0.25)',
+        border: '1px solid rgba(255, 255, 255, 0.12)',
+        borderRadius: '10px',
+        boxShadow: '0 16px 48px rgba(0, 0, 0, 0.7)',
+        background: '#1d1b26',
       }}>
         {/* Header */}
         <div style={{
           padding: '14px 16px',
           borderBottom: '1px solid rgba(255, 255, 255, 0.08)',
-          background: 'rgba(18, 16, 24, 0.85)',
+          background: '#171520',
           display: 'flex',
           alignItems: 'center',
           justifyContent: 'space-between',

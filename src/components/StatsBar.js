@@ -48,11 +48,11 @@ export default function StatsBar({
         <div style={{ width: '1px', height: '22px', background: 'rgba(255, 255, 255, 0.08)' }} />
 
         <div>
-          <div style={{ fontSize: '0.66rem', color: '#8b7d95', textTransform: 'uppercase', fontWeight: 800 }}>
+          <div style={{ fontSize: '0.66rem', color: '#887c93', textTransform: 'uppercase', fontWeight: 800 }}>
             Beatmap Matches
           </div>
-          <div style={{ fontSize: '1.15rem', fontWeight: 900, color: '#00dd88', textShadow: '0 0 14px rgba(0, 221, 136, 0.4)' }}>
-            {matchedCount} <span style={{ fontSize: '0.72rem', color: '#8b7d95' }}>
+          <div style={{ fontSize: '1.15rem', fontWeight: 900, color: '#00cc77' }}>
+            {matchedCount} <span style={{ fontSize: '0.72rem', color: '#887c93' }}>
               {searchedCount !== undefined && searchedCount < totalSongs
                 ? `(${searchedCount}/${totalSongs})`
                 : `(${matchPercentage}%)`}
@@ -63,18 +63,18 @@ export default function StatsBar({
         <div style={{ width: '1px', height: '22px', background: 'rgba(255, 255, 255, 0.08)' }} />
 
         <div>
-          <div style={{ fontSize: '0.66rem', color: '#8b7d95', textTransform: 'uppercase', fontWeight: 800 }}>
+          <div style={{ fontSize: '0.66rem', color: '#887c93', textTransform: 'uppercase', fontWeight: 800 }}>
             Status
           </div>
           <div style={{ fontSize: '0.76rem', fontWeight: 800 }}>
             {isSearching ? (
-              <span style={{ color: '#ffcc22' }}>Searching ({searchProgress}%)...</span>
+              <span style={{ color: '#ffbb22' }}>Searching ({searchProgress}%)...</span>
             ) : matchedCount > 0 ? (
-              <span style={{ color: '#44bbee', display: 'flex', alignItems: 'center', gap: '4px', textShadow: '0 0 10px rgba(68, 187, 238, 0.4)' }}>
+              <span style={{ color: '#44bbee', display: 'flex', alignItems: 'center', gap: '4px' }}>
                 <CheckCircle2 size={13} /> Ready
               </span>
             ) : (
-              <span style={{ color: '#8b7d95' }}>Idle</span>
+              <span style={{ color: '#887c93' }}>Idle</span>
             )}
           </div>
         </div>

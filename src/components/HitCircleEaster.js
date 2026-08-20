@@ -66,48 +66,46 @@ function playHitSound(ctx, type = '300') {
   } catch (e) { }
 }
 
-// Individual fire particle
+// Particle spark
 function Particle({ x, y, angle, speed, color, delay }) {
   const [pos, setPos] = useState({ x, y, opacity: 1, scale: 1 });
   const startRef = useRef(null);
 
   useEffect(() => {
-    const dx = Math.cos(angle) * speed;
-    const dy = Math.sin(angle) * speed;
     let raf;
-
     const animate = (timestamp) => {
       if (!startRef.current) startRef.current = timestamp;
-      const elapsed = (timestamp - startRef.current) / 1000;
-      if (elapsed < delay) {
+      const elapsed = (timestamp - startRef.current) / 1000 - delay;
+      if (elapsed < 0) {
         raf = requestAnimationFrame(animate);
         return;
       }
-      const t = elapsed - delay;
-      const progress = Math.min(t / 0.65, 1);
-      const ease = 1 - Math.pow(1 - progress, 3);
-      setPos({
-        x: x + dx * ease * 120,
-        y: y + dy * ease * 120 + progress * 40, // gravity
-        opacity: 1 - ease,
-        scale: 1 - ease * 0.5,
-      });
-      if (progress < 1) raf = requestAnimationFrame(animate);
+      const progress = Math.min(elapsed / 0.65, 1);
+      const distance = speed * progress * 80;
+      const currentX = x + Math.cos(angle) * distance;
+      const currentY = y + Math.sin(angle) * distance + progress * progress * 35; // gentle gravity
+      const opacity = Math.max(0, 1 - progress);
+      const scale = Math.max(0.2, (1 - progress * 0.7));
+
+      setPos({ x: currentX, y: currentY, opacity, scale });
+
+      if (progress < 1) {
+        raf = requestAnimationFrame(animate);
+      }
     };
     raf = requestAnimationFrame(animate);
     return () => cancelAnimationFrame(raf);
-  }, []);
+  }, [x, y, angle, speed, delay]);
 
   return (
     <div style={{
       position: 'fixed',
       left: `${pos.x}px`,
       top: `${pos.y}px`,
-      width: '6px',
-      height: '6px',
+      width: '5px',
+      height: '5px',
       borderRadius: '50%',
       background: color,
-      boxShadow: `0 0 8px ${color}, 0 0 16px ${color}`,
       opacity: pos.opacity,
       transform: `scale(${pos.scale})`,
       pointerEvents: 'none',
@@ -157,7 +155,7 @@ function JudgmentPopup({ x, y, text, color, glowColor }) {
       fontWeight: 900,
       fontStyle: text === 'FC!' ? 'italic' : 'normal',
       letterSpacing: '0.02em',
-      textShadow: `0 0 20px ${glowColor}, 0 0 40px ${glowColor}, 0 2px 4px rgba(0,0,0,0.8)`,
+      textShadow: '0 2px 6px rgba(0, 0, 0, 0.9)',
       pointerEvents: 'none',
       zIndex: 999999,
       fontFamily: 'inherit',
@@ -197,10 +195,9 @@ function ApproachCircle({ x, y, size }) {
       width: `${size}px`,
       height: `${size}px`,
       transform: `translate(-50%, -50%) scale(${scale})`,
-      border: '3px solid #b3b3b3ff',
+      border: '2.5px solid #ffffff',
       borderRadius: '50%',
       opacity,
-      boxShadow: '0 0 16px rgba(255, 102, 170, 0.6)',
       pointerEvents: 'none',
       zIndex: 999997,
     }} />

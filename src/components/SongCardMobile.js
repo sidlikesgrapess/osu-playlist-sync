@@ -51,9 +51,9 @@ export default function SongCardMobile({
         display: 'flex',
         flexDirection: 'column',
         gap: '8px',
-        background: isSelected && hasMatch ? 'rgba(46, 30, 48, 0.75)' : 'rgba(30, 27, 38, 0.65)',
-        border: `1px solid ${isSelected && hasMatch ? 'rgba(255, 102, 170, 0.5)' : 'rgba(255, 255, 255, 0.08)'}`,
-        boxShadow: isSelected && hasMatch ? '0 0 16px rgba(255, 102, 170, 0.2)' : '0 2px 10px rgba(0, 0, 0, 0.25)',
+        background: isSelected && hasMatch ? '#282132' : '#201d29',
+        border: `1px solid ${isSelected && hasMatch ? 'rgba(255, 102, 170, 0.4)' : 'rgba(255, 255, 255, 0.08)'}`,
+        boxShadow: '0 2px 8px rgba(0, 0, 0, 0.25)',
       }}
     >
       {/* Top Bar: Checkbox + Number + YouTube Title */}

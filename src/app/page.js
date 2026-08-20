@@ -472,14 +472,13 @@ export default function Home() {
           <div style={{
             maxWidth: '1240px',
             margin: '0 auto 16px',
-            background: 'rgba(255, 68, 68, 0.15)',
-            border: '1px solid rgba(255, 68, 68, 0.4)',
+            background: 'rgba(255, 68, 68, 0.12)',
+            border: '1px solid rgba(255, 68, 68, 0.3)',
             borderRadius: '8px',
             padding: '12px 18px',
             color: '#ff8888',
             fontSize: '0.86rem',
             fontWeight: 700,
-            backdropFilter: 'blur(10px)',
           }}>
             {errorMessage}
           </div>

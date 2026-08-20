@@ -283,7 +283,7 @@ export default function SongTable({
         ))}
       </div>
 
-      {/* Frosted Glass Pagination Bar */}
+      {/* Clean Solid Pagination Bar */}
       {totalItems > 0 && (
         <div style={{
           display: 'flex',
@@ -293,16 +293,14 @@ export default function SongTable({
           gap: '12px',
           marginTop: '12px',
           padding: '10px 16px',
-          background: 'rgba(28, 25, 36, 0.65)',
-          backdropFilter: 'blur(16px)',
-          WebkitBackdropFilter: 'blur(16px)',
+          background: '#1c1a25',
           border: '1px solid rgba(255, 255, 255, 0.08)',
           borderRadius: '8px',
           boxShadow: '0 4px 16px rgba(0, 0, 0, 0.25)',
         }}>
           {/* Left: Summary & Unsearched Helper */}
           <div style={{ display: 'flex', alignItems: 'center', gap: '10px', flexWrap: 'wrap' }}>
-            <span style={{ fontSize: '0.78rem', color: '#c6b8ce', fontWeight: 600 }}>
+            <span style={{ fontSize: '0.78rem', color: '#c0b4c8', fontWeight: 600 }}>
               Showing <strong style={{ color: '#ffffff' }}>{totalItems === 0 ? 0 : startIndex + 1} - {Math.min(startIndex + (pageSize === 'all' ? totalItems : numericPageSize), totalItems)}</strong> of <strong style={{ color: '#ffffff' }}>{totalItems}</strong> songs
             </span>
 
@@ -315,7 +313,7 @@ export default function SongTable({
                 }}
                 disabled={isSearching}
                 style={{
-                  background: 'rgba(255, 102, 170, 0.15)',
+                  background: '#2c2234',
                   border: '1px solid rgba(255, 102, 170, 0.35)',
                   color: '#ff66aa',
                   fontSize: '0.72rem',
@@ -351,9 +349,9 @@ export default function SongTable({
                 }}
                 disabled={validCurrentPage <= 1}
                 style={{
-                  background: 'rgba(255, 255, 255, 0.05)',
+                  background: '#262232',
                   border: '1px solid rgba(255, 255, 255, 0.08)',
-                  color: validCurrentPage <= 1 ? '#554d60' : '#c6b8ce',
+                  color: validCurrentPage <= 1 ? '#554d60' : '#c0b4c8',
                   borderRadius: '5px',
                   padding: '4px 8px',
                   cursor: validCurrentPage <= 1 ? 'not-allowed' : 'pointer',
@@ -376,9 +374,9 @@ export default function SongTable({
                       onPageChange(p);
                     }}
                     style={{
-                      background: validCurrentPage === p ? '#ff66aa' : 'rgba(255, 255, 255, 0.05)',
+                      background: validCurrentPage === p ? '#ff66aa' : '#262232',
                       border: `1px solid ${validCurrentPage === p ? '#ff66aa' : 'rgba(255, 255, 255, 0.08)'}`,
-                      color: validCurrentPage === p ? '#ffffff' : '#c6b8ce',
+                      color: validCurrentPage === p ? '#ffffff' : '#c0b4c8',
                       borderRadius: '5px',
                       minWidth: '28px',
                       height: '28px',
@@ -386,14 +384,13 @@ export default function SongTable({
                       fontSize: '0.76rem',
                       fontWeight: 800,
                       cursor: 'pointer',
-                      boxShadow: validCurrentPage === p ? '0 0 12px rgba(255, 102, 170, 0.5)' : 'none',
                       fontFamily: 'inherit',
                     }}
                   >
                     {p}
                   </button>
                 ) : (
-                  <span key={`dots_${idx}`} style={{ color: '#8b7d95', padding: '0 4px', fontSize: '0.74rem' }}>
+                  <span key={`dots_${idx}`} style={{ color: '#887c93', padding: '0 4px', fontSize: '0.74rem' }}>
                     ...
                   </span>
                 )
@@ -410,9 +407,9 @@ export default function SongTable({
                 }}
                 disabled={validCurrentPage >= totalPages}
                 style={{
-                  background: 'rgba(255, 255, 255, 0.05)',
+                  background: '#262232',
                   border: '1px solid rgba(255, 255, 255, 0.08)',
-                  color: validCurrentPage >= totalPages ? '#554d60' : '#c6b8ce',
+                  color: validCurrentPage >= totalPages ? '#554d60' : '#c0b4c8',
                   borderRadius: '5px',
                   padding: '4px 8px',
                   cursor: validCurrentPage >= totalPages ? 'not-allowed' : 'pointer',
@@ -428,7 +425,7 @@ export default function SongTable({
 
           {/* Right: Page Size Selector */}
           <div style={{ display: 'flex', alignItems: 'center', gap: '5px' }}>
-            <span style={{ fontSize: '0.72rem', color: '#8b7d95', fontWeight: 800, textTransform: 'uppercase' }}>
+            <span style={{ fontSize: '0.72rem', color: '#887c93', fontWeight: 800, textTransform: 'uppercase' }}>
               Per page:
             </span>
             {[10, 25, 50, 'all'].map((size) => (
@@ -441,15 +438,14 @@ export default function SongTable({
                   onPageSizeChange(size);
                 }}
                 style={{
-                  background: pageSize === size ? '#3399ff' : 'rgba(255, 255, 255, 0.05)',
-                  color: pageSize === size ? '#ffffff' : '#c6b8ce',
+                  background: pageSize === size ? '#3399ff' : '#262232',
+                  color: pageSize === size ? '#ffffff' : '#c0b4c8',
                   border: `1px solid ${pageSize === size ? '#3399ff' : 'rgba(255, 255, 255, 0.08)'}`,
                   borderRadius: '5px',
                   padding: '3px 8px',
                   fontSize: '0.72rem',
                   fontWeight: 800,
                   cursor: 'pointer',
-                  boxShadow: pageSize === size ? '0 0 10px rgba(51, 153, 255, 0.5)' : 'none',
                   fontFamily: 'inherit',
                 }}
               >
@@ -460,14 +456,12 @@ export default function SongTable({
         </div>
       )}
 
-      {/* Frosted Alternative Beatmap Picker Modal */}
+      {/* Clean Solid Alternative Beatmap Picker Modal */}
       {altPickerSong && (
         <div style={{
           position: 'fixed',
           inset: 0,
-          background: 'rgba(10, 8, 14, 0.8)',
-          backdropFilter: 'blur(12px)',
-          WebkitBackdropFilter: 'blur(12px)',
+          background: 'rgba(0, 0, 0, 0.75)',
           display: 'flex',
           alignItems: 'center',
           justifyContent: 'center',
@@ -482,15 +476,16 @@ export default function SongTable({
             display: 'flex',
             flexDirection: 'column',
             overflow: 'hidden',
-            borderRadius: '12px',
-            border: '2px solid rgba(255, 102, 170, 0.6)',
-            boxShadow: '0 20px 60px rgba(0,0,0,0.85), 0 0 30px rgba(255, 102, 170, 0.25)',
+            borderRadius: '10px',
+            border: '1px solid rgba(255, 255, 255, 0.12)',
+            boxShadow: '0 16px 48px rgba(0, 0, 0, 0.7)',
+            background: '#1d1b26',
           }}>
             {/* Modal Header */}
             <div style={{
               padding: '14px 18px',
               borderBottom: '1px solid rgba(255, 255, 255, 0.08)',
-              background: 'rgba(18, 16, 24, 0.85)',
+              background: '#171520',
               display: 'flex',
               alignItems: 'center',
               justifyContent: 'space-between',

@@ -148,14 +148,12 @@ export default function PlaylistInput({ onFetch, isLoading, mode, setMode, statu
       transition: 'all 0.3s cubic-bezier(0.16, 1, 0.3, 1)',
     }}>
       <div style={{
-        background: isDocked ? 'rgba(20, 17, 26, 0.95)' : 'rgba(28, 25, 36, 0.65)',
-        backdropFilter: isDocked ? 'blur(24px) saturate(180%)' : 'blur(16px) saturate(150%)',
-        WebkitBackdropFilter: isDocked ? 'blur(24px) saturate(180%)' : 'blur(16px) saturate(150%)',
-        border: `1px solid ${isDocked ? 'rgba(255, 102, 170, 0.5)' : 'rgba(255, 255, 255, 0.09)'}`,
+        background: isDocked ? '#181620' : '#1e1c26',
+        border: `1px solid ${isDocked ? 'rgba(255, 102, 170, 0.35)' : 'rgba(255, 255, 255, 0.08)'}`,
         borderRadius: '10px',
         boxShadow: isDocked
-          ? '0 16px 40px rgba(0, 0, 0, 0.75), 0 0 24px rgba(255, 102, 170, 0.2)'
-          : '0 8px 32px 0 rgba(0, 0, 0, 0.37)',
+          ? '0 12px 32px rgba(0, 0, 0, 0.6)'
+          : '0 4px 20px rgba(0, 0, 0, 0.35)',
         padding: isDocked ? '10px 16px' : '16px 20px',
         transition: 'all 0.28s cubic-bezier(0.16, 1, 0.3, 1)',
       }}>
@@ -168,13 +166,13 @@ export default function PlaylistInput({ onFetch, isLoading, mode, setMode, statu
             justifyContent: 'space-between',
             flexWrap: 'wrap',
             gap: '8px',
-            borderBottom: isDocked ? 'none' : '1px solid rgba(255, 255, 255, 0.08)',
+            borderBottom: isDocked ? 'none' : '1px solid rgba(255, 255, 255, 0.07)',
             paddingBottom: isDocked ? '0' : '10px',
             transition: 'all 0.25s ease',
           }}>
             {/* Game Modes */}
             <div style={{ display: 'flex', alignItems: 'center', gap: '4px', flexWrap: 'wrap' }}>
-              <span style={{ fontSize: '0.72rem', color: '#8b7d95', fontWeight: 800, textTransform: 'uppercase', marginRight: '4px' }}>
+              <span style={{ fontSize: '0.72rem', color: '#887c93', fontWeight: 800, textTransform: 'uppercase', marginRight: '4px' }}>
                 Mode:
               </span>
               <button
@@ -183,9 +181,9 @@ export default function PlaylistInput({ onFetch, isLoading, mode, setMode, statu
                 onClick={() => handleModeChange('all')}
                 onMouseEnter={() => osuAudio.playHover()}
                 style={{
-                  background: mode === 'all' ? 'rgba(74, 68, 91, 0.85)' : 'rgba(255, 255, 255, 0.05)',
-                  color: mode === 'all' ? '#ffffff' : '#c6b8ce',
-                  border: '1px solid rgba(255, 255, 255, 0.08)',
+                  background: mode === 'all' ? '#3d374a' : '#272332',
+                  color: mode === 'all' ? '#ffffff' : '#c0b4c8',
+                  border: `1px solid ${mode === 'all' ? 'rgba(255, 255, 255, 0.2)' : 'rgba(255, 255, 255, 0.06)'}`,
                   borderRadius: '9999px',
                   padding: '4px 10px',
                   fontSize: '0.76rem',
@@ -201,14 +199,13 @@ export default function PlaylistInput({ onFetch, isLoading, mode, setMode, statu
                 onClick={() => handleModeChange('osu')}
                 onMouseEnter={() => osuAudio.playHover()}
                 style={{
-                  background: mode === 'osu' ? '#ff66aa' : 'rgba(255, 255, 255, 0.05)',
-                  color: mode === 'osu' ? '#ffffff' : '#c6b8ce',
-                  border: `1px solid ${mode === 'osu' ? '#ff66aa' : 'rgba(255, 255, 255, 0.08)'}`,
+                  background: mode === 'osu' ? '#ff66aa' : '#272332',
+                  color: mode === 'osu' ? '#ffffff' : '#c0b4c8',
+                  border: `1px solid ${mode === 'osu' ? '#ff66aa' : 'rgba(255, 255, 255, 0.06)'}`,
                   borderRadius: '9999px',
                   padding: '4px 10px',
                   fontSize: '0.76rem',
                   fontWeight: 800,
-                  boxShadow: mode === 'osu' ? '0 0 14px rgba(255, 102, 170, 0.5)' : 'none',
                   fontFamily: 'inherit',
                 }}
               >
@@ -220,14 +217,13 @@ export default function PlaylistInput({ onFetch, isLoading, mode, setMode, statu
                 onClick={() => handleModeChange('taiko')}
                 onMouseEnter={() => osuAudio.playHover()}
                 style={{
-                  background: mode === 'taiko' ? '#3399ff' : 'rgba(255, 255, 255, 0.05)',
-                  color: mode === 'taiko' ? '#ffffff' : '#c6b8ce',
-                  border: `1px solid ${mode === 'taiko' ? '#3399ff' : 'rgba(255, 255, 255, 0.08)'}`,
+                  background: mode === 'taiko' ? '#3399ff' : '#272332',
+                  color: mode === 'taiko' ? '#ffffff' : '#c0b4c8',
+                  border: `1px solid ${mode === 'taiko' ? '#3399ff' : 'rgba(255, 255, 255, 0.06)'}`,
                   borderRadius: '9999px',
                   padding: '4px 10px',
                   fontSize: '0.76rem',
                   fontWeight: 800,
-                  boxShadow: mode === 'taiko' ? '0 0 14px rgba(51, 153, 255, 0.5)' : 'none',
                   fontFamily: 'inherit',
                 }}
               >
@@ -239,14 +235,13 @@ export default function PlaylistInput({ onFetch, isLoading, mode, setMode, statu
                 onClick={() => handleModeChange('fruits')}
                 onMouseEnter={() => osuAudio.playHover()}
                 style={{
-                  background: mode === 'fruits' ? '#00dd88' : 'rgba(255, 255, 255, 0.05)',
-                  color: mode === 'fruits' ? '#ffffff' : '#c6b8ce',
-                  border: `1px solid ${mode === 'fruits' ? '#00dd88' : 'rgba(255, 255, 255, 0.08)'}`,
+                  background: mode === 'fruits' ? '#00cc77' : '#272332',
+                  color: mode === 'fruits' ? '#ffffff' : '#c0b4c8',
+                  border: `1px solid ${mode === 'fruits' ? '#00cc77' : 'rgba(255, 255, 255, 0.06)'}`,
                   borderRadius: '9999px',
                   padding: '4px 10px',
                   fontSize: '0.76rem',
                   fontWeight: 800,
-                  boxShadow: mode === 'fruits' ? '0 0 14px rgba(0, 221, 136, 0.5)' : 'none',
                   fontFamily: 'inherit',
                 }}
               >
@@ -258,14 +253,13 @@ export default function PlaylistInput({ onFetch, isLoading, mode, setMode, statu
                 onClick={() => handleModeChange('mania')}
                 onMouseEnter={() => osuAudio.playHover()}
                 style={{
-                  background: mode === 'mania' ? '#9944ff' : 'rgba(255, 255, 255, 0.05)',
-                  color: mode === 'mania' ? '#ffffff' : '#c6b8ce',
-                  border: `1px solid ${mode === 'mania' ? '#9944ff' : 'rgba(255, 255, 255, 0.08)'}`,
+                  background: mode === 'mania' ? '#9944ff' : '#272332',
+                  color: mode === 'mania' ? '#ffffff' : '#c0b4c8',
+                  border: `1px solid ${mode === 'mania' ? '#9944ff' : 'rgba(255, 255, 255, 0.06)'}`,
                   borderRadius: '9999px',
                   padding: '4px 10px',
                   fontSize: '0.76rem',
                   fontWeight: 800,
-                  boxShadow: mode === 'mania' ? '0 0 14px rgba(153, 68, 255, 0.5)' : 'none',
                   fontFamily: 'inherit',
                 }}
               >
@@ -275,7 +269,7 @@ export default function PlaylistInput({ onFetch, isLoading, mode, setMode, statu
 
             {/* Status Filter buttons */}
             <div style={{ display: 'flex', alignItems: 'center', gap: '5px' }}>
-              <span style={{ fontSize: '0.72rem', color: '#8b7d95', fontWeight: 800, textTransform: 'uppercase', marginRight: '4px' }}>
+              <span style={{ fontSize: '0.72rem', color: '#887c93', fontWeight: 800, textTransform: 'uppercase', marginRight: '4px' }}>
                 Status:
               </span>
               <button
@@ -285,14 +279,13 @@ export default function PlaylistInput({ onFetch, isLoading, mode, setMode, statu
                 onClick={() => handleStatusChange('ranked')}
                 onMouseEnter={() => osuAudio.playHover()}
                 style={{
-                  background: statusFilter === 'ranked' ? '#44bbee' : 'rgba(255, 255, 255, 0.06)',
-                  color: statusFilter === 'ranked' ? '#081a24' : '#c6b8ce',
-                  border: `1px solid ${statusFilter === 'ranked' ? '#44bbee' : 'rgba(255, 255, 255, 0.08)'}`,
+                  background: statusFilter === 'ranked' ? '#44bbee' : '#272332',
+                  color: statusFilter === 'ranked' ? '#081a24' : '#c0b4c8',
+                  border: `1px solid ${statusFilter === 'ranked' ? '#44bbee' : 'rgba(255, 255, 255, 0.06)'}`,
                   borderRadius: '5px',
                   padding: '4px 10px',
                   fontSize: '0.74rem',
                   fontWeight: 800,
-                  boxShadow: statusFilter === 'ranked' ? '0 0 12px rgba(68, 187, 238, 0.5)' : 'none',
                   fontFamily: 'inherit',
                 }}
               >
@@ -305,14 +298,13 @@ export default function PlaylistInput({ onFetch, isLoading, mode, setMode, statu
                 onClick={() => handleStatusChange('any')}
                 onMouseEnter={() => osuAudio.playHover()}
                 style={{
-                  background: statusFilter === 'any' ? '#ff66aa' : 'rgba(255, 255, 255, 0.06)',
-                  color: statusFilter === 'any' ? '#ffffff' : '#c6b8ce',
-                  border: `1px solid ${statusFilter === 'any' ? '#ff66aa' : 'rgba(255, 255, 255, 0.08)'}`,
+                  background: statusFilter === 'any' ? '#ff66aa' : '#272332',
+                  color: statusFilter === 'any' ? '#ffffff' : '#c0b4c8',
+                  border: `1px solid ${statusFilter === 'any' ? '#ff66aa' : 'rgba(255, 255, 255, 0.06)'}`,
                   borderRadius: '5px',
                   padding: '4px 10px',
                   fontSize: '0.74rem',
                   fontWeight: 800,
-                  boxShadow: statusFilter === 'any' ? '0 0 12px rgba(255, 102, 170, 0.5)' : 'none',
                   fontFamily: 'inherit',
                 }}
               >
@@ -321,18 +313,15 @@ export default function PlaylistInput({ onFetch, isLoading, mode, setMode, statu
             </div>
           </div>
 
-          {/* Frosted Liquid Glass Search Bar with Platform Dropdown */}
+          {/* Clean Solid Search Bar with Platform Dropdown */}
           <div style={{
             display: 'flex',
             alignItems: 'center',
-            background: 'rgba(16, 14, 22, 0.75)',
-            backdropFilter: 'blur(16px)',
-            WebkitBackdropFilter: 'blur(16px)',
-            border: '2px solid rgba(255, 102, 170, 0.85)',
+            background: '#141318',
+            border: '1px solid rgba(255, 255, 255, 0.12)',
             borderRadius: '8px',
-            padding: '4px 6px 4px 6px',
+            padding: '4px 6px',
             gap: '6px',
-            boxShadow: '0 0 16px rgba(255, 102, 170, 0.35)',
             position: 'relative',
             zIndex: 40,
             width: '100%',
@@ -351,13 +340,13 @@ export default function PlaylistInput({ onFetch, isLoading, mode, setMode, statu
                   setIsPlatformMenuOpen(prev => !prev);
                 }}
                 style={{
-                  background: 'rgba(255, 255, 255, 0.06)',
-                  border: '1px solid rgba(255, 255, 255, 0.1)',
+                  background: '#23202c',
+                  border: '1px solid rgba(255, 255, 255, 0.08)',
                   borderRadius: '6px',
-                  padding: '4px 6px',
+                  padding: '4px 8px',
                   display: 'flex',
                   alignItems: 'center',
-                  gap: '4px',
+                  gap: '5px',
                   cursor: 'pointer',
                   color: '#ffffff',
                   fontSize: '0.74rem',
@@ -369,10 +358,10 @@ export default function PlaylistInput({ onFetch, isLoading, mode, setMode, statu
               >
                 {getPlatformIcon(activePlatform, 15)}
                 <span style={{ fontSize: '0.72rem', display: 'inline-block' }}>{getPlatformName(selectedPlatform)}</span>
-                <ChevronDown size={11} color="#8b7d95" />
+                <ChevronDown size={11} color="#887c93" />
               </button>
 
-              {/* Frosted Glass Dropdown Menu rendered via Portal */}
+              {/* Solid Clean Dropdown Menu rendered via Portal */}
               {isPlatformMenuOpen && mounted && createPortal(
                 <div
                   id="platform-dropdown-portal-menu"
@@ -382,18 +371,15 @@ export default function PlaylistInput({ onFetch, isLoading, mode, setMode, statu
                     left: `${menuPos.left}px`,
                     width: '228px',
                     maxWidth: 'calc(100vw - 16px)',
-                    background: 'rgba(20, 16, 28, 0.85)',
-                    backdropFilter: 'blur(28px) saturate(190%)',
-                    WebkitBackdropFilter: 'blur(28px) saturate(190%)',
-                    border: '1.5px solid rgba(255, 102, 170, 0.65)',
-                    borderRadius: '10px',
-                    boxShadow: '0 20px 60px rgba(0, 0, 0, 0.9), 0 0 24px rgba(255, 102, 170, 0.35)',
-                    padding: '6px',
+                    background: '#1d1a26',
+                    border: '1px solid rgba(255, 255, 255, 0.12)',
+                    borderRadius: '8px',
+                    boxShadow: '0 8px 30px rgba(0, 0, 0, 0.65)',
+                    padding: '5px',
                     zIndex: 999999,
                     display: 'flex',
                     flexDirection: 'column',
-                    gap: '4px',
-                    animation: 'scaleIn 0.15s cubic-bezier(0.16, 1, 0.3, 1)',
+                    gap: '2px',
                   }}
                 >
                   {[
@@ -413,8 +399,8 @@ export default function PlaylistInput({ onFetch, isLoading, mode, setMode, statu
                         osuAudio.playClick();
                       }}
                       style={{
-                        background: selectedPlatform === item.id ? 'rgba(255, 102, 170, 0.22)' : 'transparent',
-                        border: selectedPlatform === item.id ? '1px solid #ff66aa' : '1px solid transparent',
+                        background: selectedPlatform === item.id ? '#2e2638' : 'transparent',
+                        border: selectedPlatform === item.id ? '1px solid rgba(255, 102, 170, 0.4)' : '1px solid transparent',
                         borderRadius: '6px',
                         padding: '6px 10px',
                         display: 'flex',

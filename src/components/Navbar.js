@@ -60,13 +60,11 @@ export default function Navbar({ onOpenSetupGuide, systemStatus }) {
       position: 'sticky',
       top: 0,
       zIndex: 60,
-      background: `rgba(18, 16, 24, ${0.4 + brandProgress * 0.48})`,
-      backdropFilter: 'blur(20px) saturate(160%)',
-      WebkitBackdropFilter: 'blur(20px) saturate(160%)',
-      borderBottom: `1px solid rgba(255, 102, 170, ${0.06 + brandProgress * 0.24})`,
-      boxShadow: brandProgress > 0.1 ? `0 8px 32px rgba(0, 0, 0, ${brandProgress * 0.6}), 0 0 20px rgba(255, 102, 170, ${brandProgress * 0.15})` : 'none',
+      background: brandProgress > 0.05 ? '#191722' : 'transparent',
+      borderBottom: brandProgress > 0.05 ? '1px solid rgba(255, 255, 255, 0.08)' : '1px solid transparent',
+      boxShadow: brandProgress > 0.05 ? '0 2px 12px rgba(0, 0, 0, 0.35)' : 'none',
       padding: '8px 14px',
-      transition: 'background 0.08s linear, border 0.08s linear, box-shadow 0.08s linear',
+      transition: 'background-color 0.12s ease, border-color 0.12s ease, box-shadow 0.12s ease',
     }}>
       {/* Hit Circle Easter Egg for Navbar logo */}
       <HitCircleEaster ref={easterRef} />
@@ -109,7 +107,6 @@ export default function Navbar({ onOpenSetupGuide, systemStatus }) {
               width: '30px',
               height: '30px',
               objectFit: 'contain',
-              filter: 'drop-shadow(0 0 12px rgba(255, 102, 170, 0.65))',
               userSelect: 'none',
               flexShrink: 0,
               touchAction: 'manipulation',
@@ -120,9 +117,9 @@ export default function Navbar({ onOpenSetupGuide, systemStatus }) {
               osu! <span style={{ color: '#ff66aa' }}>Playlist Sync</span>
             </span>
             <span style={{
-              background: 'rgba(255, 102, 170, 0.15)',
+              background: '#2c2536',
               color: '#ff66aa',
-              border: '1px solid rgba(255, 102, 170, 0.3)',
+              border: '1px solid rgba(255, 102, 170, 0.25)',
               padding: '1px 5px',
               borderRadius: '4px',
               fontSize: '0.62rem',
@@ -142,9 +139,9 @@ export default function Navbar({ onOpenSetupGuide, systemStatus }) {
             onClick={toggleSound}
             onMouseEnter={() => osuAudio.playHover()}
             style={{
-              background: soundOn ? 'rgba(255, 102, 170, 0.15)' : 'rgba(255, 255, 255, 0.05)',
+              background: soundOn ? '#282333' : '#1c1a24',
               border: `1px solid ${soundOn ? 'rgba(255, 102, 170, 0.4)' : 'rgba(255, 255, 255, 0.08)'}`,
-              color: soundOn ? '#ff66aa' : '#8b7d95',
+              color: soundOn ? '#ff66aa' : '#887c93',
               padding: '6px 9px',
               borderRadius: '6px',
               fontSize: '0.75rem',
@@ -170,9 +167,9 @@ export default function Navbar({ onOpenSetupGuide, systemStatus }) {
             }}
             onMouseEnter={() => osuAudio.playHover()}
             style={{
-              background: 'rgba(0, 221, 136, 0.15)',
-              border: '1px solid rgba(0, 221, 136, 0.35)',
-              color: '#00dd88',
+              background: '#1d2a24',
+              border: '1px solid rgba(0, 204, 119, 0.3)',
+              color: '#00cc77',
               padding: '6px 10px',
               borderRadius: '6px',
               fontSize: '0.75rem',
@@ -185,7 +182,7 @@ export default function Navbar({ onOpenSetupGuide, systemStatus }) {
             }}
             title="View guide and system status"
           >
-            <div style={{ width: '6px', height: '6px', borderRadius: '50%', background: '#00dd88', boxShadow: '0 0 8px #00dd88', flexShrink: 0 }} />
+            <div style={{ width: '6px', height: '6px', borderRadius: '50%', background: '#00cc77', flexShrink: 0 }} />
             <span>Guide</span>
           </button>
         </div>

@@ -29,26 +29,21 @@ export default function OsuCheckbox({
       style={{
         width: `${size}px`,
         height: `${size}px`,
-        borderRadius: '5px',
-        background: isChecked || indeterminate ? '#ff66aa' : 'rgba(24, 20, 32, 0.85)',
+        borderRadius: '4px',
+        background: isChecked || indeterminate ? '#ff66aa' : '#1a1822',
         border: `1.5px solid ${
           disabled
             ? 'rgba(255, 255, 255, 0.1)'
             : isChecked || indeterminate
             ? '#ff66aa'
-            : 'rgba(255, 255, 255, 0.25)'
+            : 'rgba(255, 255, 255, 0.2)'
         }`,
-        boxShadow: disabled
-          ? 'none'
-          : isChecked || indeterminate
-          ? '0 0 12px rgba(255, 102, 170, 0.75)'
-          : 'none',
         display: 'inline-flex',
         alignItems: 'center',
         justifyContent: 'center',
         cursor: disabled ? 'not-allowed' : 'pointer',
-        opacity: disabled ? 0.22 : 1,
-        transition: 'all 0.16s cubic-bezier(0.16, 1, 0.3, 1)',
+        opacity: disabled ? 0.25 : 1,
+        transition: 'background-color 0.12s ease, border-color 0.12s ease',
         userSelect: 'none',
         flexShrink: 0,
       }}
