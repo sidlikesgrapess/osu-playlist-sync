@@ -359,8 +359,10 @@ export default function PlaylistInput({ onFetch, isLoading, hasSongs, mode, setM
                 title="Select source platform"
               >
                 {getPlatformIcon(activePlatform, 15)}
-                <span style={{ fontSize: '0.72rem', display: 'inline-block' }}>{getPlatformName(selectedPlatform)}</span>
-                <ChevronDown size={11} color="#887c93" />
+                <span className="pi-label-text" style={{ fontSize: '0.72rem', display: 'inline-block' }}>{getPlatformName(selectedPlatform)}</span>
+                <span className="pi-chevron" style={{ display: 'inline-flex' }}>
+                  <ChevronDown size={11} color="#887c93" />
+                </span>
               </button>
 
               {/* Solid Clean Dropdown Menu rendered via Portal */}
@@ -498,16 +500,16 @@ export default function PlaylistInput({ onFetch, isLoading, hasSongs, mode, setM
               {isLoading ? (
                 <>
                   <Loader2 size={13} className="spin-slow" />
-                  <span>{hasSongs ? 'Adding...' : 'Searching...'}</span>
+                  <span className="pi-submit-label">{hasSongs ? 'Adding...' : 'Searching...'}</span>
                 </>
               ) : hasSongs ? (
                 <>
                   <Plus size={13} />
-                  <span>Add More Songs</span>
+                  <span className="pi-submit-label">Add More Songs</span>
                 </>
               ) : (
                 <>
-                  <span>Find</span>
+                  <span className="pi-submit-label">Find</span>
                   <ArrowRight size={13} />
                 </>
               )}

@@ -316,3 +316,17 @@ button, a, input, select {
   }
 }
 
+/* Compact search bar for narrow (mobile-portrait) viewports */
+@media (max-width: 480px) {
+  .pi-label-text,
+  .pi-chevron,
+  .pi-submit-label {
+    display: none !important;
+  }
+
+  #platform-dropdown-btn,
+  #find-beatmaps-btn {
+    padding: 6px !important;
+  }
+}
+
