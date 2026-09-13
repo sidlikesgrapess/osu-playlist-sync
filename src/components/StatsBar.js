@@ -1,6 +1,6 @@
 'use client';
 
-import { Download, Archive, CheckCircle2, Share2, Trash2 } from 'lucide-react';
+import { Download, Archive, CheckCircle2, Share2, Trash2, Sparkles } from 'lucide-react';
 import { osuAudio } from '@/lib/soundEffects';
 
 export default function StatsBar({
@@ -14,6 +14,8 @@ export default function StatsBar({
   zipProgress,
   isSearching,
   searchProgress,
+  unsearchedCount = 0,
+  onSearchAllRemaining,
   onOpenExport,
   onClearList,
 }) {
@@ -82,6 +84,39 @@ export default function StatsBar({
 
       {/* Action Buttons */}
       <div style={{ display: 'flex', alignItems: 'center', gap: '6px', flexWrap: 'wrap', width: 'auto' }}>
+        {/* Search All Remaining button */}
+        {unsearchedCount > 0 && onSearchAllRemaining && (
+          <button
+            className="osu-btn-interactive osu-glass-card"
+            onClick={() => {
+              osuAudio.playClick();
+              onSearchAllRemaining();
+            }}
+            disabled={isSearching}
+            onMouseEnter={() => osuAudio.playHover()}
+            style={{
+              borderRadius: '6px',
+              color: '#ff66aa',
+              border: '1px solid rgba(255, 102, 170, 0.35)',
+              background: '#2c2234',
+              fontWeight: 800,
+              fontSize: '0.75rem',
+              padding: '6px 10px',
+              cursor: isSearching ? 'not-allowed' : 'pointer',
+              opacity: isSearching ? 0.5 : 1,
+              display: 'inline-flex',
+              alignItems: 'center',
+              gap: '4px',
+              fontFamily: 'inherit',
+              minHeight: '34px',
+            }}
+            title="Query beatmaps for all unsearched songs"
+          >
+            <Sparkles size={12} />
+            <span>Search All ({unsearchedCount})</span>
+          </button>
+        )}
+
         {/* Export Links button */}
         <button
           className="osu-btn-interactive osu-glass-card"

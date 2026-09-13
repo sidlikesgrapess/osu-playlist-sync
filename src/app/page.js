@@ -104,11 +104,16 @@ export default function Home() {
       setSongs(combinedSongs);
       setIsLoading(false);
 
-      // Only search one page's worth up front to minimize queries — the rest is
-      // searched lazily via pagination, same as the initial fetch.
-      const initialPageSize = pageSize === 'all' ? newSongs.length : pageSize;
-      const songsToSearchNow = newSongs.slice(0, initialPageSize);
-      searchTargetSongs(combinedSongs, songsToSearchNow.map(s => s.id), mode, statusFilter);
+      // Only search whatever page is currently visible — never songs the user
+      // can't see yet. Everything else is picked up lazily via pagination.
+      const pageForSearch = isAppending ? currentPage : 1;
+      const start = pageSize === 'all' ? 0 : (pageForSearch - 1) * pageSize;
+      const end = pageSize === 'all' ? combinedSongs.length : start + pageSize;
+      const visibleSongs = combinedSongs.slice(start, end);
+      const unsearchedVisible = visibleSongs.filter(s => !s.hasSearched && !s.isSearching);
+      if (unsearchedVisible.length > 0) {
+        searchTargetSongs(combinedSongs, unsearchedVisible.map(s => s.id), mode, statusFilter);
+      }
     } catch (err) {
       console.error(err);
       setErrorMessage(err.message || 'Error occurred while loading playlist.');
@@ -560,6 +565,8 @@ export default function Home() {
               zipProgress={zipProgress}
               isSearching={isSearching}
               searchProgress={searchProgress}
+              unsearchedCount={unsearchedCount}
+              onSearchAllRemaining={handleSearchAllRemaining}
               onOpenExport={() => setIsExportOpen(true)}
               onClearList={handleClearList}
             />
