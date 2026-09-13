@@ -104,15 +104,11 @@ export default function Home() {
       setSongs(combinedSongs);
       setIsLoading(false);
 
-      if (isAppending) {
-        // New additions are usually small (a song or two) — search them right away.
-        searchTargetSongs(combinedSongs, newSongs.map(s => s.id), mode, statusFilter);
-      } else {
-        // Only search Page 1 initially to minimize queries!
-        const initialPageSize = pageSize === 'all' ? combinedSongs.length : pageSize;
-        const page1Songs = combinedSongs.slice(0, initialPageSize);
-        searchTargetSongs(combinedSongs, page1Songs.map(s => s.id), mode, statusFilter);
-      }
+      // Only search one page's worth up front to minimize queries — the rest is
+      // searched lazily via pagination, same as the initial fetch.
+      const initialPageSize = pageSize === 'all' ? newSongs.length : pageSize;
+      const songsToSearchNow = newSongs.slice(0, initialPageSize);
+      searchTargetSongs(combinedSongs, songsToSearchNow.map(s => s.id), mode, statusFilter);
     } catch (err) {
       console.error(err);
       setErrorMessage(err.message || 'Error occurred while loading playlist.');
