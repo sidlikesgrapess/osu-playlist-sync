@@ -2,11 +2,11 @@
 
 import { useState, useEffect, useRef } from 'react';
 import { createPortal } from 'react-dom';
-import { Loader2, Sparkles, ArrowRight, ChevronDown } from 'lucide-react';
+import { Loader2, Sparkles, ArrowRight, ChevronDown, Plus } from 'lucide-react';
 import { YouTubeIcon, SpotifyIcon, AppleMusicIcon, MusicNoteIcon } from './Icons';
 import { osuAudio } from '@/lib/soundEffects';
 
-export default function PlaylistInput({ onFetch, isLoading, mode, setMode, statusFilter, setStatusFilter }) {
+export default function PlaylistInput({ onFetch, isLoading, hasSongs, mode, setMode, statusFilter, setStatusFilter }) {
   const [url, setUrl] = useState('');
   const [isDocked, setIsDocked] = useState(false);
   const [selectedPlatform, setSelectedPlatform] = useState('auto');
@@ -105,6 +105,7 @@ export default function PlaylistInput({ onFetch, isLoading, mode, setMode, statu
   };
 
   const getPlaceholder = () => {
+    if (hasSongs) return 'Paste another link or type a song to add to the list...';
     switch (selectedPlatform) {
       case 'youtube': return 'Paste YouTube playlist link or video URL...';
       case 'spotify': return 'Paste Spotify playlist, album, or track link...';
@@ -120,6 +121,7 @@ export default function PlaylistInput({ onFetch, isLoading, mode, setMode, statu
     if (!inputVal) return;
     osuAudio.playClick();
     onFetch(inputVal);
+    if (hasSongs) setUrl('');
   };
 
   const handleQuickSample = (sampleVal) => {
@@ -491,11 +493,17 @@ export default function PlaylistInput({ onFetch, isLoading, mode, setMode, statu
                 minHeight: '34px',
                 whiteSpace: 'nowrap',
               }}
+              title={hasSongs ? 'Add this to your current list without losing existing results' : undefined}
             >
               {isLoading ? (
                 <>
                   <Loader2 size={13} className="spin-slow" />
-                  <span>Searching...</span>
+                  <span>{hasSongs ? 'Adding...' : 'Searching...'}</span>
+                </>
+              ) : hasSongs ? (
+                <>
+                  <Plus size={13} />
+                  <span>Add More Songs</span>
                 </>
               ) : (
                 <>

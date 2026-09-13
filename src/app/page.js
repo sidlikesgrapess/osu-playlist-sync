@@ -55,14 +55,19 @@ export default function Home() {
       .catch(err => console.warn('Could not check system status:', err));
   }, []);
 
-  // Handle fetching a YouTube playlist
+  // Handle fetching a YouTube playlist. When songs already exist, new results are
+  // appended instead of replacing the current list.
   const handleFetchPlaylist = async (url) => {
+    const isAppending = songs.length > 0;
+
     setIsLoading(true);
     setErrorMessage('');
-    setSongs([]);
-    setSelectedIds(new Set());
-    setPlaylistMeta(null);
-    setCurrentPage(1);
+    if (!isAppending) {
+      setSongs([]);
+      setSelectedIds(new Set());
+      setPlaylistMeta(null);
+      setCurrentPage(1);
+    }
 
     try {
       const fetchUrl = `/api/playlist?url=${encodeURIComponent(url)}`;
@@ -73,31 +78,41 @@ export default function Home() {
         throw new Error(data.error || 'Could not load playlist items');
       }
 
-      setPlaylistMeta({
-        id: data.playlistId,
-        title: data.playlistTitle,
-        platform: data.platform,
-        isSingleTrack: data.isSingleTrack,
-        isDemo: data.isDemo,
-      });
+      if (!isAppending) {
+        setPlaylistMeta({
+          id: data.playlistId,
+          title: data.playlistTitle,
+          platform: data.platform,
+          isSingleTrack: data.isSingleTrack,
+          isDemo: data.isDemo,
+        });
+      }
 
-      const initialSongs = (data.songs || []).map((s, index) => ({
+      const offset = isAppending ? songs.length : 0;
+      const batchTag = Date.now();
+      const newSongs = (data.songs || []).map((s, index) => ({
         ...s,
-        id: s.id || `track_${index}`,
-        position: index,
+        id: s.id || `track_${batchTag}_${index}`,
+        position: offset + index,
         hasSearched: false,
         isSearching: false,
         matchedBeatmap: null,
         allMatches: [],
       }));
 
-      setSongs(initialSongs);
+      const combinedSongs = isAppending ? [...songs, ...newSongs] : newSongs;
+      setSongs(combinedSongs);
       setIsLoading(false);
 
-      // Only search Page 1 initially to minimize queries!
-      const initialPageSize = pageSize === 'all' ? initialSongs.length : pageSize;
-      const page1Songs = initialSongs.slice(0, initialPageSize);
-      searchTargetSongs(initialSongs, page1Songs.map(s => s.id), mode, statusFilter);
+      if (isAppending) {
+        // New additions are usually small (a song or two) — search them right away.
+        searchTargetSongs(combinedSongs, newSongs.map(s => s.id), mode, statusFilter);
+      } else {
+        // Only search Page 1 initially to minimize queries!
+        const initialPageSize = pageSize === 'all' ? combinedSongs.length : pageSize;
+        const page1Songs = combinedSongs.slice(0, initialPageSize);
+        searchTargetSongs(combinedSongs, page1Songs.map(s => s.id), mode, statusFilter);
+      }
     } catch (err) {
       console.error(err);
       setErrorMessage(err.message || 'Error occurred while loading playlist.');
@@ -461,6 +476,7 @@ export default function Home() {
         <PlaylistInput
           onFetch={handleFetchPlaylist}
           isLoading={isLoading}
+          hasSongs={songs.length > 0}
           mode={mode}
           setMode={handleModeChange}
           statusFilter={statusFilter}
