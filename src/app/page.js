@@ -606,6 +606,7 @@ export default function Home() {
       <SetupGuideModal
         isOpen={isSetupOpen}
         onClose={() => setIsSetupOpen(false)}
+        systemStatus={systemStatus}
       />
     </div>
   );

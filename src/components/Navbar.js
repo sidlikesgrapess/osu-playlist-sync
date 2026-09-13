@@ -1,9 +1,11 @@
 'use client';
 
-import { Settings2, Volume2, VolumeX } from 'lucide-react';
+import { Settings2, Volume2, VolumeX, Bug } from 'lucide-react';
 import { useState, useEffect, useRef } from 'react';
 import { osuAudio } from '@/lib/soundEffects';
 import HitCircleEaster from './HitCircleEaster';
+
+const ISSUE_URL = 'https://github.com/sidlikesgrapess/osu-playlist-sync/issues/new';
 
 export default function Navbar({ onOpenSetupGuide, systemStatus }) {
   const [soundOn, setSoundOn] = useState(false);
@@ -185,11 +187,41 @@ export default function Navbar({ onOpenSetupGuide, systemStatus }) {
               fontFamily: 'inherit',
               minHeight: '34px',
             }}
-            title="View guide and system status"
+            title="What's new & system status"
           >
             <div style={{ width: '6px', height: '6px', borderRadius: '50%', background: '#00cc77', flexShrink: 0 }} />
-            <span>Guide</span>
+            <span>What's New</span>
           </button>
+
+          {/* Report an Issue Button */}
+          <a
+            href={ISSUE_URL}
+            target="_blank"
+            rel="noopener noreferrer"
+            className="osu-btn-interactive"
+            onClick={() => osuAudio.playClick()}
+            onMouseEnter={() => osuAudio.playHover()}
+            style={{
+              background: '#2c2234',
+              border: '1px solid rgba(255, 102, 170, 0.3)',
+              color: '#ff66aa',
+              padding: '6px 10px',
+              borderRadius: '6px',
+              fontSize: '0.75rem',
+              fontWeight: 800,
+              display: 'flex',
+              alignItems: 'center',
+              gap: '5px',
+              fontFamily: 'inherit',
+              minHeight: '34px',
+              textDecoration: 'none',
+              whiteSpace: 'nowrap',
+            }}
+            title="Report a bug or bad match on GitHub"
+          >
+            <Bug size={13} />
+            <span>Report Issue</span>
+          </a>
         </div>
       </div>
     </header>

@@ -1,10 +1,28 @@
 'use client';
 
-import { X, CheckCircle2, Sparkles, Download, Music, Zap, ExternalLink, HelpCircle } from 'lucide-react';
+import { X, Rocket } from 'lucide-react';
 import { osuAudio } from '@/lib/soundEffects';
 
-export default function SetupGuideModal({ isOpen, onClose }) {
+const WHATS_NEW = [
+  {
+    title: 'Add More Songs',
+    description: 'Paste more links without losing your current list.',
+  },
+  {
+    title: 'Search All button',
+    description: 'One click to search everything still unmatched.',
+  },
+  {
+    title: 'Smarter query cleanup',
+    description: "Cleans up mods and junk from titles before searching.",
+  },
+];
+
+export default function SetupGuideModal({ isOpen, onClose, systemStatus }) {
   if (!isOpen) return null;
+
+  const osuConfigured = systemStatus?.osuConfigured ?? true;
+  const mirrorName = systemStatus?.defaultMirror || 'catboy.best';
 
   return (
     <div style={{
@@ -41,19 +59,16 @@ export default function SetupGuideModal({ isOpen, onClose }) {
           gap: '8px',
         }}>
           <div style={{ display: 'flex', alignItems: 'center', gap: '10px', minWidth: 0 }}>
-            <div style={{
-              width: '32px',
-              height: '32px',
-              borderRadius: '8px',
-              background: '#2c2234',
-              color: '#ff66aa',
-              display: 'flex',
-              alignItems: 'center',
-              justifyContent: 'center',
-              flexShrink: 0,
-            }}>
-              <Sparkles size={18} />
-            </div>
+            <img
+              src="/osuLogo.png"
+              alt="osu! logo"
+              style={{
+                width: '32px',
+                height: '32px',
+                objectFit: 'contain',
+                flexShrink: 0,
+              }}
+            />
             <div style={{ minWidth: 0 }}>
               <h2 style={{ fontSize: '1.05rem', fontWeight: 900, margin: 0, color: '#ffffff', whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>
                 osu! Sync
@@ -95,10 +110,10 @@ export default function SetupGuideModal({ isOpen, onClose }) {
             gap: '8px',
           }}>
             <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
-              <div style={{ width: '8px', height: '8px', borderRadius: '50%', background: '#00cc77', flexShrink: 0 }} />
+              <div style={{ width: '8px', height: '8px', borderRadius: '50%', background: osuConfigured ? '#00cc77' : '#ff4444', flexShrink: 0 }} />
               <div>
                 <div style={{ fontSize: '0.66rem', color: '#887c93', fontWeight: 800, textTransform: 'uppercase' }}>osu! Database</div>
-                <div style={{ fontSize: '0.78rem', color: '#ffffff', fontWeight: 800 }}>Connected & Live</div>
+                <div style={{ fontSize: '0.78rem', color: '#ffffff', fontWeight: 800 }}>{osuConfigured ? 'Connected & Live' : 'Not Configured'}</div>
               </div>
             </div>
 
@@ -106,7 +121,7 @@ export default function SetupGuideModal({ isOpen, onClose }) {
               <div style={{ width: '8px', height: '8px', borderRadius: '50%', background: '#3399ff', flexShrink: 0 }} />
               <div>
                 <div style={{ fontSize: '0.66rem', color: '#887c93', fontWeight: 800, textTransform: 'uppercase' }}>Fast OSZ Mirror</div>
-                <div style={{ fontSize: '0.78rem', color: '#ffffff', fontWeight: 800 }}>Active (catboy.best)</div>
+                <div style={{ fontSize: '0.78rem', color: '#ffffff', fontWeight: 800 }}>Active ({mirrorName})</div>
               </div>
             </div>
 
@@ -119,65 +134,25 @@ export default function SetupGuideModal({ isOpen, onClose }) {
             </div>
           </div>
 
-          {/* How It Works Guide */}
+          {/* What's New */}
           <div style={{ display: 'flex', flexDirection: 'column', gap: '8px' }}>
-            <h3 style={{ fontSize: '0.88rem', fontWeight: 800, color: '#ffffff', display: 'flex', alignItems: 'center', gap: '6px' }}>
-              <HelpCircle size={15} color="#ff66aa" />
-              <span>How To Use:</span>
+            <h3 style={{ fontSize: '0.88rem', fontWeight: 800, color: '#ffffff', display: 'flex', alignItems: 'center', gap: '6px', margin: 0 }}>
+              <Rocket size={15} color="#ff66aa" />
+              <span>What's New</span>
             </h3>
 
             <div style={{ display: 'grid', gridTemplateColumns: '1fr', gap: '6px' }}>
-              <div className="osu-glass-card" style={{ padding: '10px 14px', borderRadius: '8px', background: '#252130', display: 'flex', gap: '10px', alignItems: 'flex-start' }}>
-                <span style={{ background: '#ff66aa', color: '#ffffff', width: '20px', height: '20px', borderRadius: '50%', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: '0.7rem', fontWeight: 900, flexShrink: 0 }}>
-                  1
-                </span>
-                <div>
-                  <div style={{ fontSize: '0.8rem', fontWeight: 800, color: '#ffffff' }}>Paste Any Music Playlist or Song</div>
-                  <div style={{ fontSize: '0.72rem', color: '#c0b4c8', marginTop: '1px', lineHeight: 1.35 }}>
-                    Copy URLs from YouTube, Spotify, Apple Music, or search by song name and tap <strong>Find</strong>.
+              {WHATS_NEW.map((item) => (
+                <div key={item.title} className="osu-glass-card" style={{ padding: '10px 14px', borderRadius: '8px', background: '#252130', display: 'flex', gap: '10px', alignItems: 'flex-start' }}>
+                  <span style={{ background: '#ff66aa', width: '6px', height: '6px', borderRadius: '50%', flexShrink: 0, marginTop: '7px' }} />
+                  <div>
+                    <div style={{ fontSize: '0.8rem', fontWeight: 800, color: '#ffffff' }}>{item.title}</div>
+                    <div style={{ fontSize: '0.72rem', color: '#c0b4c8', marginTop: '1px', lineHeight: 1.35 }}>
+                      {item.description}
+                    </div>
                   </div>
                 </div>
-              </div>
-
-              <div className="osu-glass-card" style={{ padding: '10px 14px', borderRadius: '8px', background: '#252130', display: 'flex', gap: '10px', alignItems: 'flex-start' }}>
-                <span style={{ background: '#3399ff', color: '#ffffff', width: '20px', height: '20px', borderRadius: '50%', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: '0.7rem', fontWeight: 900, flexShrink: 0 }}>
-                  2
-                </span>
-                <div>
-                  <div style={{ fontSize: '0.8rem', fontWeight: 800, color: '#ffffff' }}>Smart Beatmap Matching & Previews</div>
-                  <div style={{ fontSize: '0.72rem', color: '#c0b4c8', marginTop: '1px', lineHeight: 1.35 }}>
-                    Matches are checked against osu! beatmaps. Tap play on covers to listen to 10s audio previews.
-                  </div>
-                </div>
-              </div>
-
-              <div className="osu-glass-card" style={{ padding: '10px 14px', borderRadius: '8px', background: '#252130', display: 'flex', gap: '10px', alignItems: 'flex-start' }}>
-                <span style={{ background: '#00cc77', color: '#0b2618', width: '20px', height: '20px', borderRadius: '50%', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: '0.7rem', fontWeight: 900, flexShrink: 0 }}>
-                  3
-                </span>
-                <div>
-                  <div style={{ fontSize: '0.8rem', fontWeight: 800, color: '#ffffff' }}>1-Click Download & Import</div>
-                  <div style={{ fontSize: '0.72rem', color: '#c0b4c8', marginTop: '1px', lineHeight: 1.35 }}>
-                    Download single <strong>.OSZ</strong> maps or get everything in one go with <strong>Bundle as .ZIP</strong>.
-                  </div>
-                </div>
-              </div>
-            </div>
-          </div>
-
-          {/* Pro Tip Box */}
-          <div style={{
-            background: '#281c2c',
-            border: '1px solid rgba(255, 102, 170, 0.25)',
-            borderRadius: '8px',
-            padding: '10px 14px',
-            display: 'flex',
-            alignItems: 'center',
-            gap: '8px',
-          }}>
-            <Zap size={16} color="#ff66aa" style={{ flexShrink: 0 }} />
-            <div style={{ fontSize: '0.74rem', color: '#ffffff', fontWeight: 600, lineHeight: 1.35 }}>
-              <strong>Pro-Tip:</strong> Open downloaded <span className="mono-font" style={{ color: '#44bbee' }}>.osz</span> files directly in osu! or osu! lazer to install instantly!
+              ))}
             </div>
           </div>
 
