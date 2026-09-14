@@ -6,8 +6,9 @@ import { Loader2, Sparkles, ArrowRight, ChevronDown, Plus, User } from 'lucide-r
 import { YouTubeIcon, SpotifyIcon, AppleMusicIcon, MusicNoteIcon } from './Icons';
 import { osuAudio } from '@/lib/soundEffects';
 
-export default function PlaylistInput({ onFetch, isLoading, hasSongs, mode, setMode, statusFilter, setStatusFilter }) {
+export default function PlaylistInput({ onFetch, isLoading, hasSongs, mode, setMode, statusFilter, setStatusFilter, matchThreshold, setMatchThreshold }) {
   const [url, setUrl] = useState('');
+  const [thresholdPreview, setThresholdPreview] = useState(matchThreshold);
   const [isDocked, setIsDocked] = useState(false);
   const [selectedPlatform, setSelectedPlatform] = useState('auto');
   const [isPlatformMenuOpen, setIsPlatformMenuOpen] = useState(false);
@@ -18,6 +19,19 @@ export default function PlaylistInput({ onFetch, isLoading, hasSongs, mode, setM
   useEffect(() => {
     setMounted(true);
   }, []);
+
+  // Keep the live-dragged preview in sync if the threshold changes elsewhere.
+  useEffect(() => {
+    setThresholdPreview(matchThreshold);
+  }, [matchThreshold]);
+
+  const getThresholdLabel = (value) => {
+    if (value <= 25) return 'Very Loose';
+    if (value <= 55) return 'Loose';
+    if (value <= 85) return 'Balanced';
+    if (value <= 130) return 'Strict';
+    return 'Very Strict';
+  };
 
   const updateMenuPos = () => {
     if (menuRef.current) {
@@ -318,6 +332,59 @@ export default function PlaylistInput({ onFetch, isLoading, hasSongs, mode, setM
                 All (incl. Unranked)
               </button>
             </div>
+          </div>
+
+          {/* Match Strictness Slider */}
+          <div style={{
+            display: 'flex',
+            alignItems: 'center',
+            gap: '10px',
+            flexWrap: 'wrap',
+            borderBottom: isDocked ? 'none' : '1px solid rgba(255, 255, 255, 0.07)',
+            paddingBottom: isDocked ? '0' : '10px',
+            transition: 'all 0.25s ease',
+          }}>
+            <span style={{ fontSize: '0.72rem', color: '#887c93', fontWeight: 800, textTransform: 'uppercase', flexShrink: 0 }}>
+              Match Strictness:
+            </span>
+            <input
+              id="match-strictness-slider"
+              type="range"
+              min={0}
+              max={150}
+              step={5}
+              value={thresholdPreview}
+              onChange={(e) => setThresholdPreview(Number(e.target.value))}
+              onMouseUp={(e) => {
+                osuAudio.playClick();
+                setMatchThreshold(Number(e.target.value));
+              }}
+              onTouchEnd={(e) => {
+                osuAudio.playClick();
+                setMatchThreshold(Number(e.target.value));
+              }}
+              onKeyUp={(e) => {
+                osuAudio.playClick();
+                setMatchThreshold(Number(e.target.value));
+              }}
+              title="Lower = more (looser) matches. Higher = fewer, more confident matches."
+              style={{
+                flex: 1,
+                minWidth: '110px',
+                maxWidth: '240px',
+                accentColor: '#ff66aa',
+                cursor: 'pointer',
+              }}
+            />
+            <span style={{
+              fontSize: '0.74rem',
+              fontWeight: 800,
+              color: '#ff66aa',
+              flexShrink: 0,
+              whiteSpace: 'nowrap',
+            }}>
+              {getThresholdLabel(thresholdPreview)} <span style={{ color: '#887c93', fontWeight: 700 }}>({thresholdPreview})</span>
+            </span>
           </div>
 
           {/* Clean Solid Search Bar with Platform Dropdown */}

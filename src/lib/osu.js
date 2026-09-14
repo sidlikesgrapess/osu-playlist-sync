@@ -245,10 +245,6 @@ function normalizeForComparison(str = '') {
     .trim();
 }
 
-const KNOWN_SONG_ARTISTS = {
-
-};
-
 /**
  * Score how well an osu! beatmapset matches the target song title & artist.
  * Returns a score between -100 and 200+.
@@ -274,19 +270,11 @@ export function scoreBeatmapMatch(beatmap, targetTitle = '', targetArtist = '') 
     score -= 60;
   }
 
-  // 2. Artist matching (including known original band for covers)
-  const knownOriginal = KNOWN_SONG_ARTISTS[tTitle] || KNOWN_SONG_ARTISTS[tTitle.replace(/\s+bury me$/, '')];
+  // 2. Artist matching
   let isArtistMatch = false;
 
   if (tArtist && bmArtist) {
     if (bmArtist === tArtist || bmArtist.includes(tArtist) || tArtist.includes(bmArtist)) {
-      score += 100;
-      isArtistMatch = true;
-    }
-  }
-
-  if (!isArtistMatch && knownOriginal) {
-    if (bmArtist === knownOriginal || bmArtist.includes(knownOriginal) || knownOriginal.includes(bmArtist)) {
       score += 100;
       isArtistMatch = true;
     }
@@ -386,11 +374,13 @@ export async function searchOsuBeatmaps(query, options = {}) {
   // Sort candidate mapsets by match score descending
   allFoundSets.sort((a, b) => (b._score || 0) - (a._score || 0));
 
-  // Minimum threshold: require at least 70 points
-  const minThreshold = 70;
+  // Minimum threshold: user-adjustable via the Match Strictness slider, 70 by default.
+  const minThreshold = typeof options.minScore === 'number' && !Number.isNaN(options.minScore)
+    ? options.minScore
+    : 70;
   const filteredSets = allFoundSets.filter(s => (s._score || 0) >= minThreshold);
 
-  const formatted = filteredSets.map(formatBeatmapset);
+  const formatted = filteredSets.map(s => ({ ...formatBeatmapset(s), matchScore: s._score }));
 
   return {
     beatmapsets: formatted,

@@ -69,6 +69,7 @@ export default function Home() {
   const [pageSize, setPageSize] = useState(10);
   const [mode, setMode] = useState('all');
   const [statusFilter, setStatusFilter] = useState('any');
+  const [matchThreshold, setMatchThreshold] = useState(70);
   const [selectedIds, setSelectedIds] = useState(new Set());
   const [downloadingIds, setDownloadingIds] = useState(new Set());
   const [isDownloadingZip, setIsDownloadingZip] = useState(false);
@@ -380,7 +381,7 @@ export default function Home() {
   };
 
   // Search osu! API for specific target song IDs in controlled batches
-  const searchTargetSongs = async (baseSongs, targetIds, currentMode, currentStatus) => {
+  const searchTargetSongs = async (baseSongs, targetIds, currentMode, currentStatus, currentMinScore = matchThreshold) => {
     if (!targetIds || targetIds.length === 0) return;
     const targetSet = new Set(targetIds);
 
@@ -412,6 +413,7 @@ export default function Home() {
           artist: targetSong.extractedArtist || targetSong.channelTitle || '',
           mode: currentMode,
           status: currentStatus,
+          minScore: String(currentMinScore),
         });
 
         const extraQueries = [
@@ -553,6 +555,28 @@ export default function Home() {
     }
   };
 
+  // Re-search when the user drags the Match Strictness slider. Player sections
+  // aren't affected — their beatmaps are pre-matched, not fuzzy-scored.
+  const handleMatchThresholdChange = (newThreshold) => {
+    setMatchThreshold(newThreshold);
+    if (playerProfile || songs.length === 0) return;
+
+    const reset = songs.map(s => ({
+      ...s,
+      hasSearched: false,
+      isSearching: false,
+      matchedBeatmap: null,
+      allMatches: [],
+    }));
+    setSongs(reset);
+    setSelectedIds(new Set());
+
+    const start = pageSize === 'all' ? 0 : (currentPage - 1) * pageSize;
+    const end = pageSize === 'all' ? reset.length : start + pageSize;
+    const pageSongs = reset.slice(start, end);
+    searchTargetSongs(reset, pageSongs.map(s => s.id), mode, statusFilter, newThreshold);
+  };
+
   // Manual query edit & rematch for a single song
   const handleManualSearch = async (songId, customQuery) => {
     setSongs(prev => prev.map(s => s.id === songId ? { ...s, cleanQuery: customQuery, isSearching: true } : s));
@@ -562,6 +586,7 @@ export default function Home() {
         q: customQuery,
         mode,
         status: statusFilter,
+        minScore: String(matchThreshold),
       });
 
       const res = await fetch(`/api/osu/search?${queryParams.toString()}`);
@@ -769,6 +794,8 @@ export default function Home() {
           setMode={handleModeChange}
           statusFilter={statusFilter}
           setStatusFilter={handleStatusFilterChange}
+          matchThreshold={matchThreshold}
+          setMatchThreshold={handleMatchThresholdChange}
         />
 
         {/* Error Notification */}

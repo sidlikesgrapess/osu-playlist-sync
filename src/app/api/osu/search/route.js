@@ -13,6 +13,8 @@ export async function GET(request) {
     const status = searchParams.get('status') || 'ranked';
     const fallbackParam = searchParams.get('fallback');
     const fallbacksParam = searchParams.get('fallbacks');
+    const minScoreParam = searchParams.get('minScore');
+    const minScore = minScoreParam !== null ? Number(minScoreParam) : undefined;
 
     if (!query && !title) {
       return NextResponse.json(
@@ -39,6 +41,7 @@ export async function GET(request) {
       queries: extraQueries,
       mode,
       status,
+      minScore,
     });
 
     return NextResponse.json({
