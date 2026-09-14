@@ -129,10 +129,10 @@ export default function PlaylistInput({ onFetch, isLoading, hasSongs, mode, setM
     if (hasSongs) setUrl('');
   };
 
-  const handleQuickSample = (sampleVal) => {
+  const handleQuickSample = (sampleVal, platform = 'auto') => {
     setUrl(sampleVal);
     osuAudio.playClick();
-    onFetch(sampleVal, 'auto');
+    onFetch(sampleVal, platform);
   };
 
   const handleModeChange = (newMode) => {
@@ -622,6 +622,32 @@ export default function PlaylistInput({ onFetch, isLoading, hasSongs, mode, setM
             >
               <MusicNoteIcon size={11} color="#ff66aa" />
               <span>YOASOBI - Idol</span>
+            </button>
+            <button
+              id="preset-player-mrekk"
+              type="button"
+              className="osu-btn-interactive"
+              onClick={() => handleQuickSample('mrekk', 'player')}
+              onMouseEnter={() => osuAudio.playHover()}
+              style={{
+                background: '#231f2d',
+                border: '1px solid rgba(255, 255, 255, 0.08)',
+                borderRadius: '6px',
+                color: '#ffffff',
+                fontSize: '0.72rem',
+                fontWeight: 800,
+                padding: '4px 9px',
+                cursor: 'pointer',
+                display: 'inline-flex',
+                alignItems: 'center',
+                gap: '5px',
+                fontFamily: 'inherit',
+                flexShrink: 0,
+                whiteSpace: 'nowrap',
+              }}
+            >
+              <User size={11} color="#44bbee" />
+              <span>mrekk</span>
             </button>
           </div>
 
