@@ -4,39 +4,9 @@ import { useState, useRef, useEffect } from 'react';
 import SongRow from './SongRow';
 import SongCardMobile from './SongCardMobile';
 import OsuCheckbox from './OsuCheckbox';
-import { X, Check, Search, ChevronLeft, ChevronRight, Sparkles, Heart, Play, Star } from 'lucide-react';
+import { X, Check, Search, ChevronLeft, ChevronRight, Sparkles, Heart, Play } from 'lucide-react';
 import { osuAudio } from '@/lib/soundEffects';
-
-const getStarColor = (stars) => {
-  if (!stars) return '#c6b8ce';
-  if (stars < 2.5) return '#4fc3f7';
-  if (stars < 4.0) return '#81c784';
-  if (stars < 5.3) return '#ffb74d';
-  if (stars < 6.5) return '#ff8a80';
-  return '#ba68c8';
-};
-
-const formatCompactNumber = (num) => {
-  if (num === null || num === undefined || isNaN(Number(num))) return '0';
-  const val = Number(num);
-  if (val >= 1_000_000) {
-    return (val / 1_000_000).toFixed(1).replace(/\.0$/, '') + 'M';
-  }
-  if (val >= 1_000) {
-    return (val / 1_000).toFixed(1).replace(/\.0$/, '') + 'K';
-  }
-  return val.toLocaleString();
-};
-
-const getStatusBadgeStyle = (status = '') => {
-  const s = status.toLowerCase();
-  if (s === 'ranked') return { bg: '#44bbee', color: '#081a24' };
-  if (s === 'loved') return { bg: '#ff66aa', color: '#ffffff' };
-  if (s === 'qualified') return { bg: '#3399ff', color: '#ffffff' };
-  if (s === 'pending') return { bg: '#ffcc22', color: '#081a24' };
-  if (s === 'wip') return { bg: '#ff9944', color: '#081a24' };
-  return { bg: '#5a5266', color: '#ffffff' };
-};
+import { getStarColor, formatCompactNumber, getStatusBadgeStyle } from '@/lib/beatmapFormat';
 
 export default function SongTable({
   songs,

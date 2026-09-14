@@ -1,15 +1,19 @@
 'use client';
 
-import { Settings2, Volume2, VolumeX, Bug } from 'lucide-react';
+import { Volume2, VolumeX, Bug } from 'lucide-react';
 import { useState, useEffect, useRef } from 'react';
 import { osuAudio } from '@/lib/soundEffects';
+import { useScrollOffset } from '@/lib/useScrollOffset';
 import HitCircleEaster from './HitCircleEaster';
 
 const ISSUE_URL = 'https://github.com/sidlikesgrapess/osu-playlist-sync/issues/new';
 
-export default function Navbar({ onOpenSetupGuide, systemStatus }) {
+// Brand fades into the header over the first 140px of scroll.
+const NAV_SCROLL_RANGE = 140;
+
+export default function Navbar({ onOpenSetupGuide }) {
   const [soundOn, setSoundOn] = useState(false);
-  const [scrollY, setScrollY] = useState(0);
+  const scrollY = useScrollOffset(NAV_SCROLL_RANGE);
   const easterRef = useRef(null);
 
   useEffect(() => {
@@ -24,28 +28,6 @@ export default function Navbar({ onOpenSetupGuide, systemStatus }) {
         osuAudio.enabled = false;
       }
     } catch (e) {}
-  }, []);
-
-  useEffect(() => {
-    let lastScroll = -1;
-    let ticking = false;
-    const handleScroll = () => {
-      if (!ticking) {
-        window.requestAnimationFrame(() => {
-          const currentY = window.scrollY;
-          // Only update state while in active transition zone (0 to 140px)
-          if (currentY <= 140 || lastScroll <= 140) {
-            setScrollY(Math.min(140, currentY));
-            lastScroll = currentY;
-          }
-          ticking = false;
-        });
-        ticking = true;
-      }
-    };
-    window.addEventListener('scroll', handleScroll, { passive: true });
-    handleScroll();
-    return () => window.removeEventListener('scroll', handleScroll);
   }, []);
 
   // Linear interpolation: brand seamlessly glides into header between scrollY 20px -> 120px

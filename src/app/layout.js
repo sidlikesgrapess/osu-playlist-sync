@@ -1,5 +1,4 @@
 import './globals.css';
-import Providers from '@/components/Providers';
 
 export const metadata = {
   title: 'osu!Sync — Turn playlists, songs and players into osu! beatmaps',
@@ -13,9 +12,7 @@ export default function RootLayout({ children }) {
   return (
     <html lang="en" style={{ backgroundColor: '#201f27', color: '#ffffff' }}>
       <body style={{ backgroundColor: '#201f27', color: '#ffffff', minHeight: '100vh', margin: 0 }}>
-        <Providers>
-          {children}
-        </Providers>
+        {children}
       </body>
     </html>
   );

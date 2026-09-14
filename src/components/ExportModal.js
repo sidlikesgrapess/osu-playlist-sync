@@ -1,37 +1,42 @@
 'use client';
 
 import { useState } from 'react';
-import { X, Copy, Check, FileText, Link2, ExternalLink } from 'lucide-react';
+import { X, Copy, Check, FileText } from 'lucide-react';
 import { osuAudio } from '@/lib/soundEffects';
+
+const EXPORT_FORMATS = [
+  {
+    id: 'links',
+    tabLabel: 'Web URLs (.ppy.sh)',
+    color: '#ff66aa',
+    activeText: '#ffffff',
+    line: (s) => `https://osu.ppy.sh/beatmapsets/${s.matchedBeatmap.id} (${s.matchedBeatmap.artist} - ${s.matchedBeatmap.title})`,
+  },
+  {
+    id: 'direct',
+    tabLabel: 'osu! Direct (osu://dl)',
+    color: '#3399ff',
+    activeText: '#ffffff',
+    line: (s) => `osu://dl/${s.matchedBeatmap.id}`,
+  },
+  {
+    id: 'text',
+    tabLabel: 'Song List (Text)',
+    color: '#00dd88',
+    activeText: '#0b2230',
+    line: (s, idx) => `${idx + 1}. ${s.matchedBeatmap.artist} - ${s.matchedBeatmap.title} [mapped by ${s.matchedBeatmap.creator}] (${s.matchedBeatmap.bpm} BPM, ★ ${s.matchedBeatmap.starRange?.min?.toFixed(1)}-${s.matchedBeatmap.starRange?.max?.toFixed(1)})`,
+  },
+];
 
 export default function ExportModal({ isOpen, onClose, songs }) {
   const [copiedType, setCopiedType] = useState(null);
-  const [exportFormat, setExportFormat] = useState('links'); // 'links' | 'direct' | 'text'
+  const [exportFormat, setExportFormat] = useState(EXPORT_FORMATS[0].id);
 
   if (!isOpen) return null;
 
   const matchedSongs = songs.filter(s => s.matchedBeatmap);
-
-  const generateContent = () => {
-    if (exportFormat === 'links') {
-      return matchedSongs
-        .map(s => `https://osu.ppy.sh/beatmapsets/${s.matchedBeatmap.id} (${s.matchedBeatmap.artist} - ${s.matchedBeatmap.title})`)
-        .join('\n');
-    }
-    if (exportFormat === 'direct') {
-      return matchedSongs
-        .map(s => `osu://dl/${s.matchedBeatmap.id}`)
-        .join('\n');
-    }
-    if (exportFormat === 'text') {
-      return matchedSongs
-        .map((s, idx) => `${idx + 1}. ${s.matchedBeatmap.artist} - ${s.matchedBeatmap.title} [mapped by ${s.matchedBeatmap.creator}] (${s.matchedBeatmap.bpm} BPM, ★ ${s.matchedBeatmap.starRange?.min?.toFixed(1)}-${s.matchedBeatmap.starRange?.max?.toFixed(1)})`)
-        .join('\n');
-    }
-    return '';
-  };
-
-  const content = generateContent();
+  const format = EXPORT_FORMATS.find(f => f.id === exportFormat) || EXPORT_FORMATS[0];
+  const content = matchedSongs.map(format.line).join('\n');
 
   const handleCopy = () => {
     osuAudio.playClick();
@@ -106,66 +111,29 @@ export default function ExportModal({ isOpen, onClose, songs }) {
         <div style={{ padding: '14px 16px', overflowY: 'auto', display: 'flex', flexDirection: 'column', gap: '12px' }}>
           {/* Format Tabs */}
           <div style={{ display: 'flex', gap: '6px', flexWrap: 'wrap', borderBottom: '1px solid rgba(255, 255, 255, 0.08)', paddingBottom: '10px' }}>
-            <button
-              onClick={() => {
-                osuAudio.playClick();
-                setExportFormat('links');
-              }}
-              style={{
-                background: exportFormat === 'links' ? '#ff66aa' : 'rgba(255, 255, 255, 0.08)',
-                color: exportFormat === 'links' ? '#ffffff' : '#c6b8ce',
-                border: 'none',
-                padding: '6px 12px',
-                borderRadius: '6px',
-                fontSize: '0.76rem',
-                fontWeight: 800,
-                cursor: 'pointer',
-                fontFamily: 'inherit',
-                minHeight: '32px',
-              }}
-            >
-              Web URLs (.ppy.sh)
-            </button>
-            <button
-              onClick={() => {
-                osuAudio.playClick();
-                setExportFormat('direct');
-              }}
-              style={{
-                background: exportFormat === 'direct' ? '#3399ff' : 'rgba(255, 255, 255, 0.08)',
-                color: exportFormat === 'direct' ? '#ffffff' : '#c6b8ce',
-                border: 'none',
-                padding: '6px 12px',
-                borderRadius: '6px',
-                fontSize: '0.76rem',
-                fontWeight: 800,
-                cursor: 'pointer',
-                fontFamily: 'inherit',
-                minHeight: '32px',
-              }}
-            >
-              osu! Direct (osu://dl)
-            </button>
-            <button
-              onClick={() => {
-                osuAudio.playClick();
-                setExportFormat('text');
-              }}
-              style={{
-                background: exportFormat === 'text' ? '#00dd88' : 'rgba(255, 255, 255, 0.08)',
-                color: exportFormat === 'text' ? '#0b2230' : '#c6b8ce',
-                border: 'none',
-                padding: '6px 12px',
-                borderRadius: '6px',
-                fontSize: '0.76rem',
-                fontWeight: 800,
-                cursor: 'pointer',
-                fontFamily: 'inherit',
-                minHeight: '32px',
-              }}
-            >
-              Song List (Text)
-            </button>
+            {EXPORT_FORMATS.map(({ id, tabLabel, color, activeText }) => (
+              <button
+                key={id}
+                onClick={() => {
+                  osuAudio.playClick();
+                  setExportFormat(id);
+                }}
+                style={{
+                  background: exportFormat === id ? color : 'rgba(255, 255, 255, 0.08)',
+                  color: exportFormat === id ? activeText : '#c6b8ce',
+                  border: 'none',
+                  padding: '6px 12px',
+                  borderRadius: '6px',
+                  fontSize: '0.76rem',
+                  fontWeight: 800,
+                  cursor: 'pointer',
+                  fontFamily: 'inherit',
+                  minHeight: '32px',
+                }}
+              >
+                {tabLabel}
+              </button>
+            ))}
           </div>
 
           <textarea

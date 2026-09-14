@@ -3,6 +3,7 @@
 import { useState } from 'react';
 import { Play, Download, ExternalLink, Loader2, Music, Layers, Edit3, Check, X } from 'lucide-react';
 import { osuAudio } from '@/lib/soundEffects';
+import { getStarColor, getStatusBadgeStyle } from '@/lib/beatmapFormat';
 import OsuCheckbox from './OsuCheckbox';
 
 export default function SongCardMobile({
@@ -24,15 +25,7 @@ export default function SongCardMobile({
   const isPlaying = activeAudio === song.id;
   const match = song.matchedBeatmap;
   const hasMatch = Boolean(match);
-
-  const getStarColor = (stars) => {
-    if (!stars) return '#c6b8ce';
-    if (stars < 2.5) return '#4fc3f7';
-    if (stars < 4.0) return '#81c784';
-    if (stars < 5.3) return '#ffb74d';
-    if (stars < 6.5) return '#ff8a80';
-    return '#ba68c8';
-  };
+  const statusStyle = getStatusBadgeStyle(match?.status);
 
   const handleQuerySubmit = (e) => {
     e.preventDefault();
@@ -292,13 +285,8 @@ export default function SongCardMobile({
                 textTransform: 'uppercase',
                 padding: '1px 5px',
                 borderRadius: '3px',
-                background:
-                  match.status === 'ranked' ? '#44bbee' :
-                  match.status === 'loved' ? '#ff66aa' :
-                  match.status === 'qualified' ? '#3399ff' :
-                  match.status === 'pending' ? '#ffcc22' :
-                  '#5a5266',
-                color: (match.status === 'ranked' || match.status === 'pending') ? '#081a24' : '#ffffff',
+                background: statusStyle.bg,
+                color: statusStyle.color,
               }}>
                 {match.status}
               </span>

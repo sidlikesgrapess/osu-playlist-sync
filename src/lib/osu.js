@@ -328,12 +328,10 @@ export async function searchOsuBeatmaps(query, options = {}) {
   let bestScore = -100;
 
   for (const q of queriesToRun) {
-    const searchUrl = isRankedOnly
-      ? `https://osu.ppy.sh/api/v2/beatmapsets/search?q=${encodeURIComponent(q)}&sort=relevance_desc${modeParam ? `&m=${modeParam}` : ''}&s=ranked`
-      : `https://osu.ppy.sh/api/v2/beatmapsets/search?q=${encodeURIComponent(q)}&sort=relevance_desc${modeParam ? `&m=${modeParam}` : ''}&s=any`;
+    const searchPath = `/beatmapsets/search?q=${encodeURIComponent(q)}&sort=relevance_desc${modeParam ? `&m=${modeParam}` : ''}&s=${isRankedOnly ? 'ranked' : 'any'}`;
 
     try {
-      const res = await fetch(searchUrl, {
+      const res = await fetch(`${OSU_API_BASE}${searchPath}`, {
         cache: 'no-store',
         headers: {
           'Authorization': `Bearer ${token}`,
@@ -435,12 +433,5 @@ function formatBeatmapset(set) {
       ? { min: diffs[0].difficultyRating, max: diffs[diffs.length - 1].difficultyRating }
       : { min: 0, max: 0 },
     downloadUrl: `/api/download?beatmapsetId=${set.id}`,
-    mirrorUrls: {
-      catboy: `https://catboy.best/d/${set.id}`,
-      nerinyan: `https://api.nerinyan.moe/d/${set.id}`,
-      beatconnect: `https://beatconnect.io/b/${set.id}`,
-    },
   };
 }
-
-export default searchOsuBeatmaps;

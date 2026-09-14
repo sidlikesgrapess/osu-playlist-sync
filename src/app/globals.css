@@ -1,47 +1,5 @@
 @import url('https://fonts.googleapis.com/css2?family=Nunito:wght@400;600;700;800;900&family=JetBrains+Mono:wght@400;600;700&display=swap');
 
-:root {
-  /* Clean Solid Dark Theme Palette (osu! & osu! lazer native styling) */
-  --osu-bg-darkest: #111015;
-  --osu-bg-dark: #16151c;
-  --osu-bg-surface: #1f1d27;
-  --osu-bg-surface-hover: #2a2735;
-  --osu-bg-card: #252230;
-  --osu-bg-card-hover: #2f2b3d;
-  
-  --osu-border: rgba(255, 255, 255, 0.08);
-  --osu-border-hover: rgba(255, 102, 170, 0.5);
-
-  --osu-pink: #ff66aa;
-  --osu-pink-hover: #ff7ebb;
-  --osu-pink-dark: #cc3377;
-
-  /* Mode Colors */
-  --mode-osu: #ff66aa;
-  --mode-taiko: #3399ff;
-  --mode-fruits: #00cc77;
-  --mode-mania: #9944ff;
-
-  /* Status Colors */
-  --status-ranked: #44bbee;
-  --status-loved: #ff66aa;
-  --status-qualified: #3399ff;
-  --status-pending: #ffbb22;
-  --status-graveyard: #6e657a;
-  --status-wip: #ff9944;
-
-  /* Typography Colors */
-  --osu-text-primary: #ffffff;
-  --osu-text-secondary: #c0b4c8;
-  --osu-text-muted: #887c93;
-  --osu-text-dim: #5c5267;
-
-  --radius-sm: 6px;
-  --radius-md: 10px;
-  --radius-lg: 14px;
-  --radius-pill: 9999px;
-}
-
 * {
   box-sizing: border-box;
   margin: 0;
@@ -287,12 +245,6 @@ button, a, input, select {
   .no-scrollbar {
     -ms-overflow-style: none;
     scrollbar-width: none;
-  }
-
-  /* Touch-friendly min hit-box */
-  .touch-target {
-    min-height: 44px;
-    min-width: 44px;
   }
 
   .osu-table-desktop {

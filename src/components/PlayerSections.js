@@ -7,38 +7,12 @@ import {
 } from 'lucide-react';
 import OsuCheckbox from './OsuCheckbox';
 import { osuAudio } from '@/lib/soundEffects';
+import { getStarColor, formatCompactNumber, getStatusBadgeStyle } from '@/lib/beatmapFormat';
 
-export const SECTION_META = {
+const SECTION_META = {
   best: { label: 'Best Performances', icon: Trophy, color: '#ffbb22' },
   most_played: { label: 'Most Played', icon: Play, color: '#3399ff' },
   favourite: { label: 'Favourites', icon: Heart, color: '#ff66aa' },
-};
-
-const getStarColor = (stars) => {
-  if (!stars) return '#c6b8ce';
-  if (stars < 2.5) return '#4fc3f7';
-  if (stars < 4.0) return '#81c784';
-  if (stars < 5.3) return '#ffb74d';
-  if (stars < 6.5) return '#ff8a80';
-  return '#ba68c8';
-};
-
-const formatCompactNumber = (num) => {
-  const val = Number(num);
-  if (!val) return '0';
-  if (val >= 1_000_000) return (val / 1_000_000).toFixed(1).replace(/\.0$/, '') + 'M';
-  if (val >= 1_000) return (val / 1_000).toFixed(1).replace(/\.0$/, '') + 'K';
-  return val.toLocaleString();
-};
-
-const getStatusStyle = (status = '') => {
-  const s = status.toLowerCase();
-  if (s === 'ranked') return { bg: '#44bbee', color: '#081a24' };
-  if (s === 'loved') return { bg: '#ff66aa', color: '#ffffff' };
-  if (s === 'qualified') return { bg: '#3399ff', color: '#ffffff' };
-  if (s === 'pending') return { bg: '#ffcc22', color: '#081a24' };
-  if (s === 'wip') return { bg: '#ff9944', color: '#081a24' };
-  return { bg: '#5a5266', color: '#ffffff' };
 };
 
 const GRADES = ['XH', 'X', 'SH', 'S', 'A', 'B', 'C', 'D', 'F'];
@@ -108,7 +82,7 @@ function BeatmapRow({ song, isSelected, onToggleSelect, onDownloadSingle, isDown
   const [isHovered, setIsHovered] = useState(false);
   const match = song.matchedBeatmap;
   const isPlaying = activeAudio === song.id;
-  const statusStyle = getStatusStyle(match.status || '');
+  const statusStyle = getStatusBadgeStyle(match.status || '');
   const minStars = match.starRange?.min;
   const maxStars = match.starRange?.max;
   const hasStars = Boolean(maxStars);

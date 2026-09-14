@@ -1,34 +1,16 @@
 'use client';
 
-import { useState, useEffect, useRef } from 'react';
+import { useRef } from 'react';
 import { osuAudio } from '@/lib/soundEffects';
+import { useScrollOffset } from '@/lib/useScrollOffset';
 import HitCircleEaster from './HitCircleEaster';
 
-export default function Hero({ onTryDemo }) {
-  const [scrollY, setScrollY] = useState(0);
-  const easterRef = useRef(null);
+// Brand glides towards the header over the first 150px of scroll.
+const HERO_SCROLL_RANGE = 150;
 
-  useEffect(() => {
-    let lastScroll = -1;
-    let ticking = false;
-    const handleScroll = () => {
-      if (!ticking) {
-        window.requestAnimationFrame(() => {
-          const currentY = window.scrollY;
-          // Only update state while in active top transition zone (0 to 150px)
-          if (currentY <= 150 || lastScroll <= 150) {
-            setScrollY(Math.min(150, currentY));
-            lastScroll = currentY;
-          }
-          ticking = false;
-        });
-        ticking = true;
-      }
-    };
-    window.addEventListener('scroll', handleScroll, { passive: true });
-    handleScroll();
-    return () => window.removeEventListener('scroll', handleScroll);
-  }, []);
+export default function Hero() {
+  const scrollY = useScrollOffset(HERO_SCROLL_RANGE);
+  const easterRef = useRef(null);
 
   // Linear progress from 0 to 1 as user scrolls 0 -> 140px
   const progress = Math.min(1, Math.max(0, scrollY / 130));

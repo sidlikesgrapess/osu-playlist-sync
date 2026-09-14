@@ -22,8 +22,6 @@ export default function StatsBar({
 }) {
   const effectiveTotal = searchedCount !== undefined && searchedCount > 0 ? searchedCount : totalSongs;
   const matchPercentage = effectiveTotal > 0 ? Math.round((matchedCount / effectiveTotal) * 100) : 0;
-  // Downloads act on ticked beatmaps only.
-  const targetCount = selectedCount;
   const isEverythingSelected = matchedCount > 0 && selectedCount === matchedCount;
 
   return (
@@ -152,7 +150,7 @@ export default function StatsBar({
         <button
           className="osu-btn-interactive osu-glass-card"
           onClick={onDownloadAction}
-          disabled={targetCount === 0 || isSearching}
+          disabled={selectedCount === 0 || isSearching}
           onMouseEnter={() => osuAudio.playHover()}
           style={{
             borderRadius: '6px',
@@ -160,8 +158,8 @@ export default function StatsBar({
             fontWeight: 800,
             fontSize: '0.75rem',
             padding: '6px 12px',
-            cursor: targetCount === 0 || isSearching ? 'not-allowed' : 'pointer',
-            opacity: targetCount === 0 || isSearching ? 0.5 : 1,
+            cursor: selectedCount === 0 || isSearching ? 'not-allowed' : 'pointer',
+            opacity: selectedCount === 0 || isSearching ? 0.5 : 1,
             display: 'inline-flex',
             alignItems: 'center',
             gap: '5px',
@@ -179,7 +177,7 @@ export default function StatsBar({
         <button
           className="osu-btn-interactive osu-btn-pink"
           onClick={onDownloadZipAction}
-          disabled={targetCount === 0 || isDownloadingZip || isSearching}
+          disabled={selectedCount === 0 || isDownloadingZip || isSearching}
           onMouseEnter={() => osuAudio.playHover()}
           style={{
             border: 'none',
@@ -187,8 +185,8 @@ export default function StatsBar({
             fontSize: '0.76rem',
             padding: '6px 14px',
             borderRadius: '6px',
-            cursor: targetCount === 0 || isDownloadingZip || isSearching ? 'not-allowed' : 'pointer',
-            opacity: targetCount === 0 || isDownloadingZip || isSearching ? 0.5 : 1,
+            cursor: selectedCount === 0 || isDownloadingZip || isSearching ? 'not-allowed' : 'pointer',
+            opacity: selectedCount === 0 || isDownloadingZip || isSearching ? 0.5 : 1,
             display: 'inline-flex',
             alignItems: 'center',
             gap: '5px',

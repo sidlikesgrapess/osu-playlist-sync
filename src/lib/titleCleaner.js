@@ -269,5 +269,3 @@ export function cleanSongTitle(rawTitle, channelTitle = '') {
     queries: uniqueQueries,
   };
 }
-
-export default cleanSongTitle;

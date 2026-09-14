@@ -6,6 +6,66 @@ import { Loader2, Sparkles, ArrowRight, ChevronDown, Plus, User } from 'lucide-r
 import { YouTubeIcon, SpotifyIcon, AppleMusicIcon, MusicNoteIcon } from './Icons';
 import { osuAudio } from '@/lib/soundEffects';
 
+const GAME_MODES = [
+  { id: 'all', label: 'All Modes', color: '#3d374a', activeText: '#ffffff', activeBorder: 'rgba(255, 255, 255, 0.2)' },
+  { id: 'osu', label: 'osu!', color: '#ff66aa' },
+  { id: 'taiko', label: 'osu!taiko', color: '#3399ff' },
+  { id: 'fruits', label: 'osu!catch', color: '#00cc77' },
+  { id: 'mania', label: 'osu!mania', color: '#9944ff' },
+];
+
+const STATUS_FILTERS = [
+  { id: 'ranked', label: 'Ranked & Loved', color: '#44bbee', activeText: '#081a24' },
+  { id: 'any', label: 'All (incl. Unranked)', color: '#ff66aa', activeText: '#ffffff' },
+];
+
+const PLATFORM_OPTIONS = [
+  { id: 'auto', name: 'Auto Detect', label: 'Auto Detect (Any Link)', placeholder: 'Paste YouTube, Spotify, Apple Music link, or type song title...' },
+  { id: 'youtube', name: 'YouTube', label: 'YouTube (Playlist/Track)', placeholder: 'Paste YouTube playlist link or video URL...' },
+  { id: 'spotify', name: 'Spotify', label: 'Spotify (Playlist/Track)', placeholder: 'Paste Spotify playlist, album, or track link...' },
+  { id: 'apple', name: 'Apple Music', label: 'Apple Music (Playlist/Song)', placeholder: 'Paste Apple Music playlist, album, or song link...' },
+  { id: 'query', name: 'Single Song', label: 'Single Song Search', placeholder: 'Type song and artist name (e.g. YOASOBI - Idol)...' },
+  { id: 'player', name: 'Player Search', label: 'Player Search (osu! profile)', placeholder: 'Type an osu! player name or paste their profile link...' },
+];
+
+const PLATFORM_BY_ID = Object.fromEntries(PLATFORM_OPTIONS.map(o => [o.id, o]));
+
+const SAMPLES = [
+  { id: 'preset-youtube-banger', label: 'osu! Banger Showcase', value: 'https://www.youtube.com/playlist?list=PLosu_banger_showcase_01', icon: 'youtube', iconSize: 12 },
+  { id: 'preset-spotify-top', label: 'Today’s Top Hits', value: 'https://open.spotify.com/playlist/37i9dQZF1DXcBWIGoYBM5M', icon: 'spotify', iconSize: 12 },
+  { id: 'preset-single-song', label: 'YOASOBI - Idol', value: 'YOASOBI - Idol', icon: 'query', iconSize: 11 },
+  { id: 'preset-player-mrekk', label: 'mrekk', value: 'mrekk', platform: 'player', icon: 'player', iconSize: 11 },
+];
+
+/** Shared look for the mode pills (rounded) and status pills (square). */
+const pillStyle = (isActive, { color, activeText = '#ffffff', activeBorder, radius, fontSize }) => ({
+  background: isActive ? color : '#272332',
+  color: isActive ? activeText : '#c0b4c8',
+  border: `1px solid ${isActive ? (activeBorder || color) : 'rgba(255, 255, 255, 0.06)'}`,
+  borderRadius: radius,
+  padding: '4px 10px',
+  fontSize,
+  fontWeight: 800,
+  fontFamily: 'inherit',
+});
+
+const sampleButtonStyle = {
+  background: '#231f2d',
+  border: '1px solid rgba(255, 255, 255, 0.08)',
+  borderRadius: '6px',
+  color: '#ffffff',
+  fontSize: '0.72rem',
+  fontWeight: 800,
+  padding: '4px 9px',
+  cursor: 'pointer',
+  display: 'inline-flex',
+  alignItems: 'center',
+  gap: '5px',
+  fontFamily: 'inherit',
+  flexShrink: 0,
+  whiteSpace: 'nowrap',
+};
+
 export default function PlaylistInput({ onFetch, isLoading, hasSongs, mode, setMode, statusFilter, setStatusFilter, matchThreshold, setMatchThreshold }) {
   const [url, setUrl] = useState('');
   const [thresholdPreview, setThresholdPreview] = useState(matchThreshold);
@@ -111,32 +171,17 @@ export default function PlaylistInput({ onFetch, isLoading, hasSongs, mode, setM
     }
   };
 
-  const getPlatformName = (plat) => {
-    switch (plat) {
-      case 'youtube': return 'YouTube';
-      case 'spotify': return 'Spotify';
-      case 'apple': return 'Apple Music';
-      case 'query': return 'Single Song';
-      case 'player': return 'Player Search';
-      default: return 'Auto Detect';
-    }
-  };
+  const getPlatformName = (plat) => (PLATFORM_BY_ID[plat] || PLATFORM_BY_ID.auto).name;
 
   const getPlaceholder = () => {
-    if (selectedPlatform === 'player') return 'Type an osu! player name or paste their profile link...';
+    if (selectedPlatform === 'player') return PLATFORM_BY_ID.player.placeholder;
     if (hasSongs) return 'Paste another link or type a song to add to the list...';
-    switch (selectedPlatform) {
-      case 'youtube': return 'Paste YouTube playlist link or video URL...';
-      case 'spotify': return 'Paste Spotify playlist, album, or track link...';
-      case 'apple': return 'Paste Apple Music playlist, album, or song link...';
-      case 'query': return 'Type song and artist name (e.g. YOASOBI - Idol)...';
-      default: return 'Paste YouTube, Spotify, Apple Music link, or type song title...';
-    }
+    return (PLATFORM_BY_ID[selectedPlatform] || PLATFORM_BY_ID.auto).placeholder;
   };
 
   const handleSubmit = (e) => {
     if (e && e.preventDefault) e.preventDefault();
-    const inputVal = url.trim() || (typeof document !== 'undefined' ? document.getElementById('playlist-url-input')?.value?.trim() : '');
+    const inputVal = url.trim();
     if (!inputVal) return;
     osuAudio.playClick();
     onFetch(inputVal, activePlatform);
@@ -196,96 +241,18 @@ export default function PlaylistInput({ onFetch, isLoading, hasSongs, mode, setM
               <span style={{ fontSize: '0.72rem', color: '#887c93', fontWeight: 800, textTransform: 'uppercase', marginRight: '4px' }}>
                 Mode:
               </span>
-              <button
-                type="button"
-                className="osu-pill-tab"
-                onClick={() => handleModeChange('all')}
-                onMouseEnter={() => osuAudio.playHover()}
-                style={{
-                  background: mode === 'all' ? '#3d374a' : '#272332',
-                  color: mode === 'all' ? '#ffffff' : '#c0b4c8',
-                  border: `1px solid ${mode === 'all' ? 'rgba(255, 255, 255, 0.2)' : 'rgba(255, 255, 255, 0.06)'}`,
-                  borderRadius: '9999px',
-                  padding: '4px 10px',
-                  fontSize: '0.76rem',
-                  fontWeight: 800,
-                  fontFamily: 'inherit',
-                }}
-              >
-                All Modes
-              </button>
-              <button
-                type="button"
-                className="osu-pill-tab"
-                onClick={() => handleModeChange('osu')}
-                onMouseEnter={() => osuAudio.playHover()}
-                style={{
-                  background: mode === 'osu' ? '#ff66aa' : '#272332',
-                  color: mode === 'osu' ? '#ffffff' : '#c0b4c8',
-                  border: `1px solid ${mode === 'osu' ? '#ff66aa' : 'rgba(255, 255, 255, 0.06)'}`,
-                  borderRadius: '9999px',
-                  padding: '4px 10px',
-                  fontSize: '0.76rem',
-                  fontWeight: 800,
-                  fontFamily: 'inherit',
-                }}
-              >
-                osu!
-              </button>
-              <button
-                type="button"
-                className="osu-pill-tab"
-                onClick={() => handleModeChange('taiko')}
-                onMouseEnter={() => osuAudio.playHover()}
-                style={{
-                  background: mode === 'taiko' ? '#3399ff' : '#272332',
-                  color: mode === 'taiko' ? '#ffffff' : '#c0b4c8',
-                  border: `1px solid ${mode === 'taiko' ? '#3399ff' : 'rgba(255, 255, 255, 0.06)'}`,
-                  borderRadius: '9999px',
-                  padding: '4px 10px',
-                  fontSize: '0.76rem',
-                  fontWeight: 800,
-                  fontFamily: 'inherit',
-                }}
-              >
-                osu!taiko
-              </button>
-              <button
-                type="button"
-                className="osu-pill-tab"
-                onClick={() => handleModeChange('fruits')}
-                onMouseEnter={() => osuAudio.playHover()}
-                style={{
-                  background: mode === 'fruits' ? '#00cc77' : '#272332',
-                  color: mode === 'fruits' ? '#ffffff' : '#c0b4c8',
-                  border: `1px solid ${mode === 'fruits' ? '#00cc77' : 'rgba(255, 255, 255, 0.06)'}`,
-                  borderRadius: '9999px',
-                  padding: '4px 10px',
-                  fontSize: '0.76rem',
-                  fontWeight: 800,
-                  fontFamily: 'inherit',
-                }}
-              >
-                osu!catch
-              </button>
-              <button
-                type="button"
-                className="osu-pill-tab"
-                onClick={() => handleModeChange('mania')}
-                onMouseEnter={() => osuAudio.playHover()}
-                style={{
-                  background: mode === 'mania' ? '#9944ff' : '#272332',
-                  color: mode === 'mania' ? '#ffffff' : '#c0b4c8',
-                  border: `1px solid ${mode === 'mania' ? '#9944ff' : 'rgba(255, 255, 255, 0.06)'}`,
-                  borderRadius: '9999px',
-                  padding: '4px 10px',
-                  fontSize: '0.76rem',
-                  fontWeight: 800,
-                  fontFamily: 'inherit',
-                }}
-              >
-                osu!mania
-              </button>
+              {GAME_MODES.map(({ id, label, color, activeText, activeBorder }) => (
+                <button
+                  key={id}
+                  type="button"
+                  className="osu-pill-tab"
+                  onClick={() => handleModeChange(id)}
+                  onMouseEnter={() => osuAudio.playHover()}
+                  style={pillStyle(mode === id, { color, activeText, activeBorder, radius: '9999px', fontSize: '0.76rem' })}
+                >
+                  {label}
+                </button>
+              ))}
             </div>
 
             {/* Status Filter buttons */}
@@ -293,44 +260,19 @@ export default function PlaylistInput({ onFetch, isLoading, hasSongs, mode, setM
               <span style={{ fontSize: '0.72rem', color: '#887c93', fontWeight: 800, textTransform: 'uppercase', marginRight: '4px' }}>
                 Status:
               </span>
-              <button
-                id="status-ranked-btn"
-                type="button"
-                className="osu-pill-tab"
-                onClick={() => handleStatusChange('ranked')}
-                onMouseEnter={() => osuAudio.playHover()}
-                style={{
-                  background: statusFilter === 'ranked' ? '#44bbee' : '#272332',
-                  color: statusFilter === 'ranked' ? '#081a24' : '#c0b4c8',
-                  border: `1px solid ${statusFilter === 'ranked' ? '#44bbee' : 'rgba(255, 255, 255, 0.06)'}`,
-                  borderRadius: '5px',
-                  padding: '4px 10px',
-                  fontSize: '0.74rem',
-                  fontWeight: 800,
-                  fontFamily: 'inherit',
-                }}
-              >
-                Ranked & Loved
-              </button>
-              <button
-                id="status-all-btn"
-                type="button"
-                className="osu-pill-tab"
-                onClick={() => handleStatusChange('any')}
-                onMouseEnter={() => osuAudio.playHover()}
-                style={{
-                  background: statusFilter === 'any' ? '#ff66aa' : '#272332',
-                  color: statusFilter === 'any' ? '#ffffff' : '#c0b4c8',
-                  border: `1px solid ${statusFilter === 'any' ? '#ff66aa' : 'rgba(255, 255, 255, 0.06)'}`,
-                  borderRadius: '5px',
-                  padding: '4px 10px',
-                  fontSize: '0.74rem',
-                  fontWeight: 800,
-                  fontFamily: 'inherit',
-                }}
-              >
-                All (incl. Unranked)
-              </button>
+              {STATUS_FILTERS.map(({ id, label, color, activeText }) => (
+                <button
+                  key={id}
+                  id={`status-${id === 'any' ? 'all' : id}-btn`}
+                  type="button"
+                  className="osu-pill-tab"
+                  onClick={() => handleStatusChange(id)}
+                  onMouseEnter={() => osuAudio.playHover()}
+                  style={pillStyle(statusFilter === id, { color, activeText, radius: '5px', fontSize: '0.74rem' })}
+                >
+                  {label}
+                </button>
+              ))}
             </div>
           </div>
 
@@ -458,14 +400,7 @@ export default function PlaylistInput({ onFetch, isLoading, hasSongs, mode, setM
                     gap: '2px',
                   }}
                 >
-                  {[
-                    { id: 'auto', label: 'Auto Detect (Any Link)', icon: 'auto' },
-                    { id: 'youtube', label: 'YouTube (Playlist/Track)', icon: 'youtube' },
-                    { id: 'spotify', label: 'Spotify (Playlist/Track)', icon: 'spotify' },
-                    { id: 'apple', label: 'Apple Music (Playlist/Song)', icon: 'apple' },
-                    { id: 'query', label: 'Single Song Search', icon: 'query' },
-                    { id: 'player', label: 'Player Search (osu! profile)', icon: 'player' },
-                  ].map((item) => (
+                  {PLATFORM_OPTIONS.map((item) => (
                     <button
                       key={item.id}
                       type="button"
@@ -491,7 +426,7 @@ export default function PlaylistInput({ onFetch, isLoading, hasSongs, mode, setM
                         fontFamily: 'inherit',
                       }}
                     >
-                      {getPlatformIcon(item.icon, 16)}
+                      {getPlatformIcon(item.id, 16)}
                       <span>{item.label}</span>
                     </button>
                   ))}
@@ -612,110 +547,20 @@ export default function PlaylistInput({ onFetch, isLoading, hasSongs, mode, setM
             <span style={{ fontSize: '0.72rem', color: '#8b7d95', fontWeight: 800, flexShrink: 0 }}>
               Try sample:
             </span>
-            <button
-              id="preset-youtube-banger"
-              type="button"
-              className="osu-btn-interactive"
-              onClick={() => handleQuickSample('https://www.youtube.com/playlist?list=PLosu_banger_showcase_01')}
-              onMouseEnter={() => osuAudio.playHover()}
-              style={{
-                background: '#231f2d',
-                border: '1px solid rgba(255, 255, 255, 0.08)',
-                borderRadius: '6px',
-                color: '#ffffff',
-                fontSize: '0.72rem',
-                fontWeight: 800,
-                padding: '4px 9px',
-                cursor: 'pointer',
-                display: 'inline-flex',
-                alignItems: 'center',
-                gap: '5px',
-                fontFamily: 'inherit',
-                flexShrink: 0,
-                whiteSpace: 'nowrap',
-              }}
-            >
-              <YouTubeIcon size={12} color="#ff3333" />
-              <span>osu! Banger Showcase</span>
-            </button>
-            <button
-              id="preset-spotify-top"
-              type="button"
-              className="osu-btn-interactive"
-              onClick={() => handleQuickSample('https://open.spotify.com/playlist/37i9dQZF1DXcBWIGoYBM5M')}
-              onMouseEnter={() => osuAudio.playHover()}
-              style={{
-                background: '#231f2d',
-                border: '1px solid rgba(255, 255, 255, 0.08)',
-                borderRadius: '6px',
-                color: '#ffffff',
-                fontSize: '0.72rem',
-                fontWeight: 800,
-                padding: '4px 9px',
-                cursor: 'pointer',
-                display: 'inline-flex',
-                alignItems: 'center',
-                gap: '5px',
-                fontFamily: 'inherit',
-                flexShrink: 0,
-                whiteSpace: 'nowrap',
-              }}
-            >
-              <SpotifyIcon size={12} color="#1db954" />
-              <span>Today’s Top Hits</span>
-            </button>
-            <button
-              id="preset-single-song"
-              type="button"
-              className="osu-btn-interactive"
-              onClick={() => handleQuickSample('YOASOBI - Idol')}
-              onMouseEnter={() => osuAudio.playHover()}
-              style={{
-                background: '#231f2d',
-                border: '1px solid rgba(255, 255, 255, 0.08)',
-                borderRadius: '6px',
-                color: '#ffffff',
-                fontSize: '0.72rem',
-                fontWeight: 800,
-                padding: '4px 9px',
-                cursor: 'pointer',
-                display: 'inline-flex',
-                alignItems: 'center',
-                gap: '5px',
-                fontFamily: 'inherit',
-                flexShrink: 0,
-                whiteSpace: 'nowrap',
-              }}
-            >
-              <MusicNoteIcon size={11} color="#ff66aa" />
-              <span>YOASOBI - Idol</span>
-            </button>
-            <button
-              id="preset-player-mrekk"
-              type="button"
-              className="osu-btn-interactive"
-              onClick={() => handleQuickSample('mrekk', 'player')}
-              onMouseEnter={() => osuAudio.playHover()}
-              style={{
-                background: '#231f2d',
-                border: '1px solid rgba(255, 255, 255, 0.08)',
-                borderRadius: '6px',
-                color: '#ffffff',
-                fontSize: '0.72rem',
-                fontWeight: 800,
-                padding: '4px 9px',
-                cursor: 'pointer',
-                display: 'inline-flex',
-                alignItems: 'center',
-                gap: '5px',
-                fontFamily: 'inherit',
-                flexShrink: 0,
-                whiteSpace: 'nowrap',
-              }}
-            >
-              <User size={11} color="#44bbee" />
-              <span>mrekk</span>
-            </button>
+            {SAMPLES.map(({ id, label, value, platform, icon, iconSize }) => (
+              <button
+                key={id}
+                id={id}
+                type="button"
+                className="osu-btn-interactive"
+                onClick={() => handleQuickSample(value, platform || 'auto')}
+                onMouseEnter={() => osuAudio.playHover()}
+                style={sampleButtonStyle}
+              >
+                {getPlatformIcon(icon, iconSize)}
+                <span>{label}</span>
+              </button>
+            ))}
           </div>
 
         </form>

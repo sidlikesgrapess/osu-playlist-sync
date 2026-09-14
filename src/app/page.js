@@ -43,6 +43,23 @@ const beatmapToSong = (item, section) => ({
   playerSection: section,
 });
 
+// `pageSize` may be the string 'all', so every slice goes through here.
+const pageSlice = (list, page, pageSize) => {
+  if (pageSize === 'all') return list;
+  const start = (page - 1) * pageSize;
+  return list.slice(start, start + pageSize);
+};
+
+// Fresh object per call — each song needs its own `allMatches` array.
+const blankMatchState = () => ({ hasSearched: false, isSearching: false, matchedBeatmap: null, allMatches: [] });
+
+const PLATFORM_BADGE = {
+  spotify: { color: '#1db954', bg: 'rgba(29, 185, 84, 0.15)', border: 'rgba(29, 185, 84, 0.35)' },
+  apple: { color: '#fc3c44', bg: 'rgba(252, 60, 68, 0.15)', border: 'rgba(252, 60, 68, 0.35)' },
+  youtube: { color: '#ff4444', bg: 'rgba(255, 51, 51, 0.15)', border: 'rgba(255, 51, 51, 0.35)' },
+  query: { color: '#ff66aa', bg: 'rgba(255, 102, 170, 0.15)', border: 'rgba(255, 102, 170, 0.35)' },
+};
+
 function downloadBlob(blob, filename) {
   if (typeof window === 'undefined') return;
   const url = URL.createObjectURL(blob);
@@ -353,10 +370,7 @@ export default function Home() {
         ...s,
         id: s.id || `track_${batchTag}_${index}`,
         position: offset + index,
-        hasSearched: false,
-        isSearching: false,
-        matchedBeatmap: null,
-        allMatches: [],
+        ...blankMatchState(),
       }));
 
       const combinedSongs = isAppending ? [...songs, ...newSongs] : newSongs;
@@ -366,9 +380,7 @@ export default function Home() {
       // Only search whatever page is currently visible — never songs the user
       // can't see yet. Everything else is picked up lazily via pagination.
       const pageForSearch = isAppending ? currentPage : 1;
-      const start = pageSize === 'all' ? 0 : (pageForSearch - 1) * pageSize;
-      const end = pageSize === 'all' ? combinedSongs.length : start + pageSize;
-      const visibleSongs = combinedSongs.slice(start, end);
+      const visibleSongs = pageSlice(combinedSongs, pageForSearch, pageSize);
       const unsearchedVisible = visibleSongs.filter(s => !s.hasSearched && !s.isSearching);
       if (unsearchedVisible.length > 0) {
         searchTargetSongs(combinedSongs, unsearchedVisible.map(s => s.id), mode, statusFilter);
@@ -470,11 +482,7 @@ export default function Home() {
     setCurrentPage(newPage);
     if (songs.length === 0) return;
 
-    const start = pageSize === 'all' ? 0 : (newPage - 1) * pageSize;
-    const end = pageSize === 'all' ? songs.length : start + pageSize;
-    const pageSongs = songs.slice(start, end);
-
-    const unsearched = pageSongs.filter(s => !s.hasSearched && !s.isSearching);
+    const unsearched = pageSlice(songs, newPage, pageSize).filter(s => !s.hasSearched && !s.isSearching);
     if (unsearched.length > 0) {
       searchTargetSongs(songs, unsearched.map(s => s.id), mode, statusFilter);
     }
@@ -486,9 +494,7 @@ export default function Home() {
     setCurrentPage(1);
 
     if (songs.length === 0) return;
-    const initialPageSize = newSize === 'all' ? songs.length : newSize;
-    const page1Songs = songs.slice(0, initialPageSize);
-    const unsearched = page1Songs.filter(s => !s.hasSearched && !s.isSearching);
+    const unsearched = pageSlice(songs, 1, newSize).filter(s => !s.hasSearched && !s.isSearching);
     if (unsearched.length > 0) {
       searchTargetSongs(songs, unsearched.map(s => s.id), mode, statusFilter);
     }
@@ -502,6 +508,19 @@ export default function Home() {
     }
   };
 
+  // Any search-affecting filter change invalidates every existing match: drop
+  // them all, then re-search just the page the user is currently looking at.
+  const rematchVisiblePage = (nextMode, nextStatus, nextThreshold) => {
+    if (songs.length === 0) return;
+
+    const reset = songs.map(s => ({ ...s, ...blankMatchState() }));
+    setSongs(reset);
+    setSelectedIds(new Set());
+
+    const pageSongs = pageSlice(reset, currentPage, pageSize);
+    searchTargetSongs(reset, pageSongs.map(s => s.id), nextMode, nextStatus, nextThreshold);
+  };
+
   // Re-search when user changes Mode or Status filter
   const handleModeChange = (newMode) => {
     setMode(newMode);
@@ -510,23 +529,7 @@ export default function Home() {
       reloadPlayerSections(newMode, statusFilter);
       return;
     }
-
-    if (songs.length > 0) {
-      const reset = songs.map(s => ({
-        ...s,
-        hasSearched: false,
-        isSearching: false,
-        matchedBeatmap: null,
-        allMatches: [],
-      }));
-      setSongs(reset);
-      setSelectedIds(new Set());
-
-      const start = pageSize === 'all' ? 0 : (currentPage - 1) * pageSize;
-      const end = pageSize === 'all' ? reset.length : start + pageSize;
-      const pageSongs = reset.slice(start, end);
-      searchTargetSongs(reset, pageSongs.map(s => s.id), newMode, statusFilter);
-    }
+    rematchVisiblePage(newMode, statusFilter, matchThreshold);
   };
 
   const handleStatusFilterChange = (newStatus) => {
@@ -536,45 +539,15 @@ export default function Home() {
       reloadPlayerSections(mode, newStatus);
       return;
     }
-
-    if (songs.length > 0) {
-      const reset = songs.map(s => ({
-        ...s,
-        hasSearched: false,
-        isSearching: false,
-        matchedBeatmap: null,
-        allMatches: [],
-      }));
-      setSongs(reset);
-      setSelectedIds(new Set());
-
-      const start = pageSize === 'all' ? 0 : (currentPage - 1) * pageSize;
-      const end = pageSize === 'all' ? reset.length : start + pageSize;
-      const pageSongs = reset.slice(start, end);
-      searchTargetSongs(reset, pageSongs.map(s => s.id), mode, newStatus);
-    }
+    rematchVisiblePage(mode, newStatus, matchThreshold);
   };
 
   // Re-search when the user drags the Match Strictness slider. Player sections
   // aren't affected — their beatmaps are pre-matched, not fuzzy-scored.
   const handleMatchThresholdChange = (newThreshold) => {
     setMatchThreshold(newThreshold);
-    if (playerProfile || songs.length === 0) return;
-
-    const reset = songs.map(s => ({
-      ...s,
-      hasSearched: false,
-      isSearching: false,
-      matchedBeatmap: null,
-      allMatches: [],
-    }));
-    setSongs(reset);
-    setSelectedIds(new Set());
-
-    const start = pageSize === 'all' ? 0 : (currentPage - 1) * pageSize;
-    const end = pageSize === 'all' ? reset.length : start + pageSize;
-    const pageSongs = reset.slice(start, end);
-    searchTargetSongs(reset, pageSongs.map(s => s.id), mode, statusFilter, newThreshold);
+    if (playerProfile) return;
+    rematchVisiblePage(mode, statusFilter, newThreshold);
   };
 
   // Manual query edit & rematch for a single song
@@ -653,7 +626,7 @@ export default function Home() {
     setDownloadingIds(prev => new Set(prev).add(song.id));
 
     try {
-      const downloadUrl = `/api/download?beatmapsetId=${beatmapId}&noVideo=true`;
+      const downloadUrl = `/api/download?beatmapsetId=${beatmapId}`;
       const response = await fetch(downloadUrl);
       if (!response.ok) throw new Error('Download failed');
 
@@ -717,7 +690,7 @@ export default function Home() {
         const filename = `${beatmapId} ${song.matchedBeatmap.artist} - ${song.matchedBeatmap.title}.osz`.replace(/[\\/*?:"<>|]/g, '_');
 
         try {
-          const downloadUrl = `/api/download?beatmapsetId=${beatmapId}&noVideo=true`;
+          const downloadUrl = `/api/download?beatmapsetId=${beatmapId}`;
           const res = await fetch(downloadUrl);
           if (res.ok) {
             const blob = await res.blob();
@@ -768,6 +741,8 @@ export default function Home() {
     osuAudio.playClick();
   };
 
+  const platformBadge = PLATFORM_BADGE[playlistMeta?.platform] || PLATFORM_BADGE.query;
+
   const matchedCount = songs.filter(s => s.matchedBeatmap).length;
   const searchedCount = songs.filter(s => s.hasSearched).length;
   const unsearchedCount = songs.filter(s => !s.hasSearched).length;
@@ -775,15 +750,12 @@ export default function Home() {
   return (
     <div style={{ minHeight: '100vh', display: 'flex', flexDirection: 'column' }}>
       {/* Sticky Frosted Glass Header */}
-      <Navbar
-        onOpenSetupGuide={() => setIsSetupOpen(true)}
-        systemStatus={systemStatus}
-      />
+      <Navbar onOpenSetupGuide={() => setIsSetupOpen(true)} />
 
       {/* Main Content */}
       <main style={{ flex: 1, padding: '0 16px 40px' }}>
         {/* Dynamic Hero Section */}
-        <Hero isCompact={songs.length > 0 || Boolean(playerProfile) || playerResults.length > 0} />
+        <Hero />
 
         {/* Liquid Glass Search & Filter Dock */}
         <PlaylistInput
@@ -875,20 +847,9 @@ export default function Home() {
                 </h2>
                 {playlistMeta.platform && (
                   <span style={{
-                    background: playlistMeta.platform === 'spotify' ? 'rgba(29, 185, 84, 0.15)' :
-                                playlistMeta.platform === 'apple' ? 'rgba(252, 60, 68, 0.15)' :
-                                playlistMeta.platform === 'youtube' ? 'rgba(255, 51, 51, 0.15)' :
-                                'rgba(255, 102, 170, 0.15)',
-                    color: playlistMeta.platform === 'spotify' ? '#1db954' :
-                           playlistMeta.platform === 'apple' ? '#fc3c44' :
-                           playlistMeta.platform === 'youtube' ? '#ff4444' :
-                           '#ff66aa',
-                    border: `1px solid ${
-                      playlistMeta.platform === 'spotify' ? 'rgba(29, 185, 84, 0.35)' :
-                      playlistMeta.platform === 'apple' ? 'rgba(252, 60, 68, 0.35)' :
-                      playlistMeta.platform === 'youtube' ? 'rgba(255, 51, 51, 0.35)' :
-                      'rgba(255, 102, 170, 0.35)'
-                    }`,
+                    background: platformBadge.bg,
+                    color: platformBadge.color,
+                    border: `1px solid ${platformBadge.border}`,
                     padding: '2px 8px',
                     borderRadius: '4px',
                     fontSize: '0.68rem',
@@ -994,7 +955,6 @@ export default function Home() {
         isOpen={isExportOpen}
         onClose={() => setIsExportOpen(false)}
         songs={songs}
-        playlistTitle={playerProfile ? `${playerProfile.username} — osu! beatmaps` : playlistMeta?.title}
       />
 
       {/* End-User Guide & System Status Modal */}

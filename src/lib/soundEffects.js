@@ -103,4 +103,3 @@ class OsuSoundEffects {
 }
 
 export const osuAudio = new OsuSoundEffects();
-export default osuAudio;
