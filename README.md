@@ -101,7 +101,3 @@ graph TD
 All osu! API calls run through a single client-credentials token (`/lib/osu.js`), cached in-memory and refreshed as it nears expiry.
 
 ---
-
-## License
-
-MIT License. Developed for the osu! and rhythm game community.
