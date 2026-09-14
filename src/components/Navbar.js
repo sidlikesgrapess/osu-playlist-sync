@@ -187,10 +187,10 @@ export default function Navbar({ onOpenSetupGuide, systemStatus }) {
               fontFamily: 'inherit',
               minHeight: '34px',
             }}
-            title="What's new & system status"
+            title="System status & what's new"
           >
             <div style={{ width: '6px', height: '6px', borderRadius: '50%', background: '#00cc77', flexShrink: 0 }} />
-            <span>What's New</span>
+            <span>Online</span>
           </button>
 
           {/* Report an Issue Button */}

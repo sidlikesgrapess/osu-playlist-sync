@@ -5,6 +5,7 @@ import { osuAudio } from '@/lib/soundEffects';
 
 export default function StatsBar({
   totalSongs,
+  totalLabel = 'Playlist Songs',
   matchedCount,
   searchedCount,
   selectedCount,
@@ -21,8 +22,9 @@ export default function StatsBar({
 }) {
   const effectiveTotal = searchedCount !== undefined && searchedCount > 0 ? searchedCount : totalSongs;
   const matchPercentage = effectiveTotal > 0 ? Math.round((matchedCount / effectiveTotal) * 100) : 0;
-  const isSelective = selectedCount > 0 && selectedCount < matchedCount;
-  const targetCount = isSelective ? selectedCount : matchedCount;
+  // Downloads act on ticked beatmaps only.
+  const targetCount = selectedCount;
+  const isEverythingSelected = matchedCount > 0 && selectedCount === matchedCount;
 
   return (
     <div className="osu-glass" style={{
@@ -40,7 +42,7 @@ export default function StatsBar({
       <div style={{ display: 'flex', alignItems: 'center', gap: 'clamp(10px, 3vw, 18px)', flexWrap: 'wrap' }}>
         <div>
           <div style={{ fontSize: '0.66rem', color: '#8b7d95', textTransform: 'uppercase', fontWeight: 800 }}>
-            Playlist Songs
+            {totalLabel}
           </div>
           <div style={{ fontSize: '1.15rem', fontWeight: 900, color: '#ffffff' }}>
             {totalSongs}
@@ -169,7 +171,7 @@ export default function StatsBar({
         >
           <Download size={13} />
           <span>
-            {isSelective ? `Download (${selectedCount})` : `Download All (${matchedCount})`}
+            {isEverythingSelected ? `Download All (${selectedCount})` : `Download (${selectedCount})`}
           </span>
         </button>
 
@@ -198,9 +200,9 @@ export default function StatsBar({
           <span>
             {isDownloadingZip
               ? `Zipping (${zipProgress}%)...`
-              : isSelective
-              ? `ZIP (${selectedCount})`
-              : `Bundle as .ZIP (${matchedCount})`}
+              : isEverythingSelected
+              ? `Bundle as .ZIP (${selectedCount})`
+              : `ZIP (${selectedCount})`}
           </span>
         </button>
 

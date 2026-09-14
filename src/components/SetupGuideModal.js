@@ -1,24 +1,52 @@
 'use client';
 
-import { X, Rocket } from 'lucide-react';
+import { useEffect, useState } from 'react';
+import { X, Rocket, ExternalLink } from 'lucide-react';
 import { osuAudio } from '@/lib/soundEffects';
 
-const WHATS_NEW = [
-  {
-    title: 'Add More Songs',
-    description: 'Paste more links without losing your current list.',
-  },
-  {
-    title: 'Search All button',
-    description: 'One click to search everything still unmatched.',
-  },
-  {
-    title: 'Smarter query cleanup',
-    description: "Cleans up mods and junk from titles before searching.",
-  },
-];
+const COMMIT_TYPES = {
+  feat: { label: 'Feature', color: '#00cc77' },
+  fix: { label: 'Fix', color: '#44bbee' },
+  perf: { label: 'Performance', color: '#ffbb22' },
+  style: { label: 'Style', color: '#ff66aa' },
+  refactor: { label: 'Refactor', color: '#9944ff' },
+  chore: { label: 'Chore', color: '#887c93' },
+  docs: { label: 'Docs', color: '#c0b4c8' },
+  test: { label: 'Test', color: '#ff9944' },
+  build: { label: 'Build', color: '#887c93' },
+  ci: { label: 'CI', color: '#887c93' },
+};
+
+const DEFAULT_TYPE = { label: 'Update', color: '#c0b4c8' };
+
+function relativeTime(iso) {
+  if (!iso) return '';
+  const diffMs = Date.now() - new Date(iso).getTime();
+  const days = Math.floor(diffMs / 86400000);
+  if (days > 0) return `${days}d ago`;
+  const hours = Math.floor(diffMs / 3600000);
+  if (hours > 0) return `${hours}h ago`;
+  const mins = Math.max(1, Math.floor(diffMs / 60000));
+  return `${mins}m ago`;
+}
 
 export default function SetupGuideModal({ isOpen, onClose, systemStatus }) {
+  const [commits, setCommits] = useState([]);
+
+  useEffect(() => {
+    if (!isOpen) return;
+    let cancelled = false;
+
+    fetch('/api/github/commits')
+      .then(res => res.json())
+      .then(data => {
+        if (!cancelled) setCommits(data.commits || []);
+      })
+      .catch(() => {});
+
+    return () => { cancelled = true; };
+  }, [isOpen]);
+
   if (!isOpen) return null;
 
   const osuConfigured = systemStatus?.osuConfigured ?? true;
@@ -134,26 +162,76 @@ export default function SetupGuideModal({ isOpen, onClose, systemStatus }) {
             </div>
           </div>
 
-          {/* What's New */}
+          {/* What's New — pulled straight from the repo's latest commits */}
           <div style={{ display: 'flex', flexDirection: 'column', gap: '8px' }}>
             <h3 style={{ fontSize: '0.88rem', fontWeight: 800, color: '#ffffff', display: 'flex', alignItems: 'center', gap: '6px', margin: 0 }}>
               <Rocket size={15} color="#ff66aa" />
               <span>What's New</span>
             </h3>
 
-            <div style={{ display: 'grid', gridTemplateColumns: '1fr', gap: '6px' }}>
-              {WHATS_NEW.map((item) => (
-                <div key={item.title} className="osu-glass-card" style={{ padding: '10px 14px', borderRadius: '8px', background: '#252130', display: 'flex', gap: '10px', alignItems: 'flex-start' }}>
-                  <span style={{ background: '#ff66aa', width: '6px', height: '6px', borderRadius: '50%', flexShrink: 0, marginTop: '7px' }} />
-                  <div>
-                    <div style={{ fontSize: '0.8rem', fontWeight: 800, color: '#ffffff' }}>{item.title}</div>
-                    <div style={{ fontSize: '0.72rem', color: '#c0b4c8', marginTop: '1px', lineHeight: 1.35 }}>
-                      {item.description}
-                    </div>
-                  </div>
-                </div>
-              ))}
-            </div>
+            {commits.length === 0 ? (
+              <div style={{ fontSize: '0.75rem', color: '#887c93', fontWeight: 600, padding: '6px 2px' }}>
+                Loading latest changes...
+              </div>
+            ) : (
+              <div style={{ display: 'grid', gridTemplateColumns: '1fr', gap: '6px' }}>
+                {commits.map((commit) => {
+                  const commitType = COMMIT_TYPES[commit.type] || DEFAULT_TYPE;
+                  return (
+                  <a
+                    key={commit.sha}
+                    href={commit.url}
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    className="osu-btn-interactive"
+                    onMouseEnter={() => osuAudio.playHover()}
+                    style={{
+                      padding: '9px 14px',
+                      borderRadius: '8px',
+                      background: '#252130',
+                      border: '1px solid rgba(255, 255, 255, 0.07)',
+                      display: 'flex',
+                      gap: '9px',
+                      alignItems: 'center',
+                      textDecoration: 'none',
+                    }}
+                  >
+                    <span style={{
+                      fontSize: '0.64rem',
+                      fontWeight: 900,
+                      padding: '2px 7px',
+                      borderRadius: '4px',
+                      flexShrink: 0,
+                      whiteSpace: 'nowrap',
+                      color: commitType.color,
+                      background: 'rgba(0, 0, 0, 0.35)',
+                      border: `1px solid ${commitType.color}44`,
+                    }}>
+                      {commitType.label}
+                    </span>
+
+                    <span style={{
+                      fontSize: '0.75rem',
+                      color: '#e4dced',
+                      fontWeight: 600,
+                      flex: 1,
+                      minWidth: 0,
+                      overflow: 'hidden',
+                      textOverflow: 'ellipsis',
+                      whiteSpace: 'nowrap',
+                    }}>
+                      {commit.text}
+                    </span>
+
+                    <span style={{ fontSize: '0.68rem', color: '#887c93', fontWeight: 700, flexShrink: 0 }}>
+                      {relativeTime(commit.date)}
+                    </span>
+                    <ExternalLink size={11} color="#887c93" style={{ flexShrink: 0 }} />
+                  </a>
+                  );
+                })}
+              </div>
+            )}
           </div>
 
         </div>

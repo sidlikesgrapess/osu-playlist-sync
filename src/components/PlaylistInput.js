@@ -2,7 +2,7 @@
 
 import { useState, useEffect, useRef } from 'react';
 import { createPortal } from 'react-dom';
-import { Loader2, Sparkles, ArrowRight, ChevronDown, Plus } from 'lucide-react';
+import { Loader2, Sparkles, ArrowRight, ChevronDown, Plus, User } from 'lucide-react';
 import { YouTubeIcon, SpotifyIcon, AppleMusicIcon, MusicNoteIcon } from './Icons';
 import { osuAudio } from '@/lib/soundEffects';
 
@@ -70,6 +70,7 @@ export default function PlaylistInput({ onFetch, isLoading, hasSongs, mode, setM
   const detectPlatform = () => {
     if (selectedPlatform !== 'auto') return selectedPlatform;
     const lower = url.toLowerCase().trim();
+    if (/osu\.ppy\.sh\/(users|u)\//.test(lower)) return 'player';
     if (lower.includes('spotify.com')) return 'spotify';
     if (lower.includes('music.apple.com')) return 'apple';
     if (lower.includes('youtube.com') || lower.includes('youtu.be')) return 'youtube';
@@ -89,6 +90,8 @@ export default function PlaylistInput({ onFetch, isLoading, hasSongs, mode, setM
         return <AppleMusicIcon size={size} color="#fc3c44" />;
       case 'query':
         return <MusicNoteIcon size={size} color="#ff66aa" />;
+      case 'player':
+        return <User size={size} color="#44bbee" />;
       default:
         return <Sparkles size={size} color="#ff66aa" />;
     }
@@ -100,11 +103,13 @@ export default function PlaylistInput({ onFetch, isLoading, hasSongs, mode, setM
       case 'spotify': return 'Spotify';
       case 'apple': return 'Apple Music';
       case 'query': return 'Single Song';
+      case 'player': return 'Player Search';
       default: return 'Auto Detect';
     }
   };
 
   const getPlaceholder = () => {
+    if (selectedPlatform === 'player') return 'Type an osu! player name or paste their profile link...';
     if (hasSongs) return 'Paste another link or type a song to add to the list...';
     switch (selectedPlatform) {
       case 'youtube': return 'Paste YouTube playlist link or video URL...';
@@ -120,14 +125,14 @@ export default function PlaylistInput({ onFetch, isLoading, hasSongs, mode, setM
     const inputVal = url.trim() || (typeof document !== 'undefined' ? document.getElementById('playlist-url-input')?.value?.trim() : '');
     if (!inputVal) return;
     osuAudio.playClick();
-    onFetch(inputVal);
+    onFetch(inputVal, activePlatform);
     if (hasSongs) setUrl('');
   };
 
   const handleQuickSample = (sampleVal) => {
     setUrl(sampleVal);
     osuAudio.playClick();
-    onFetch(sampleVal);
+    onFetch(sampleVal, 'auto');
   };
 
   const handleModeChange = (newMode) => {
@@ -392,6 +397,7 @@ export default function PlaylistInput({ onFetch, isLoading, hasSongs, mode, setM
                     { id: 'spotify', label: 'Spotify (Playlist/Track)', icon: 'spotify' },
                     { id: 'apple', label: 'Apple Music (Playlist/Song)', icon: 'apple' },
                     { id: 'query', label: 'Single Song Search', icon: 'query' },
+                    { id: 'player', label: 'Player Search (osu! profile)', icon: 'player' },
                   ].map((item) => (
                     <button
                       key={item.id}

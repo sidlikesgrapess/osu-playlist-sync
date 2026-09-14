@@ -25,6 +25,7 @@ export async function getOsuAccessToken() {
   try {
     const response = await fetch('https://osu.ppy.sh/oauth/token', {
       method: 'POST',
+      cache: 'no-store',
       headers: {
         'Content-Type': 'application/x-www-form-urlencoded',
         'Accept': 'application/json',
@@ -51,6 +52,185 @@ export async function getOsuAccessToken() {
     console.error('[osu! API] Token request exception:', error);
     return null;
   }
+}
+
+const OSU_API_BASE = 'https://osu.ppy.sh/api/v2';
+
+/**
+ * Authenticated GET against the osu! API v2. Throws with `.status` so callers
+ * can distinguish rate limits (429) from genuine misses.
+ */
+async function osuApiGet(path, token) {
+  const res = await fetch(`${OSU_API_BASE}${path}`, {
+    cache: 'no-store',
+    headers: {
+      'Authorization': `Bearer ${token}`,
+      'Accept': 'application/json',
+    },
+  });
+
+  if (!res.ok) {
+    const error = new Error(`osu! API responded ${res.status} for ${path}`);
+    error.status = res.status;
+    error.retryAfter = res.headers.get('retry-after');
+    throw error;
+  }
+
+  return res.json();
+}
+
+/**
+ * Extracts the user reference (id or username) out of an osu! profile URL.
+ * Returns null when the input isn't a profile link.
+ */
+export function parseOsuProfileRef(input = '') {
+  const match = String(input).trim().match(/osu\.ppy\.sh\/(?:users|u)\/([^/?#\s]+)/i);
+  return match ? decodeURIComponent(match[1]) : null;
+}
+
+function formatUserSummary(user) {
+  return {
+    id: user.id,
+    username: user.username,
+    avatarUrl: user.avatar_url,
+    countryCode: user.country_code || user.country?.code || null,
+    isSupporter: Boolean(user.is_supporter),
+  };
+}
+
+function formatUserProfile(user) {
+  const stats = user.statistics || {};
+  return {
+    ...formatUserSummary(user),
+    coverUrl: user.cover?.custom_url || user.cover?.url || user.cover_url || null,
+    globalRank: stats.global_rank || null,
+    countryRank: stats.country_rank || null,
+    pp: stats.pp ? Math.round(stats.pp) : null,
+    playCount: stats.play_count || 0,
+    counts: {
+      // /scores/best only ever exposes the top 100 plays
+      best: Math.min(user.scores_best_count ?? 100, 100),
+      most_played: user.beatmap_playcounts_count ?? 0,
+      favourite: user.favourite_beatmapset_count ?? 0,
+    },
+  };
+}
+
+/**
+ * Search osu! users by name. The API pages in fixed windows of 20 via `page`.
+ */
+export async function searchOsuUsers(query, page = 1) {
+  const token = await getOsuAccessToken();
+  if (!token) return { users: [], isDemo: true };
+
+  const data = await osuApiGet(`/search?query=${encodeURIComponent(query)}&mode=user&page=${page}`, token);
+  const users = data?.user?.data || [];
+
+  return { users: users.map(formatUserSummary), total: data?.user?.total || users.length };
+}
+
+/**
+ * Fetch a single osu! user profile by numeric id or username.
+ */
+export async function getOsuUser(userRef) {
+  const token = await getOsuAccessToken();
+  if (!token) return null;
+
+  const ref = String(userRef).trim();
+  const path = /^\d+$/.test(ref)
+    ? `/users/${encodeURIComponent(ref)}`
+    : `/users/${encodeURIComponent(ref)}?key=username`;
+
+  return formatUserProfile(await osuApiGet(path, token));
+}
+
+/**
+ * Normalizes one entry from a user's best scores / most played / favourites
+ * into a common `{ beatmapset, meta }` shape.
+ */
+function normalizeUserBeatmapEntry(entry, type) {
+  let set = null;
+  let beatmap = null;
+  let meta = {};
+
+  if (type === 'best') {
+    set = entry.beatmapset;
+    beatmap = entry.beatmap;
+    meta = {
+      pp: typeof entry.pp === 'number' ? Math.round(entry.pp) : null,
+      rank: entry.rank || null,
+      accuracy: typeof entry.accuracy === 'number' ? Number((entry.accuracy * 100).toFixed(2)) : null,
+      mods: (entry.mods || []).map(m => (typeof m === 'string' ? m : m?.acronym)).filter(Boolean),
+    };
+  } else if (type === 'most_played') {
+    set = entry.beatmapset;
+    beatmap = entry.beatmap;
+    meta = { playCount: entry.count || 0 };
+  } else {
+    set = entry;
+  }
+
+  if (!set || !set.id) return null;
+
+  // Compact sets from score/playcount endpoints carry no difficulty list —
+  // fall back to the single beatmap the entry refers to.
+  const withDifficulties = (!set.beatmaps || set.beatmaps.length === 0) && beatmap
+    ? { ...set, beatmaps: [beatmap] }
+    : set;
+
+  return { beatmapset: formatBeatmapset(withDifficulties), meta };
+}
+
+const RANKED_STATUSES = ['ranked', 'loved', 'qualified', 'approved'];
+
+/**
+ * Applies the UI's mode / status filters to a normalized beatmapset.
+ * osu! only supports a mode filter natively on score endpoints, so the
+ * collection endpoints are filtered here instead.
+ */
+function matchesCollectionFilters(beatmapset, mode, status) {
+  if (status === 'ranked' && !RANKED_STATUSES.includes(beatmapset.status)) {
+    return false;
+  }
+
+  if (mode && mode !== 'all') {
+    const modes = (beatmapset.difficulties || []).map(d => d.mode).filter(Boolean);
+    if (modes.length > 0 && !modes.includes(mode)) return false;
+  }
+
+  return true;
+}
+
+/**
+ * Fetch a window of a user's best performances, most played maps, or favourites.
+ *
+ * Filtering has to happen after the fetch for the collection endpoints, so we
+ * pull one larger window per section and let the caller paginate locally —
+ * that keeps page counts honest and costs one API call instead of one per page.
+ */
+export async function getUserBeatmapCollection(userId, type, { limit = 100, mode = 'all', status = 'any' } = {}) {
+  const token = await getOsuAccessToken();
+  if (!token) return { items: [], isDemo: true };
+
+  // Only the score endpoints accept a ruleset filter directly.
+  const modeParam = type === 'best' && mode && mode !== 'all' ? `&mode=${encodeURIComponent(mode)}` : '';
+
+  const pathByType = {
+    best: `/users/${userId}/scores/best?limit=${limit}&offset=0${modeParam}`,
+    most_played: `/users/${userId}/beatmapsets/most_played?limit=${limit}&offset=0`,
+    favourite: `/users/${userId}/beatmapsets/favourite?limit=${limit}&offset=0`,
+  };
+
+  const path = pathByType[type];
+  if (!path) throw new Error(`Unknown collection type: ${type}`);
+
+  const data = await osuApiGet(path, token);
+  const list = Array.isArray(data) ? data : [];
+
+  const normalized = list.map(entry => normalizeUserBeatmapEntry(entry, type)).filter(Boolean);
+  const items = normalized.filter(item => matchesCollectionFilters(item.beatmapset, mode, status));
+
+  return { items, fetched: normalized.length };
 }
 
 /**
@@ -166,11 +346,16 @@ export async function searchOsuBeatmaps(query, options = {}) {
 
     try {
       const res = await fetch(searchUrl, {
+        cache: 'no-store',
         headers: {
           'Authorization': `Bearer ${token}`,
           'Accept': 'application/json',
         },
       });
+
+      if (!res.ok) {
+        console.warn(`[osu! Search] ${res.status} for query "${q}"${res.status === 429 ? ' (rate limited)' : ''}`);
+      }
 
       if (res.ok) {
         const data = await res.json();
