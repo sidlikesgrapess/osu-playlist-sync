@@ -1,42 +1,45 @@
-# osu! Playlist Sync
+# osu!Sync
 
-A modern Next.js web application to sync music playlists and individual songs from **YouTube**, **Spotify**, and **Apple Music** directly to **osu! beatmaps** with intelligent metadata extraction, title cleaning, official osu! API search, and one-click `.osz` / ZIP downloads via community mirrors.
+Turn playlists, songs, or any osu! player's top plays and favourites into downloadable osu! beatmaps — no manual searching, no API key of your own required.
+
+Point it at a **YouTube / Spotify / Apple Music** playlist, a single song, or an **osu! player's profile**, and it finds the matching beatmapsets and lets you download them one at a time or as a ZIP.
 
 ---
 
 ## Features
 
-- **Multi-Platform Playlist & Song Extraction**:
-  - Auto-detects and extracts tracks from **YouTube** playlists and videos, **Spotify** playlists, albums, and tracks (via public metadata and embed extractors), **Apple Music** playlists and songs, as well as direct text searches (e.g. `YOASOBI - Idol`).
-- **Intelligent Title Cleaner**:
-  - Automatically cleans noisy video and audio titles (`[MV]`, `(Official Audio)`, `[HQ]`, `【...】`, `(4K 60FPS)`) into precise `Artist - Title` search terms.
-- **Accurate osu! Search & Filter Modes**:
-  - Search and filter across all 4 game modes (**osu!**, **osu!taiko**, **osu!catch**, **osu!mania**) and map statuses (**Ranked & Loved**, **All / Unranked**).
-  - Shows cover art, creator info, BPM, and difficulty star ratings.
-  - Interactive **Alternative Beatmap Picker** to select different mapset versions or difficulties.
-- **osu! lazer Styled Checkboxes & Gating**:
-  - Custom osu! lazer style checkboxes.
-  - Automatically prevents selecting tracks that do not have a beatmap match.
-- **Pagination & Query Optimization**:
-  - Fast paginated table with selectable page sizes (10, 25, 50, All) and on-demand search to minimize query overhead.
-- **Live Audio Previews**:
-  - In-browser MP3 preview player with real-time waveform equalizer visualizer.
-- **Fast Batch & Single Downloads**:
-  - Direct single `.osz` download per beatmap.
-  - Instant **Bundle as .ZIP** with client-side packaging (`JSZip`) and celebratory confetti.
-  - Multi-mirror failover support (`catboy.best`, `nerinyan.moe`, `beatconnect.io`).
-  - Formatted exports for **Web URLs**, **osu! Direct (`osu://dl`)**, and plain text song lists.
-- **osu! Hit Circle Easter Egg**:
-  - Interactive logo click easter egg featuring approach circle rings, hit flash, combo counter, Web Audio synthesized hit sounds, and `100` / `300` / `FC!` judgments.
-- **Mobile & Tablet Optimized**:
-  - Fully responsive layout switching between desktop tables and touch-friendly mobile frosted glass cards.
+### Three ways in
+- **Playlists & tracks** — paste a YouTube playlist/video, Spotify playlist/album/track, or Apple Music playlist/song link. Spotify and Apple Music are read from their public embed/oEmbed metadata, no developer keys needed; YouTube playlists are pulled zero-key via the Innertube API.
+- **Plain-text song search** — just type `Artist - Title`.
+- **osu! Player Search** — search by username or paste a profile link (`osu.ppy.sh/users/...`). Shows the player's real banner, avatar, rank and pp, then three collapsible sections — **Best Performances**, **Most Played**, and **Favourites** — each paginated locally from a single fetched window, so browsing pages costs no extra API calls.
+
+### Smart matching
+- Title/artist scoring (exact match, partial overlap, artist confirmation, ranked/loved bonus) instead of trusting raw search order — every candidate across several query fallbacks gets scored and only the best survive.
+- **Match Strictness slider** — drag from *Very Loose* to *Very Strict* to control the score cutoff yourself instead of a fixed threshold.
+- Filter by game mode (**osu!**, **taiko**, **catch**, **mania**) and status (**Ranked & Loved** or **All**) — applied server-side for playlist search, and to a player's own maps too.
+- Manual query editing and an alternative-beatmap picker when the top match isn't the one you want.
+
+### Downloads
+- Only **ticked** beatmaps download — nothing downloads by accident, with a select-all per page.
+- Single `.osz` download, or bundle everything as a **ZIP** (client-side via JSZip).
+- Multi-mirror failover (`catboy.best`, `nerinyan.moe`, `beatconnect.io`, `sayobot`) with a generated fallback if every mirror is down.
+- Export as web URLs, `osu://dl/` links, or a plain-text list.
+- A draggable, throwable toast confirms each download — grab it, flick it, and it falls with real inertia instead of just fading out.
+
+### Everything else
+- Real osu! grade badges (SS/S/A/B/C/D/F, served locally) on player scores, with pp, rank, mods, and play counts shown per entry.
+- Live audio previews with a waveform equalizer.
+- osu!-lazer-styled checkboxes that gate selection to matched beatmaps only.
+- An **Online** panel with live system status and a "What's New" list pulled straight from this repo's latest commits.
+- A hit-circle easter egg on the logo (approach circles, judgments, synthesized hit sounds).
+- Fully responsive — desktop table / mobile card layouts, and a compact icon-only search bar under 480px.
 
 ---
 
 ## Quick Start (Local Development)
 
 ### 1. Prerequisites
-- Node.js 18.x or higher installed
+- Node.js 18.x or higher
 
 ### 2. Install Dependencies
 ```bash
@@ -49,21 +52,23 @@ Copy `.env.example` to `.env.local`:
 cp .env.example .env.local
 ```
 
-Configure your credentials in `.env.local`:
 ```env
-OSU_CLIENT_ID=your_osu_oauth_client_id
-OSU_CLIENT_SECRET=your_osu_oauth_client_secret
+# Required — from osu.ppy.sh -> Account Settings -> OAuth, Client Credentials grant type
+OSU_CLIENT_ID=your_osu_client_id
+OSU_CLIENT_SECRET=your_osu_client_secret
 
-# Optional: For server-side YouTube Data API v3 playlist fetching
-YOUTUBE_API_KEY=your_youtube_api_key
+# Optional — beatmap download mirror priority
+DEFAULT_MIRROR=catboy.best
 ```
 
-### 4. Run Development Server
+YouTube, Spotify, and Apple Music extraction need no API keys or credentials at all.
+
+### 4. Run the Dev Server
 ```bash
 npm run dev
 ```
 
-Open [http://localhost:3000](http://localhost:3000) in your browser.
+Open [http://localhost:3000](http://localhost:3000).
 
 ---
 
@@ -71,11 +76,8 @@ Open [http://localhost:3000](http://localhost:3000) in your browser.
 
 1. Push this repository to GitHub.
 2. Import the project on [Vercel](https://vercel.com).
-3. In **Project Settings -> Environment Variables**, configure:
-   - `OSU_CLIENT_ID`
-   - `OSU_CLIENT_SECRET`
-   - `YOUTUBE_API_KEY` (optional)
-4. In your [osu! OAuth Settings](https://osu.ppy.sh/home/account/edit#oauth), ensure your application is created with Client Credentials grant type.
+3. In **Project Settings → Environment Variables**, set `OSU_CLIENT_ID`, `OSU_CLIENT_SECRET`, and optionally `DEFAULT_MIRROR`.
+4. In your [osu! OAuth Settings](https://osu.ppy.sh/home/account/edit#oauth), make sure the application uses the **Client Credentials** grant type.
 
 ---
 
@@ -83,12 +85,20 @@ Open [http://localhost:3000](http://localhost:3000) in your browser.
 
 ```mermaid
 graph TD
-    User["User (Desktop / Mobile)"] -->|"Paste Link or Search"| Frontend["Next.js App Router UI"]
-    Frontend -->|"Extract Tracks"| Extractor["/api/playlist (YouTube, Spotify, Apple Music)"]
-    Frontend -->|"Search Beatmaps"| OsuSearch["/api/osu/search (osu! API v2 / Mirror)"]
-    Frontend -->|"Download .osz"| Proxy["/api/download (catboy.best / nerinyan.moe)"]
-    Frontend -->|"Bundle .ZIP"| JSZip["Client-side JSZip Packaging"]
+    User["User"] -->|"Playlist / song link or text"| Extract["/api/playlist\n(YouTube Innertube, Spotify embed, Apple Music)"]
+    User -->|"Username or profile link"| PlayerSearch["/api/osu/player"]
+
+    Extract --> Match["/api/osu/search\n(scored fuzzy matching, mode/status/threshold)"]
+    PlayerSearch -->|"Resolved profile"| Collections["/api/osu/player/beatmaps\n(best / most played / favourites)"]
+
+    Match --> UI["Song / Beatmap Table"]
+    Collections --> UI
+
+    UI -->|"Download .osz"| Proxy["/api/download\n(mirror failover)"]
+    UI -->|"Bundle as .ZIP"| JSZip["Client-side JSZip packaging"]
 ```
+
+All osu! API calls run through a single client-credentials token (`/lib/osu.js`), cached in-memory and refreshed as it nears expiry.
 
 ---
 
