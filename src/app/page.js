@@ -12,8 +12,12 @@ import PlayerProfile from '@/components/PlayerProfile';
 import PlayerResults from '@/components/PlayerResults';
 import PlayerSections from '@/components/PlayerSections';
 import DownloadToast from '@/components/DownloadToast';
+import { GitHubIcon } from '@/components/Icons';
+import { Star } from 'lucide-react';
 import { osuAudio } from '@/lib/soundEffects';
 import JSZip from 'jszip';
+
+const REPO_URL = 'https://github.com/sidlikesgrapess/osu-playlist-sync';
 
 const PLAYER_PAGE_SIZE = 5;
 
@@ -924,6 +928,36 @@ export default function Home() {
           </>
         )}
       </main>
+
+      {/* Footer: GitHub link + star nudge */}
+      <footer style={{
+        padding: '18px 16px 28px',
+        display: 'flex',
+        justifyContent: 'center',
+      }}>
+        <a
+          href={REPO_URL}
+          target="_blank"
+          rel="noopener noreferrer"
+          onMouseEnter={() => osuAudio.playHover()}
+          onClick={() => osuAudio.playClick()}
+          style={{
+            display: 'inline-flex',
+            alignItems: 'center',
+            gap: '6px',
+            color: '#6b6376',
+            fontSize: '0.72rem',
+            fontWeight: 700,
+            textDecoration: 'none',
+          }}
+        >
+          <GitHubIcon size={13} color="#6b6376" />
+          <span>GitHub</span>
+          <span style={{ color: '#3d3846' }}>·</span>
+          <Star size={12} color="#ffbb22" style={{ fill: '#ffbb22' }} />
+          <span>Consider starring this project</span>
+        </a>
+      </footer>
 
       {/* Download completion toasts */}
       <DownloadToast toasts={toasts} onDismiss={dismissToast} />
