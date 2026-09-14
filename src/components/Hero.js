@@ -91,7 +91,7 @@ export default function Hero({ onTryDemo }) {
             margin: 0,
             lineHeight: 1.1,
           }}>
-            Sync
+            <span style={{ color: '#b9aec6', fontWeight: 800 }}>osu!</span>Sync
           </h1>
         </div>
       </div>
@@ -104,9 +104,9 @@ export default function Hero({ onTryDemo }) {
         margin: '0 auto 6px',
         letterSpacing: '-0.01em',
         lineHeight: 1.45,
-        maxWidth: '580px',
+        maxWidth: '880px',
       }}>
-        Sync your <span style={{ color: '#1db954', fontWeight: 800 }}>Spotify</span>, <span style={{ color: '#ff5555', fontWeight: 800 }}>YouTube</span> &amp; <span style={{ color: '#fc3c44', fontWeight: 800 }}>Apple Music</span> playlists to <span style={{ color: '#ff66aa', fontWeight: 800 }}>osu! Beatmaps</span>
+        Sync your <span style={{ color: '#44bbee', fontWeight: 800 }}>playlists</span> and <span style={{ color: '#1db954', fontWeight: 800 }}>songs</span>. Or pull any <span style={{ color: '#ff66aa', fontWeight: 800 }}>player’s</span> top plays and favourites in bulk.
       </h2>
     </section>
   );

@@ -99,10 +99,10 @@ export default function SetupGuideModal({ isOpen, onClose, systemStatus }) {
             />
             <div style={{ minWidth: 0 }}>
               <h2 style={{ fontSize: '1.05rem', fontWeight: 900, margin: 0, color: '#ffffff', whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>
-                osu! Sync
+                osu!Sync
               </h2>
               <p style={{ fontSize: '0.72rem', color: '#887c93', margin: '1px 0 0', fontWeight: 600, whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>
-                Multi-platform playlist converter for osu!
+                Playlists, songs and players into osu! beatmaps
               </p>
             </div>
           </div>
