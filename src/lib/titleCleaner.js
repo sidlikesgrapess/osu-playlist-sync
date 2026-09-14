@@ -48,15 +48,6 @@ const INLINE_NOISE_PATTERNS = [
   /\b(?:sped\s*up|speed\s*up|slowed\s*\+\s*reverb|slowed\s*down|nightcore|daycore|8d\s*audio|bass\s*boosted)\b/gi,
 ];
 
-// Well-known original artists for iconic songs
-const KNOWN_SONG_ARTISTS = {
-  'the kill': '30 Seconds to Mars',
-  'the kill bury me': '30 Seconds to Mars',
-  'i hate everything about you': 'Three Days Grace',
-  'iris': 'Goo Goo Dolls',
-  'all i wanted': 'Paramore',
-};
-
 /**
  * Strips symbols and noise trailing after a song name (e.g. "Song Name +HDHR 6x100" or "Song Name • Official Visualizer")
  */
@@ -251,16 +242,6 @@ export function cleanSongTitle(rawTitle, channelTitle = '') {
     const mainTitle = stripTrailingSymbolNoise(subMatch[1]);
     if (artist) queries.push(`${artist} ${mainTitle}`);
     queries.push(mainTitle);
-  }
-
-  // Check known iconic song artists
-  const normTitle = (baseTitle || title).toLowerCase().replace(/[^a-z0-9 ]/g, ' ').replace(/\s+/g, ' ').trim();
-  const shortTitle = normTitle.replace(/\s+bury me$/, '').trim();
-  
-  if (KNOWN_SONG_ARTISTS[normTitle]) {
-    queries.unshift(`${KNOWN_SONG_ARTISTS[normTitle]} ${baseTitle || title}`);
-  } else if (KNOWN_SONG_ARTISTS[shortTitle]) {
-    queries.unshift(`${KNOWN_SONG_ARTISTS[shortTitle]} ${baseTitle || title}`);
   }
 
   // Normalize spaces
