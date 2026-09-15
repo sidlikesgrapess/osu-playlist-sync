@@ -467,7 +467,11 @@ export default function PlayerSections({
                     display: 'flex',
                     flexDirection: 'column',
                     gap: '7px',
-                    paddingRight: '4px',
+                    // Cancel the body's right padding so the scrollbar sits against
+                    // the card edge, then hold the rows clear of it — otherwise it
+                    // overlaps the .OSZ button on hover.
+                    marginRight: '-12px',
+                    paddingRight: '9px',
                   }}>
                     {allItems.map((song, idx) => {
                       // Position is part of the row key: a duplicate id would
