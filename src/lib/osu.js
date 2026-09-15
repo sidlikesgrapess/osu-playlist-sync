@@ -181,6 +181,57 @@ function normalizeUserBeatmapEntry(entry, type) {
   return { beatmapset: formatBeatmapset(withDifficulties), meta };
 }
 
+/**
+ * The `best` and `most_played` endpoints return one entry per *difficulty*, so a
+ * set the player has several scores or playcounts on comes back several times.
+ * Everything downstream — selection, export, download — is keyed by beatmapset,
+ * so those rows are indistinguishable duplicates: collapse them into one entry
+ * that keeps the strongest score and every difficulty the player touched.
+ */
+function dedupeByBeatmapset(entries) {
+  const byId = new Map();
+
+  entries.forEach(entry => {
+    const existing = byId.get(entry.beatmapset.id);
+    byId.set(entry.beatmapset.id, existing ? mergeBeatmapsetEntries(existing, entry) : entry);
+  });
+
+  return [...byId.values()];
+}
+
+function mergeBeatmapsetEntries(a, b) {
+  // The higher-pp score wins the row (rank badge, accuracy, mods); playcounts
+  // are per-difficulty, so they add up to the player's total on the set.
+  const primary = (b.meta?.pp || 0) > (a.meta?.pp || 0) ? b : a;
+  const other = primary === a ? b : a;
+
+  const difficulties = [...(primary.beatmapset.difficulties || [])];
+  const seenDiffs = new Set(difficulties.map(d => d.id));
+  (other.beatmapset.difficulties || []).forEach(d => {
+    if (!seenDiffs.has(d.id)) {
+      seenDiffs.add(d.id);
+      difficulties.push(d);
+    }
+  });
+  difficulties.sort((x, y) => x.difficultyRating - y.difficultyRating);
+
+  const playCount = (a.meta?.playCount || 0) + (b.meta?.playCount || 0);
+
+  return {
+    beatmapset: {
+      ...primary.beatmapset,
+      difficulties,
+      starRange: difficulties.length > 0
+        ? { min: difficulties[0].difficultyRating, max: difficulties[difficulties.length - 1].difficultyRating }
+        : primary.beatmapset.starRange,
+    },
+    meta: {
+      ...primary.meta,
+      ...(playCount > 0 ? { playCount } : {}),
+    },
+  };
+}
+
 const RANKED_STATUSES = ['ranked', 'loved', 'qualified', 'approved'];
 
 /**
@@ -228,7 +279,10 @@ export async function getUserBeatmapCollection(userId, type, { limit = 100, mode
   const list = Array.isArray(data) ? data : [];
 
   const normalized = list.map(entry => normalizeUserBeatmapEntry(entry, type)).filter(Boolean);
-  const items = normalized.filter(item => matchesCollectionFilters(item.beatmapset, mode, status));
+  const filtered = normalized.filter(item => matchesCollectionFilters(item.beatmapset, mode, status));
+  // Dedupe after filtering: the mode filter reads per-difficulty modes, which a
+  // merged entry would blur together.
+  const items = dedupeByBeatmapset(filtered);
 
   return { items, fetched: normalized.length };
 }
