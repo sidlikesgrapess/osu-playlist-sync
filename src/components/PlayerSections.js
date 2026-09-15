@@ -2,7 +2,7 @@
 
 import { useState, useRef, useEffect } from 'react';
 import {
-  Trophy, Play, Heart, ChevronDown, ChevronLeft, ChevronRight,
+  Trophy, Play, Heart, ChevronDown,
   Loader2, Download, ExternalLink, Music,
 } from 'lucide-react';
 import OsuCheckbox from './OsuCheckbox';
@@ -16,6 +16,9 @@ const SECTION_META = {
 };
 
 const GRADES = ['XH', 'X', 'SH', 'S', 'A', 'B', 'C', 'D', 'F'];
+
+// ~6 rows before the list starts scrolling instead of growing the page.
+const LIST_MAX_HEIGHT = 400;
 
 function GradeIcon({ rank }) {
   if (!rank || !GRADES.includes(rank)) return null;
@@ -77,7 +80,7 @@ function MetaBadge({ song }) {
   return null;
 }
 
-function BeatmapRow({ song, isSelected, onToggleSelect, onDownloadSingle, isDownloading, activeAudio, onToggleAudio }) {
+function BeatmapRow({ song, rowKey, isSelected, onToggleSelect, onDownloadSingle, isDownloading, activeAudio, onToggleAudio }) {
   const [imgError, setImgError] = useState(false);
   const [isHovered, setIsHovered] = useState(false);
   const match = song.matchedBeatmap;
@@ -108,7 +111,7 @@ function BeatmapRow({ song, isSelected, onToggleSelect, onDownloadSingle, isDown
       }}
     >
       <OsuCheckbox
-        id={`checkbox-${song.id}`}
+        id={`checkbox-${rowKey}`}
         checked={isSelected}
         onChange={() => {
           osuAudio.playClick();
@@ -288,94 +291,12 @@ function BeatmapRow({ song, isSelected, onToggleSelect, onDownloadSingle, isDown
   );
 }
 
-function SectionPagination({ page, totalPages, onPageChange, disabled }) {
-  if (totalPages <= 1) return null;
-
-  const pages = (() => {
-    if (totalPages <= 5) return Array.from({ length: totalPages }, (_, i) => i + 1);
-    if (page <= 3) return [1, 2, 3, 4, '...', totalPages];
-    if (page >= totalPages - 2) return [1, '...', totalPages - 3, totalPages - 2, totalPages - 1, totalPages];
-    return [1, '...', page - 1, page, page + 1, '...', totalPages];
-  })();
-
-  const navStyle = (isDisabled) => ({
-    background: '#262232',
-    border: '1px solid rgba(255, 255, 255, 0.08)',
-    color: isDisabled ? '#554d60' : '#c0b4c8',
-    borderRadius: '5px',
-    padding: '4px 8px',
-    cursor: isDisabled ? 'not-allowed' : 'pointer',
-    display: 'flex',
-    alignItems: 'center',
-    fontFamily: 'inherit',
-  });
-
-  return (
-    <div style={{
-      display: 'flex',
-      alignItems: 'center',
-      justifyContent: 'center',
-      gap: '4px',
-      flexWrap: 'wrap',
-      paddingTop: '4px',
-    }}>
-      <button
-        className="osu-btn-interactive"
-        onClick={() => page > 1 && onPageChange(page - 1)}
-        disabled={disabled || page <= 1}
-        style={navStyle(disabled || page <= 1)}
-      >
-        <ChevronLeft size={14} />
-      </button>
-
-      {pages.map((p, idx) => (
-        typeof p === 'number' ? (
-          <button
-            key={p}
-            className="osu-btn-interactive"
-            onClick={() => onPageChange(p)}
-            disabled={disabled}
-            style={{
-              background: page === p ? '#ff66aa' : '#262232',
-              border: `1px solid ${page === p ? '#ff66aa' : 'rgba(255, 255, 255, 0.08)'}`,
-              color: page === p ? '#ffffff' : '#c0b4c8',
-              borderRadius: '5px',
-              minWidth: '28px',
-              height: '28px',
-              padding: '0 6px',
-              fontSize: '0.74rem',
-              fontWeight: 800,
-              cursor: disabled ? 'wait' : 'pointer',
-              fontFamily: 'inherit',
-            }}
-          >
-            {p}
-          </button>
-        ) : (
-          <span key={`dots_${idx}`} style={{ color: '#887c93', padding: '0 4px', fontSize: '0.74rem' }}>...</span>
-        )
-      ))}
-
-      <button
-        className="osu-btn-interactive"
-        onClick={() => page < totalPages && onPageChange(page + 1)}
-        disabled={disabled || page >= totalPages}
-        style={navStyle(disabled || page >= totalPages)}
-      >
-        <ChevronRight size={14} />
-      </button>
-    </div>
-  );
-}
-
 export default function PlayerSections({
   sections,
-  pageSize = 5,
   selectedIds,
   onToggleSelect,
-  onSelectPage,
+  onSelectMany,
   onToggleSection,
-  onPageChange,
   onDownloadSingle,
   downloadingIds,
 }) {
@@ -407,9 +328,6 @@ export default function PlayerSections({
         const section = sections[type];
         const Icon = meta.icon;
         const allItems = section.allItems || [];
-        const totalPages = Math.max(1, Math.ceil(allItems.length / pageSize));
-        const currentPage = Math.min(section.page || 1, totalPages);
-        const pageItems = allItems.slice((currentPage - 1) * pageSize, currentPage * pageSize);
 
         return (
           <div
@@ -512,14 +430,14 @@ export default function PlayerSections({
                   </div>
                 )}
 
-                {pageItems.length > 0 && (() => {
-                  const allPageSelected = pageItems.every(s => selectedIds.has(s.id));
+                {allItems.length > 0 && (() => {
+                  const allSelected = allItems.every(s => selectedIds.has(s.id));
                   return (
                     <button
                       className="osu-btn-interactive"
                       onClick={() => {
                         osuAudio.playClick();
-                        onSelectPage(pageItems.map(s => s.id), !allPageSelected);
+                        onSelectMany(allItems.map(s => s.id), !allSelected);
                       }}
                       style={{
                         alignSelf: 'flex-start',
@@ -534,30 +452,44 @@ export default function PlayerSections({
                         fontFamily: 'inherit',
                       }}
                     >
-                      {allPageSelected ? 'Deselect Page' : `Select All in Page (${pageItems.length})`}
+                      {allSelected ? 'Deselect All' : `Select All (${allItems.length})`}
                     </button>
                   );
                 })()}
 
-                {pageItems.map((song) => (
-                  <BeatmapRow
-                    key={`${type}-${song.id}`}
-                    song={song}
-                    isSelected={selectedIds.has(song.id)}
-                    onToggleSelect={onToggleSelect}
-                    onDownloadSingle={onDownloadSingle}
-                    isDownloading={downloadingIds.has(song.id)}
-                    activeAudio={activeAudio}
-                    onToggleAudio={handleToggleAudio}
-                  />
-                ))}
+                {/* The whole window is rendered at once and scrolls in place —
+                    roughly six rows tall, so an open section never pushes the
+                    ones below it off the screen. */}
+                {allItems.length > 0 && (
+                  <div style={{
+                    maxHeight: `${LIST_MAX_HEIGHT}px`,
+                    overflowY: 'auto',
+                    display: 'flex',
+                    flexDirection: 'column',
+                    gap: '7px',
+                    paddingRight: '4px',
+                  }}>
+                    {allItems.map((song, idx) => {
+                      // Position is part of the row key: a duplicate id would
+                      // otherwise collide and make React duplicate or drop rows.
+                      const rowKey = `${type}-${idx}-${song.id}`;
 
-                <SectionPagination
-                  page={currentPage}
-                  totalPages={totalPages}
-                  onPageChange={(p) => onPageChange(type, p)}
-                  disabled={section.isLoading}
-                />
+                      return (
+                        <BeatmapRow
+                          key={rowKey}
+                          rowKey={rowKey}
+                          song={song}
+                          isSelected={selectedIds.has(song.id)}
+                          onToggleSelect={onToggleSelect}
+                          onDownloadSingle={onDownloadSingle}
+                          isDownloading={downloadingIds.has(song.id)}
+                          activeAudio={activeAudio}
+                          onToggleAudio={handleToggleAudio}
+                        />
+                      );
+                    })}
+                  </div>
+                )}
               </div>
             )}
           </div>

@@ -19,12 +19,11 @@ import JSZip from 'jszip';
 
 const REPO_URL = 'https://github.com/sidlikesgrapess/osu-playlist-sync';
 
-const PLAYER_PAGE_SIZE = 5;
 
 const createEmptySections = () => ({
-  best: { isOpen: false, page: 1, allItems: [], total: 0, isLoading: false, error: '', loaded: false },
-  most_played: { isOpen: false, page: 1, allItems: [], total: 0, isLoading: false, error: '', loaded: false },
-  favourite: { isOpen: false, page: 1, allItems: [], total: 0, isLoading: false, error: '', loaded: false },
+  best: { isOpen: false, allItems: [], total: 0, isLoading: false, error: '', loaded: false },
+  most_played: { isOpen: false, allItems: [], total: 0, isLoading: false, error: '', loaded: false },
+  favourite: { isOpen: false, allItems: [], total: 0, isLoading: false, error: '', loaded: false },
 });
 
 // osu! collections are already beatmapsets, so they slot straight into the
@@ -253,7 +252,6 @@ export default function Home() {
           ...prev[type],
           allItems: entries,
           total: entries.length,
-          page: 1,
           isLoading: false,
           loaded: true,
         },
@@ -268,8 +266,8 @@ export default function Home() {
     }
   };
 
-  // Selects or deselects a whole page's worth of beatmaps at once.
-  const handleSelectPage = (ids, shouldSelect) => {
+  // Selects or deselects a whole section's worth of beatmaps at once.
+  const handleSelectMany = (ids, shouldSelect) => {
     setSelectedIds(prev => {
       const next = new Set(prev);
       ids.forEach(id => shouldSelect ? next.add(id) : next.delete(id));
@@ -291,11 +289,6 @@ export default function Home() {
     }
   };
 
-  // Pagination within a loaded section is local — no extra API calls.
-  const handleSectionPageChange = (type, page) => {
-    setPlayerSections(prev => ({ ...prev, [type]: { ...prev[type], page } }));
-  };
-
   // Mode/status tabs changed while browsing a player: drop loaded maps and refetch.
   const reloadPlayerSections = (nextMode, nextStatus) => {
     if (!playerProfile) return;
@@ -309,7 +302,6 @@ export default function Home() {
           ...next[type],
           allItems: [],
           total: playerProfile.counts?.[type] || 0,
-          page: 1,
           loaded: false,
           error: '',
         };
@@ -823,12 +815,10 @@ export default function Home() {
 
             <PlayerSections
               sections={playerSections}
-              pageSize={PLAYER_PAGE_SIZE}
               selectedIds={selectedIds}
               onToggleSelect={handleToggleSelect}
-              onSelectPage={handleSelectPage}
+              onSelectMany={handleSelectMany}
               onToggleSection={handleToggleSection}
-              onPageChange={handleSectionPageChange}
               onDownloadSingle={handleDownloadSingle}
               downloadingIds={downloadingIds}
             />
