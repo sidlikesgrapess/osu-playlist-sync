@@ -59,3 +59,7 @@ Thumbs.db
 .vscode/
 *.swp
 *.swo
+
+# Local notes
+osu_scoring_algo.md
+MATCHING_PLAN.md

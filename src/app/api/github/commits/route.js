@@ -4,10 +4,10 @@ const REPO = 'sidlikesgrapess/osu-playlist-sync';
 const COMMIT_COUNT = 5;
 
 // The route itself always runs (otherwise the commit list would freeze at build
-// time), but the GitHub call is cached for an hour — unauthenticated reads are
-// capped at 60/hour per IP.
+// time), but the GitHub call is cached briefly — unauthenticated reads are capped
+// at 60/hour per IP, so this can't be fully live without risking that limit.
 export const dynamic = 'force-dynamic';
-const REVALIDATE_SECONDS = 3600;
+const REVALIDATE_SECONDS = 300;
 
 /** Splits a conventional-commit subject into its type and human-readable part. */
 function parseSubject(message) {

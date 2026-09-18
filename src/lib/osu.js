@@ -288,57 +288,120 @@ export async function getUserBeatmapCollection(userId, type, { limit = 100, mode
 }
 
 /**
- * Normalizes strings for loose comparison (removes punctuation, prefixes like 'the', and extra spaces)
+ * Normalizes strings for loose comparison (removes punctuation, prefixes like 'the', and extra
+ * spaces). Keeps any Unicode letter/number (not just a-z0-9) so CJK and other non-Latin titles
+ * survive normalization instead of collapsing to an empty string that spuriously "matches" any
+ * other empty string.
  */
 function normalizeForComparison(str = '') {
   return str
     .toLowerCase()
     .replace(/^the\s+/, '')
-    .replace(/[^a-z0-9 ]/g, ' ')
+    .replace(/[^\p{L}\p{N} ]/gu, ' ')
     .replace(/\s+/g, ' ')
     .trim();
 }
 
+function tokenize(str) {
+  return str.split(' ').filter(Boolean);
+}
+
+/** Order-independent whole-word containment: every token of the smaller side must appear in the larger side. */
+function tokenSetSimilar(a, b) {
+  const ta = new Set(tokenize(a));
+  const tb = new Set(tokenize(b));
+  if (ta.size === 0 || tb.size === 0) return false;
+  const [small, large] = ta.size <= tb.size ? [ta, tb] : [tb, ta];
+  for (const t of small) {
+    if (!large.has(t)) return false;
+  }
+  return true;
+}
+
+/** Character-bigram Dice coefficient: a continuous 0-1 similarity, no dependency. */
+function bigramDice(a, b) {
+  if (!a || !b) return 0;
+  if (a === b) return 1;
+  const bigrams = s => {
+    const arr = [];
+    for (let i = 0; i < s.length - 1; i++) arr.push(s.slice(i, i + 2));
+    return arr;
+  };
+  const A = bigrams(a);
+  const B = bigrams(b);
+  if (A.length === 0 || B.length === 0) return 0;
+  const counts = new Map();
+  for (const bg of A) counts.set(bg, (counts.get(bg) || 0) + 1);
+  let overlap = 0;
+  for (const bg of B) {
+    const c = counts.get(bg) || 0;
+    if (c > 0) {
+      overlap++;
+      counts.set(bg, c - 1);
+    }
+  }
+  return (2 * overlap) / (A.length + B.length);
+}
+
+/**
+ * Similarity between two normalized strings, 0-1. Token-set containment gives a clean 1 (handles
+ * word-order swaps and "Artist" vs "Artist Extra"). Otherwise falls back to bigram Dice, gated by
+ * a higher bar on short strings — a couple of coincidentally shared bigrams (e.g. "ado" / "shadow"
+ * share "ad"+"do") inflates the ratio on short inputs, so demand more confidence there.
+ */
+function textSimilarity(a, b) {
+  if (!a || !b) return 0;
+  if (a === b) return 1;
+  if (tokenSetSimilar(a, b)) return 1;
+  const dice = bigramDice(a, b);
+  const bar = Math.min(a.length, b.length) < 6 ? 0.85 : 0.55;
+  return dice >= bar ? dice : 0;
+}
+
 /**
  * Score how well an osu! beatmapset matches the target song title & artist.
- * Returns a score between -100 and 200+.
+ * Returns a score between roughly -140 and 215.
  */
 export function scoreBeatmapMatch(beatmap, targetTitle = '', targetArtist = '') {
   let score = 0;
-  const bmTitle = normalizeForComparison(beatmap.title || '');
-  const bmArtist = normalizeForComparison(beatmap.artist || '');
   const tTitle = normalizeForComparison(targetTitle || '');
   const tArtist = normalizeForComparison(targetArtist || '');
+  const bmTitle = normalizeForComparison(beatmap.title || '');
+  const bmTitleUnicode = normalizeForComparison(beatmap.title_unicode || '');
+  const bmArtist = normalizeForComparison(beatmap.artist || '');
+  const bmArtistUnicode = normalizeForComparison(beatmap.artist_unicode || '');
+  const bmTags = normalizeForComparison(beatmap.tags || '');
 
-  // 1. Title matching
-  const isExactTitle = bmTitle === tTitle;
-  const isTitleContained = (tTitle && bmTitle.includes(tTitle)) || (bmTitle && tTitle.includes(bmTitle));
+  // 1. Title matching — compare against the best of the romanized and unicode fields, so a
+  // Japanese-language target (e.g. from Spotify) can match a beatmap whose `title` is romanized
+  // but whose `title_unicode` carries the original script.
+  const titleSim = tTitle
+    ? Math.max(textSimilarity(tTitle, bmTitle), textSimilarity(tTitle, bmTitleUnicode))
+    : 0;
+  const isExactTitle = titleSim === 1;
+  score += tTitle ? 160 * titleSim - 60 : 0;
 
-  if (isExactTitle) {
-    score += 100;
-  } else if (isTitleContained && tTitle) {
-    const lenRatio = Math.min(bmTitle.length, tTitle.length) / Math.max(bmTitle.length, tTitle.length);
-    score += 60 * lenRatio;
-  } else {
-    // No title overlap at all
-    score -= 60;
-  }
+  // 2. Artist matching. Evidence comes from three places, any of which can justify trust:
+  // the romanized artist field, the unicode artist field, or the original artist/vocalist
+  // credited in `tags` (common for covers/remixes, where `artist` is the remixer instead).
+  if (tArtist) {
+    const directSim = Math.max(textSimilarity(tArtist, bmArtist), textSimilarity(tArtist, bmArtistUnicode));
+    const tagTokens = tokenize(tArtist);
+    const tagsHit = tagTokens.length > 0 && bmTags && tagTokens.every(t => bmTags.includes(t));
+    const evidence = Math.max(directSim, tagsHit ? 0.7 : 0);
 
-  // 2. Artist matching
-  let isArtistMatch = false;
-
-  if (tArtist && bmArtist) {
-    if (bmArtist === tArtist || bmArtist.includes(tArtist) || tArtist.includes(bmArtist)) {
-      score += 100;
-      isArtistMatch = true;
+    if (evidence >= 0.97) {
+      score += 100; // direct, unicode, or whole-word match
+    } else if (evidence >= 0.78) {
+      score += 75; // close fuzzy match (e.g. a one-character romanization spelling difference)
+    } else if (evidence >= 0.55) {
+      score += 30; // weak evidence: a tags hit, or a looser fuzzy variant
+    } else {
+      // No relation to the target artist anywhere (name, unicode name, or tags). Only soften
+      // this when the title is a confirmed exact match, since our own extraction sometimes
+      // mangles the artist (e.g. YouTube channel names) even when the song itself is right.
+      score -= isExactTitle ? 50 : 80;
     }
-  }
-
-  // If artist does not match:
-  // - If title is exact, apply mild penalty (-25) so channel name differences don't drop exact song matches
-  // - If title is only partial or fuzzy, apply heavy penalty (-80)
-  if (tArtist && !isArtistMatch) {
-    score -= isExactTitle ? 25 : 80;
   }
 
   // Bonus for ranked or loved maps

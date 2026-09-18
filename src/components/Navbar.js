@@ -169,7 +169,7 @@ export default function Navbar({ onOpenSetupGuide }) {
               fontFamily: 'inherit',
               minHeight: '34px',
             }}
-            title="System status & what's new"
+            title="System status & changelog"
           >
             <div style={{ width: '6px', height: '6px', borderRadius: '50%', background: '#00cc77', flexShrink: 0 }} />
             <span>Online</span>

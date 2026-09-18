@@ -162,11 +162,11 @@ export default function SetupGuideModal({ isOpen, onClose, systemStatus }) {
             </div>
           </div>
 
-          {/* What's New — pulled straight from the repo's latest commits */}
+          {/* Changelog — pulled straight from the repo's latest commits */}
           <div style={{ display: 'flex', flexDirection: 'column', gap: '8px' }}>
             <h3 style={{ fontSize: '0.88rem', fontWeight: 800, color: '#ffffff', display: 'flex', alignItems: 'center', gap: '6px', margin: 0 }}>
               <Rocket size={15} color="#ff66aa" />
-              <span>What's New</span>
+              <span>Changelog</span>
             </h3>
 
             {commits.length === 0 ? (
