@@ -36,3 +36,31 @@ const DEFAULT_STATUS_BADGE = { bg: '#5a5266', color: '#ffffff' };
 export function getStatusBadgeStyle(status = '') {
   return STATUS_BADGE_STYLES[String(status).toLowerCase()] || DEFAULT_STATUS_BADGE;
 }
+
+/**
+ * The line shown where a beatmap would be, when the matcher returned nothing.
+ *
+ * "No beatmaps found" and "this song is on osu!, but by someone else" are different
+ * outcomes, and collapsing them into one message is what makes a deliberate refusal look
+ * like a failure. The artist gate only feels correct if it can say why it refused.
+ */
+export function describeRejection(rejection) {
+  if (!rejection) return 'No matching beatmapset found';
+
+  switch (rejection.kind) {
+    case 'wrong-artist':
+      // Short on purpose: the beatmap itself is shown right alongside, badged with the
+      // artist mismatch, so naming the other artist here would only repeat it.
+      return rejection.artist
+        ? `Found this song but it's not by ${rejection.artist}`
+        : 'Found this song but by a different artist';
+    case 'artist-absent':
+      return rejection.artist
+        ? `${rejection.artist} has no beatmaps on osu!`
+        : 'This artist has no beatmaps on osu!';
+    case 'artist-unknown':
+      return 'No matching beatmapset found — the artist could not be verified';
+    default:
+      return 'No matching beatmapset found';
+  }
+}

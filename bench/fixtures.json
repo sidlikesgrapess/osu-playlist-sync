@@ -1,0 +1,306 @@
+[
+  {
+    "id": "yoasobi-kaibutsu-jp",
+    "source": "spotify",
+    "rawTitle": "怪物",
+    "channelTitle": "YOASOBI",
+    "class": "native-script-target",
+    "expect": "match"
+  },
+  {
+    "id": "yoasobi-kaibutsu-ro",
+    "source": "spotify",
+    "rawTitle": "Kaibutsu",
+    "channelTitle": "YOASOBI",
+    "class": "romanized-target-native-beatmap",
+    "expect": "match"
+  },
+  {
+    "id": "yoasobi-yorunikakeru",
+    "source": "spotify",
+    "rawTitle": "夜に駆ける",
+    "channelTitle": "YOASOBI",
+    "class": "native-script-target",
+    "expect": "match"
+  },
+  {
+    "id": "yoasobi-idol",
+    "source": "spotify",
+    "rawTitle": "アイドル",
+    "channelTitle": "YOASOBI",
+    "class": "native-script-target",
+    "expect": "match"
+  },
+  {
+    "id": "ado-usseewa",
+    "source": "spotify",
+    "rawTitle": "うっせぇわ",
+    "channelTitle": "Ado",
+    "class": "single-token-artist",
+    "expect": "match"
+  },
+  {
+    "id": "ado-gira",
+    "source": "spotify",
+    "rawTitle": "ギラギラ",
+    "channelTitle": "Ado",
+    "class": "single-token-artist",
+    "expect": "match"
+  },
+  {
+    "id": "eve-kaikaikitan",
+    "source": "spotify",
+    "rawTitle": "廻廻奇譚",
+    "channelTitle": "Eve",
+    "class": "single-token-artist",
+    "expect": "match"
+  },
+  {
+    "id": "eve-doku",
+    "source": "spotify",
+    "rawTitle": "ドラマツルギー",
+    "channelTitle": "Eve",
+    "class": "single-token-artist",
+    "expect": "match"
+  },
+  {
+    "id": "yonezu-lemon",
+    "source": "spotify",
+    "rawTitle": "Lemon",
+    "channelTitle": "Kenshi Yonezu",
+    "class": "romanization-variant",
+    "expect": "match"
+  },
+  {
+    "id": "yonezu-lemon-jp",
+    "source": "spotify",
+    "rawTitle": "Lemon",
+    "channelTitle": "米津玄師",
+    "class": "native-artist-target",
+    "expect": "match"
+  },
+  {
+    "id": "yorushika-dakara",
+    "source": "spotify",
+    "rawTitle": "だから僕は音楽を辞めた",
+    "channelTitle": "ヨルシカ",
+    "class": "native-artist-target",
+    "expect": "match"
+  },
+  {
+    "id": "yorushika-ro",
+    "source": "spotify",
+    "rawTitle": "Ame to Cappuccino",
+    "channelTitle": "Yorushika",
+    "class": "romanized-artist-native-beatmap",
+    "expect": "match"
+  },
+  {
+    "id": "camellia-ghost",
+    "source": "spotify",
+    "rawTitle": "GHOST",
+    "channelTitle": "Camellia",
+    "class": "romanization-variant",
+    "expect": "match"
+  },
+  {
+    "id": "camellia-jp",
+    "source": "spotify",
+    "rawTitle": "Exit This Earth's Atomosphere",
+    "channelTitle": "かめりあ",
+    "class": "native-artist-target",
+    "expect": "match"
+  },
+  {
+    "id": "reol-hibana",
+    "source": "spotify",
+    "rawTitle": "ちるちる",
+    "channelTitle": "Reol",
+    "class": "single-token-artist",
+    "expect": "match"
+  },
+  {
+    "id": "tuyu-romaji",
+    "source": "spotify",
+    "rawTitle": "くらべられっ子",
+    "channelTitle": "Tuyu",
+    "class": "romanization-variant-tsu-tu",
+    "expect": "match"
+  },
+  {
+    "id": "imagine-monster",
+    "source": "spotify",
+    "rawTitle": "Monster",
+    "channelTitle": "Imagine Dragons",
+    "class": "colliding-title",
+    "expect": "match-or-none"
+  },
+  {
+    "id": "skillet-monster",
+    "source": "spotify",
+    "rawTitle": "Monster",
+    "channelTitle": "Skillet",
+    "class": "colliding-title",
+    "expect": "match-or-none"
+  },
+  {
+    "id": "alone-marshmello",
+    "source": "spotify",
+    "rawTitle": "Alone",
+    "channelTitle": "Marshmello",
+    "class": "colliding-title",
+    "expect": "match"
+  },
+  {
+    "id": "faded-alanwalker",
+    "source": "spotify",
+    "rawTitle": "Faded",
+    "channelTitle": "Alan Walker",
+    "class": "colliding-title",
+    "expect": "match"
+  },
+  {
+    "id": "sunflower-swaelee",
+    "source": "spotify",
+    "rawTitle": "Sunflower",
+    "channelTitle": "Post Malone",
+    "class": "colliding-title",
+    "expect": "match-or-none"
+  },
+  {
+    "id": "believer-imagine",
+    "source": "spotify",
+    "rawTitle": "Believer",
+    "channelTitle": "Imagine Dragons",
+    "class": "colliding-title",
+    "expect": "match"
+  },
+  {
+    "id": "yt-nightcore-noise",
+    "source": "youtube",
+    "rawTitle": "【Nightcore】 Faded (Lyrics) [1080p HD]",
+    "channelTitle": "Nightcore Gaming",
+    "class": "low-confidence-artist",
+    "expect": "match"
+  },
+  {
+    "id": "yt-channel-artist",
+    "source": "youtube",
+    "rawTitle": "Alan Walker - Faded (Official Video)",
+    "channelTitle": "MrSuicideSheep",
+    "class": "low-confidence-artist",
+    "expect": "match"
+  },
+  {
+    "id": "yt-osu-replay",
+    "source": "youtube",
+    "rawTitle": "Camellia - GHOST [Insane] +HDHR 99.45% FC 727pp",
+    "channelTitle": "osu! replays",
+    "class": "osu-noise-title",
+    "expect": "match"
+  },
+  {
+    "id": "yt-cover",
+    "source": "youtube",
+    "rawTitle": "Lemon - Kenshi Yonezu | Covered by Rainych",
+    "channelTitle": "Rainych Ran",
+    "class": "cover-artist-in-tags",
+    "expect": "match"
+  },
+  {
+    "id": "nonexistent-artist",
+    "source": "spotify",
+    "rawTitle": "Ordinary",
+    "channelTitle": "Alex Warren",
+    "class": "artist-present-after-all",
+    "expect": "match",
+    "note": "Originally assumed absent from osu!; the capture proved otherwise. Kept as a positive case."
+  },
+  {
+    "id": "nonexistent-song",
+    "source": "spotify",
+    "rawTitle": "Qwertzuiop Nonexistent Track",
+    "channelTitle": "Zxcvbnm Nobody",
+    "class": "fully-absent",
+    "expect": "none"
+  },
+  {
+    "id": "generic-title-nobody",
+    "source": "spotify",
+    "rawTitle": "Dream",
+    "channelTitle": "Nonexistent Artist Xyzzy",
+    "class": "colliding-title-absent-artist",
+    "expect": "none"
+  },
+  {
+    "id": "colon-title",
+    "source": "spotify",
+    "rawTitle": "Re:Re:",
+    "channelTitle": "ASIAN KUNG-FU GENERATION",
+    "class": "colon-splitter-bug",
+    "expect": "match"
+  },
+  {
+    "id": "yonezu-kanden-jp",
+    "source": "spotify",
+    "rawTitle": "Kanden",
+    "channelTitle": "米津玄師",
+    "class": "alias-required-romanized-only-mapset",
+    "expect": "match",
+    "note": "Every osu! set for this title carries artist \"Kenshi Yonezu\" with NO artist_unicode. Target is native script. No shared characters, no romaji-fold path — only a corpus-learned alias can bridge it."
+  },
+  {
+    "id": "yonezu-peacesign-jp",
+    "source": "spotify",
+    "rawTitle": "Peace Sign",
+    "channelTitle": "米津玄師",
+    "class": "alias-required-romanized-only-mapset",
+    "expect": "match",
+    "note": "Same structure as yonezu-kanden-jp."
+  },
+  {
+    "id": "yonezu-shinigami-jp",
+    "source": "spotify",
+    "rawTitle": "Shinigami",
+    "channelTitle": "米津玄師",
+    "class": "alias-required-romanized-only-mapset",
+    "expect": "match",
+    "note": "Same structure as yonezu-kanden-jp."
+  },
+  {
+    "id": "yt-topic-obscure-artist",
+    "source": "youtube",
+    "rawTitle": "Feeling",
+    "channelTitle": "Kaneko Lumi - Topic",
+    "class": "obscure-but-real-artist",
+    "expect": "none",
+    "note": "osu! has 3 Kaneko Lumi sets (Astronauts, Void, Still Into You) but no Feeling. Under count>=5 presence the artist collapsed to none and DJ Fresh - The Feeling won on title alone."
+  },
+  {
+    "id": "yt-topic-verified-artist-collision",
+    "source": "youtube",
+    "rawTitle": "Kiss Me!",
+    "channelTitle": "nihmune - Topic",
+    "class": "colliding-title",
+    "expect": "none",
+    "note": "nihmune has 37 sets on osu!, none titled Kiss Me. Rameses B - Kiss Me passed on an exact title minus the weak -40 low-confidence penalty."
+  },
+  {
+    "id": "yt-dash-artist-absent",
+    "source": "youtube",
+    "rawTitle": "Twinbed - Trouble I’m in (Lyrics)",
+    "channelTitle": "KHB",
+    "class": "artist-absent-youtube",
+    "expect": "none",
+    "note": "Artist parsed from the title dash, not the channel. osu! has nothing by Twinbed; Giriboy - I M IN TROUBLE won on token overlap."
+  },
+  {
+    "id": "yt-channel-artist-absent",
+    "source": "youtube",
+    "rawTitle": "19°C",
+    "channelTitle": "Ohzora Kimishima",
+    "class": "artist-absent-youtube",
+    "expect": "none",
+    "note": "osu! has nothing by Ohzora Kimishima. Short title makes bigram dice generous: 19 vs 19C."
+  }
+]

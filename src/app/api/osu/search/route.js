@@ -11,6 +11,8 @@ export async function GET(request) {
     const artist = searchParams.get('artist') || '';
     const mode = searchParams.get('mode') || 'all';
     const status = searchParams.get('status') || 'ranked';
+    // Provenance of the artist string: decides whether a wrong-artist verdict may reject.
+    const source = searchParams.get('source') || '';
     const fallbackParam = searchParams.get('fallback');
     const fallbacksParam = searchParams.get('fallbacks');
     const minScoreParam = searchParams.get('minScore');
@@ -42,6 +44,7 @@ export async function GET(request) {
       mode,
       status,
       minScore,
+      source,
     });
 
     return NextResponse.json({
@@ -51,6 +54,10 @@ export async function GET(request) {
       bestScore: result.bestScore || 0,
       beatmapsets: result.beatmapsets || [],
       isDemo: result.isDemo || false,
+      // Why nothing came back, when nothing came back. Lets the UI distinguish
+      // "no beatmaps found" from "found this song, but not by this artist".
+      rejection: result.rejection || null,
+      artistConfidence: result.artistConfidence || null,
     });
   } catch (error) {
     console.error('[osu! Search API Error]:', error);

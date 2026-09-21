@@ -3,7 +3,7 @@
 import { useState } from 'react';
 import { Play, Download, ExternalLink, Loader2, Music, Layers, Edit3, Check, X } from 'lucide-react';
 import { osuAudio } from '@/lib/soundEffects';
-import { getStarColor, getStatusBadgeStyle } from '@/lib/beatmapFormat';
+import { getStarColor, getStatusBadgeStyle, describeRejection } from '@/lib/beatmapFormat';
 import OsuCheckbox from './OsuCheckbox';
 
 export default function SongRow({
@@ -210,7 +210,20 @@ export default function SongRow({
             <span>Finding beatmaps...</span>
           </div>
         ) : hasMatch ? (
-          <div style={{ display: 'flex', gap: '10px', alignItems: 'center' }}>
+          <div>
+            {/* No beatmap by the target artist exists, so what follows is the nearest thing
+                found. Said as a sentence introducing the result, not a label on it. */}
+            {match.artistOverride && song.extractedArtist && (
+              <div style={{
+                fontSize: '0.72rem',
+                fontWeight: 700,
+                color: '#ff3d5e',
+                marginBottom: '5px',
+              }}>
+                Could not find one by {song.extractedArtist}. Closest match:
+              </div>
+            )}
+            <div style={{ display: 'flex', gap: '10px', alignItems: 'center' }}>
             {/* Beatmap Cover with Play Preview Overlay */}
             <div
               className="osu-thumb-container"
@@ -358,6 +371,7 @@ export default function SongRow({
                 </button>
               )}
             </div>
+            </div>
           </div>
         ) : song.hasSearched === false ? (
           <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
@@ -383,7 +397,7 @@ export default function SongRow({
         ) : (
           <div style={{ display: 'flex', alignItems: 'center', gap: '6px' }}>
             <span style={{ color: '#8b7d95', fontSize: '0.78rem', fontWeight: 600 }}>
-              No matching beatmapset found
+              {describeRejection(song.rejection)}
             </span>
             <button
               onClick={() => setIsEditingQuery(true)}

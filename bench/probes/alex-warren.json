@@ -1,0 +1,103 @@
+{
+  "artist": "Alex Warren",
+  "query": "artist=Alex Warren",
+  "capturedAt": "2026-09-21T22:50:54.655Z",
+  "sets": [
+    {
+      "id": 2440111,
+      "title": "Ordinary",
+      "title_unicode": "Ordinary",
+      "artist": "Alex Warren",
+      "artist_unicode": "Alex Warren",
+      "tags": "2025 youll dim dimitrov6907 lyvai kalu theshadowofdark hype house you'll be alright kid pop english chamber single tiktok adult contemporary gospel soul",
+      "source": "",
+      "status": "ranked",
+      "favourite_count": 194,
+      "play_count": 42231
+    },
+    {
+      "id": 2350521,
+      "title": "Ordinary",
+      "title_unicode": "Ordinary",
+      "artist": "Alex Warren",
+      "artist_unicode": "Alex Warren",
+      "tags": "",
+      "source": "Alex Warren",
+      "status": "graveyard",
+      "favourite_count": 5,
+      "play_count": 926
+    },
+    {
+      "id": 2423319,
+      "title": "Eternity",
+      "title_unicode": "Eternity",
+      "artist": "Alex Warren",
+      "artist_unicode": "Alex Warren",
+      "tags": "",
+      "source": "youtube",
+      "status": "graveyard",
+      "favourite_count": 4,
+      "play_count": 195
+    },
+    {
+      "id": 2395378,
+      "title": "Ordinary",
+      "title_unicode": "Ordinary",
+      "artist": "Alex Warren",
+      "artist_unicode": "Alex Warren",
+      "tags": "",
+      "source": "",
+      "status": "graveyard",
+      "favourite_count": 4,
+      "play_count": 400
+    },
+    {
+      "id": 2149535,
+      "title": "Before You Leave Me (Official Video)",
+      "title_unicode": "Before You Leave Me (Official Video)",
+      "artist": "Alex Warren",
+      "artist_unicode": "Alex Warren",
+      "tags": "heartbreak youtube",
+      "source": "youtube",
+      "status": "graveyard",
+      "favourite_count": 4,
+      "play_count": 321
+    },
+    {
+      "id": 2624028,
+      "title": "EMERALD EYES",
+      "title_unicode": "EMERALD EYES",
+      "artist": "Alex Warren",
+      "artist_unicode": "Alex Warren",
+      "tags": "",
+      "source": "",
+      "status": "wip",
+      "favourite_count": 0,
+      "play_count": 0
+    },
+    {
+      "id": 2605227,
+      "title": "Eternity",
+      "title_unicode": "Eternity",
+      "artist": "Alex Warren",
+      "artist_unicode": "Alex Warren",
+      "tags": "",
+      "source": "",
+      "status": "pending",
+      "favourite_count": 0,
+      "play_count": 25
+    },
+    {
+      "id": 2381374,
+      "title": "Yard Sale (Sped Up Ver.)",
+      "title_unicode": "Yard Sale (Sped Up Ver.)",
+      "artist": "Alex Warren",
+      "artist_unicode": "Alex Warren",
+      "tags": "sped up english pop",
+      "source": "",
+      "status": "graveyard",
+      "favourite_count": 0,
+      "play_count": 214
+    }
+  ]
+}

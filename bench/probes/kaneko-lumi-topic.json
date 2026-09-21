@@ -1,0 +1,43 @@
+{
+  "artist": "Kaneko Lumi - Topic",
+  "query": "artist=Kaneko Lumi - Topic",
+  "capturedAt": "2026-09-21T22:50:57.736Z",
+  "sets": [
+    {
+      "id": 2468056,
+      "title": "Still Into You",
+      "title_unicode": "Still Into You",
+      "artist": "Himemiya Rie, Runie Ruse & Kaneko Lumi",
+      "artist_unicode": "Himemiya Rie, Runie Ruse & Kaneko Lumi",
+      "tags": "paramore 金子瑠美 ルニ・ルーズ 姫宮りえ cover phase connect phase-connect virtual youtuber vtuber english pop acapella aurorance froskya take phase academy azuki",
+      "source": "",
+      "status": "ranked",
+      "favourite_count": 20,
+      "play_count": 3127
+    },
+    {
+      "id": 2465939,
+      "title": "Astronauts",
+      "title_unicode": "Astronauts",
+      "artist": "Kaneko Lumi",
+      "artist_unicode": "Kaneko Lumi",
+      "tags": "en english soft rock void vtuber virtual youtuber phase-connect phase connect invaders coffee lemon cat lucky star",
+      "source": "",
+      "status": "graveyard",
+      "favourite_count": 1,
+      "play_count": 130
+    },
+    {
+      "id": 2389173,
+      "title": "Void",
+      "title_unicode": "Void",
+      "artist": "Kaneko Lumi",
+      "artist_unicode": "Kaneko Lumi",
+      "tags": "Voids EP 2024 Phase Connect Invaders Vtuber SO87 Sound",
+      "source": "",
+      "status": "graveyard",
+      "favourite_count": 1,
+      "play_count": 58
+    }
+  ]
+}

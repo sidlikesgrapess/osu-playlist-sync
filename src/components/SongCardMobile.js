@@ -3,7 +3,7 @@
 import { useState } from 'react';
 import { Play, Download, ExternalLink, Loader2, Music, Layers, Edit3, Check, X } from 'lucide-react';
 import { osuAudio } from '@/lib/soundEffects';
-import { getStarColor, getStatusBadgeStyle } from '@/lib/beatmapFormat';
+import { getStarColor, getStatusBadgeStyle, describeRejection } from '@/lib/beatmapFormat';
 import OsuCheckbox from './OsuCheckbox';
 
 export default function SongCardMobile({
@@ -209,6 +209,12 @@ export default function SongCardMobile({
           <span>Searching beatmaps...</span>
         </div>
       ) : hasMatch ? (
+        <>
+        {match.artistOverride && song.extractedArtist && (
+          <div style={{ fontSize: '0.7rem', fontWeight: 700, color: '#ff3d5e', margin: '2px 0 4px' }}>
+            Could not find one by {song.extractedArtist}. Closest match:
+          </div>
+        )}
         <div style={{
           background: 'rgba(18, 16, 24, 0.65)',
           borderRadius: '8px',
@@ -311,6 +317,7 @@ export default function SongCardMobile({
             </div>
           </div>
         </div>
+        </>
       ) : song.hasSearched === false ? (
         <div style={{ display: 'flex', alignItems: 'center', gap: '8px', padding: '4px 0' }}>
           <span style={{ color: '#8b7d95', fontSize: '0.74rem', fontWeight: 600 }}>Not searched yet</span>
@@ -332,7 +339,9 @@ export default function SongCardMobile({
         </div>
       ) : (
         <div style={{ display: 'flex', alignItems: 'center', gap: '6px', padding: '4px 0' }}>
-          <span style={{ color: '#8b7d95', fontSize: '0.74rem', fontWeight: 600 }}>No beatmap found</span>
+          <span style={{ color: '#8b7d95', fontSize: '0.74rem', fontWeight: 600 }}>
+            {describeRejection(song.rejection)}
+          </span>
           <button
             onClick={() => setIsEditingQuery(true)}
             style={{

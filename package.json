@@ -6,7 +6,13 @@
     "dev": "next dev",
     "build": "next build",
     "start": "next start",
-    "lint": "next lint"
+    "lint": "next lint",
+    "bench": "node bench/run.mjs",
+    "bench:sweep": "node bench/run.mjs --sweep",
+    "bench:cost": "node bench/cost.mjs",
+    "bench:label": "node bench/label.mjs",
+    "bench:capture": "node --env-file=.env.local bench/capture.mjs",
+    "bench:probes": "node --env-file=.env.local bench/capture-probes.mjs"
   },
   "dependencies": {
     "jszip": "^3.10.1",

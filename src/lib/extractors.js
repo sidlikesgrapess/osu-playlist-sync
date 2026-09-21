@@ -240,6 +240,9 @@ export async function extractMusicData(inputUrlOrQuery) {
       id: song.id || `track_${index}_${Date.now()}`,
       index: index + 1,
       position: index,
+      // Where the metadata came from. Spotify/Apple hand us a real artist field, so the
+      // matcher may trust it enough to reject on; a YouTube channel name it may not.
+      source: result.platform,
       cleanQuery: cleaned.cleanQuery,
       extractedArtist: cleaned.artist,
       extractedTitle: cleaned.title,

@@ -1,0 +1,55 @@
+{
+  "artist": "Nightcore Gaming",
+  "query": "artist=Nightcore Gaming",
+  "capturedAt": "2026-09-21T22:50:51.639Z",
+  "sets": [
+    {
+      "id": 328642,
+      "title": "If i die young",
+      "title_unicode": "If i die young",
+      "artist": "Nightcore",
+      "artist_unicode": "Nightcore",
+      "tags": "",
+      "source": "",
+      "status": "graveyard",
+      "favourite_count": 0,
+      "play_count": 45
+    },
+    {
+      "id": 328634,
+      "title": "Sound of my dream(Russian)",
+      "title_unicode": "Sound of my dream(Russian)",
+      "artist": "Nightcore",
+      "artist_unicode": "Nightcore",
+      "tags": "",
+      "source": "",
+      "status": "graveyard",
+      "favourite_count": 0,
+      "play_count": 5
+    },
+    {
+      "id": 328545,
+      "title": "Sound of my dream (russian)",
+      "title_unicode": "Sound of my dream (russian)",
+      "artist": "Nightcore",
+      "artist_unicode": "Nightcore",
+      "tags": "",
+      "source": "",
+      "status": "graveyard",
+      "favourite_count": 0,
+      "play_count": 0
+    },
+    {
+      "id": 2586569,
+      "title": "Total Eclipse of the Heart (Radio Mix)",
+      "title_unicode": "Total Eclipse of the Heart (Radio Mix)",
+      "artist": "Nicki French (Nightcore)",
+      "artist_unicode": "Nicki French (Nightcore)",
+      "tags": "",
+      "source": "",
+      "status": "graveyard",
+      "favourite_count": 1,
+      "play_count": 17
+    }
+  ]
+}

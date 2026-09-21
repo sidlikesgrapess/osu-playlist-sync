@@ -50,7 +50,7 @@ const pageSlice = (list, page, pageSize) => {
 };
 
 // Fresh object per call — each song needs its own `allMatches` array.
-const blankMatchState = () => ({ hasSearched: false, isSearching: false, matchedBeatmap: null, allMatches: [] });
+const blankMatchState = () => ({ hasSearched: false, isSearching: false, matchedBeatmap: null, allMatches: [], rejection: null });
 
 const PLATFORM_BADGE = {
   spotify: { color: '#1db954', bg: 'rgba(29, 185, 84, 0.15)', border: 'rgba(29, 185, 84, 0.35)' },
@@ -418,6 +418,7 @@ export default function Home() {
           mode: currentMode,
           status: currentStatus,
           minScore: String(currentMinScore),
+          source: targetSong.source || '',
         });
 
         const extraQueries = [
@@ -435,7 +436,9 @@ export default function Home() {
           if (s.id === targetSong.id) {
             const hasMatch = result.beatmapsets && result.beatmapsets.length > 0;
             const matched = hasMatch ? result.beatmapsets[0] : null;
-            if (matched) {
+            // A result that failed the artist gate is shown but never pre-selected --
+            // it must not slip into a bulk download just because it was displayed.
+            if (matched && !matched.artistOverride) {
               setSelectedIds(curr => new Set(curr).add(s.id));
             }
             return {
@@ -444,6 +447,7 @@ export default function Home() {
               isSearching: false,
               matchedBeatmap: matched,
               allMatches: result.beatmapsets || [],
+              rejection: result.rejection || null,
             };
           }
           return s;
@@ -560,7 +564,7 @@ export default function Home() {
       setSongs(prev => prev.map(s => {
         if (s.id === songId) {
           const matched = result.beatmapsets && result.beatmapsets.length > 0 ? result.beatmapsets[0] : null;
-          if (matched) {
+          if (matched && !matched.artistOverride) {
             setSelectedIds(curr => new Set(curr).add(songId));
           }
           return {
@@ -570,6 +574,7 @@ export default function Home() {
             isSearching: false,
             matchedBeatmap: matched,
             allMatches: result.beatmapsets || [],
+            rejection: result.rejection || null,
           };
         }
         return s;

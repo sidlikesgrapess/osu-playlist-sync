@@ -14,6 +14,20 @@ npm run lint     # next lint
 **There is no test framework in this repo.** `package.json` has no `test` script and no
 runner is installed. If you add tests, `node --test` needs no new dependency.
 
+The one exception is **`bench/`**, a dev-only benchmark for song → beatmap matching:
+
+```bash
+npm run bench          # replay fixtures through every scorer, offline
+npm run bench:sweep    # threshold sweep
+npm run bench:cost     # API calls per track
+npm run bench:capture  # re-hit the osu! API (needs .env.local) — rarely
+```
+
+Nothing in `bench/` is imported by `src/` or deployed; the dependency runs the other way
+(`bench/scorers/shipped.mjs` imports the real `src/lib/osu.js`). It replays captured API
+responses, so it is deterministic and needs no credentials to run. **Run it before and
+after any change to `scoreBeatmapMatch`** — see `bench/README.md`.
+
 **Never run `npm run build` while `npm run dev` is running.** Both write to `.next/`, and
 the build wipes the chunks the dev server is serving — every route starts 404ing until dev
 is restarted. Stop dev first.
@@ -38,11 +52,18 @@ Understanding it explains most of the codebase:
 
 ```
 { id, index, title, channelTitle, thumbnail, duration,   // from the extractor
+  source,                                                // 'spotify' | 'apple' | 'youtube' | 'query'
   cleanQuery, extractedTitle, extractedArtist,           // from titleCleaner
   fallbacks, queries,                                    // alternate search queries
   hasSearched, isSearching,                              // UI state, mutated in page.js
-  matchedBeatmap, allMatches }                           // filled by /api/osu/search
+  matchedBeatmap, allMatches,                            // filled by /api/osu/search
+  rejection }                                            // why the gate refused, when it did
 ```
+
+`source` is load-bearing, not decoration: it decides whether the artist is trusted enough to
+*reject* a candidate (see the matching section below), so keep it populated on every path.
+`artistOverride` sits on the *beatmapset*, not the song — a song can hold a mix of gated and
+ungated matches in `allMatches`.
 
 `src/app/page.js` owns the `songs` array and is the only place this shape mutates.
 Components receive songs and call back up; they never fetch.
@@ -69,13 +90,57 @@ anything under `minScore` (default 70, user-controlled by the Match Strictness s
 It early-exits at score ≥ 150. The osu! API's own `relevance_desc` order is deliberately
 ignored.
 
+**The artist is a gate, not a weight — do not turn it back into a number.** A confident
+`DIFFERENT` verdict returns `-Infinity`, so a wrong artist can never be outscored by a good
+title. This is the whole point: before it, two different songs sharing a title both scored
+215 and *no* threshold could separate them. `artistVerdict` is a ladder of independent
+evidence where the first rung wins, deliberately not a blend.
+
+How far the artist is trusted depends on where it came from (`source` on the song object).
+Spotify/Apple hand us a real artist field and are trusted on arrival. Anything else is
+settled by `resolveArtistTrust` against the corpus, and **the test is the alias set, never a
+row count**: aliases are only recorded for sets whose own artist links back to the target,
+so "Kaneko Lumi" (3 sets, all hers) verifies while "Nightcore Gaming" (4 loosely-related
+sets, none linked) does not. A count threshold got this exactly backwards — it classed a
+real-but-obscure artist as junk and then ignored the artist entirely, which is the one case
+where a title collision is most likely. Outcomes:
+
+| evidence | trust | effect |
+|---|---|---|
+| structured source | `high` | may reject |
+| a candidate in the pool links to the artist | `high` | may reject, and the pool supplies the aliases for free |
+| probe finds linked sets | `high` | may reject |
+| probe finds nothing at all | `high` | may reject — nothing on osu! answers to this name |
+| probe finds sets but none linked | `none` | the string is not an artist; judge on title alone |
+| probe failed (429) | `low` | doubt only, never refuse |
+
+The pool is checked before the probe, so a correctly extracted artist costs no call at all;
+probes stay at ~0.2 per track.
+
+When nothing passes, the result carries a `rejection` (`wrong-artist`, `artist-absent`,
+`artist-unknown`, `no-match`) so the UI can say *why*. Gated-out candidates are kept in
+`gatedOut` precisely because they are the evidence for that message — a wrong-artist
+candidate is refused *because* its title matched.
+
+`wrong-artist` and `artist-absent` both still return results when a title match exists:
+those candidates come back in `beatmapsets` like any other match, flagged
+`artistOverride: true` with `matchScore: null`. They differ only in what can be *said* — the
+artist has nothing on osu! at all, versus this particular song of theirs is not mapped.
+Hiding them helps nobody — the user can see the artist differs and judge. What the gate buys
+is that `page.js` **does not auto-select** a flagged result, so it can never slip into a bulk
+download, and the match column introduces it with "Could not find one by <artist>. Closest
+match:". Keep both halves: showing it without the notice, or showing the notice while
+auto-selecting, each defeats the point.
+
 `src/lib/titleCleaner.js` exists only to stop noise tokens (`Nightcore`, `Official Video`,
 `+HDHR`) from producing zero-result queries. It is a recall tool, not a precision tool —
 precision is `scoreBeatmapMatch`'s job.
 
-**See `MATCHING_PLAN.md`** before working on matching. It documents known gaps (unicode
-title fields ignored, duration unused, `tags`/`source` dropped) and the intended order of
-fixes. Start with the benchmark harness — without it, matching changes are unverifiable.
+**See `MATCHING_PLAN.md`** before working on matching — but note it is partly historical now.
+The unicode title/artist fields, `tags` credit, graded title similarity and a popularity
+tiebreak have all landed. **Beatmap `duration` is still unused**, and the cleaner has not been
+shrunk (Phase 4). Measure any change with `npm run bench` first; without it, matching changes
+are unverifiable.
 
 ### Zero-key extraction is scraping, and it is fragile
 
