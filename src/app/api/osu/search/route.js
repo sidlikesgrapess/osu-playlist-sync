@@ -15,8 +15,11 @@ export async function GET(request) {
     const source = searchParams.get('source') || '';
     const fallbackParam = searchParams.get('fallback');
     const fallbacksParam = searchParams.get('fallbacks');
-    const minScoreParam = searchParams.get('minScore');
-    const minScore = minScoreParam !== null ? Number(minScoreParam) : undefined;
+    // 0-100 Match Strictness. Deliberately NOT accepting the old `minScore` name: that was a
+    // raw 0-150 score cutoff, so honouring it here would read 70 ("the old default") as 70
+    // ("Strict") and quietly change what every stale client asks for.
+    const strictnessParam = searchParams.get('strictness');
+    const strictness = strictnessParam !== null ? Number(strictnessParam) : undefined;
 
     if (!query && !title) {
       return NextResponse.json(
@@ -43,7 +46,7 @@ export async function GET(request) {
       queries: extraQueries,
       mode,
       status,
-      minScore,
+      strictness,
       source,
     });
 
