@@ -15,6 +15,7 @@ import DownloadToast from '@/components/DownloadToast';
 import { GitHubIcon } from '@/components/Icons';
 import { Star } from 'lucide-react';
 import { osuAudio } from '@/lib/soundEffects';
+import { DEFAULT_STRICTNESS } from '@/lib/matchStrictness';
 import JSZip from 'jszip';
 
 const REPO_URL = 'https://github.com/sidlikesgrapess/osu-playlist-sync';
@@ -85,7 +86,7 @@ export default function Home() {
   const [pageSize, setPageSize] = useState(10);
   const [mode, setMode] = useState('all');
   const [statusFilter, setStatusFilter] = useState('any');
-  const [matchThreshold, setMatchThreshold] = useState(70);
+  const [matchThreshold, setMatchThreshold] = useState(DEFAULT_STRICTNESS);
   const [selectedIds, setSelectedIds] = useState(new Set());
   const [downloadingIds, setDownloadingIds] = useState(new Set());
   const [isDownloadingZip, setIsDownloadingZip] = useState(false);
@@ -385,7 +386,7 @@ export default function Home() {
   };
 
   // Search osu! API for specific target song IDs in controlled batches
-  const searchTargetSongs = async (baseSongs, targetIds, currentMode, currentStatus, currentMinScore = matchThreshold) => {
+  const searchTargetSongs = async (baseSongs, targetIds, currentMode, currentStatus, currentStrictness = matchThreshold) => {
     if (!targetIds || targetIds.length === 0) return;
     const targetSet = new Set(targetIds);
 
@@ -417,7 +418,7 @@ export default function Home() {
           artist: targetSong.extractedArtist || targetSong.channelTitle || '',
           mode: currentMode,
           status: currentStatus,
-          minScore: String(currentMinScore),
+          strictness: String(currentStrictness),
           source: targetSong.source || '',
         });
 
@@ -555,7 +556,7 @@ export default function Home() {
         q: customQuery,
         mode,
         status: statusFilter,
-        minScore: String(matchThreshold),
+        strictness: String(matchThreshold),
       });
 
       const res = await fetch(`/api/osu/search?${queryParams.toString()}`);

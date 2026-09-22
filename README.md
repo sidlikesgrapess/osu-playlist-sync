@@ -15,7 +15,7 @@ Point it at a **YouTube / Spotify / Apple Music** playlist, a single song, or an
 
 ### Smart matching
 - **The artist has to match.** Plenty of different songs share a title, so a beatmap by the wrong artist is never passed off as a match. You get *"Could not find one by Justin Bieber. Closest match:"* above the nearest beatmap, left unticked so it cannot slip into a bulk download. Romanisations, native spellings and alternate names still count as the same artist. [How it works ↓](#how-matching-works)
-- **Match Strictness slider** — drag from *Very Loose* to *Very Strict* to control the score cutoff yourself instead of a fixed threshold.
+- **Match Strictness slider** — 0 shows everything osu! returned, 100 shows only exact title-and-artist matches, and the middle is the balanced default. Each position says in words what it will do.
 - Filter by game mode (**osu!**, **taiko**, **catch**, **mania**) and status (**Ranked & Loved** or **All**) — applied server-side for playlist search, and to a player's own maps too.
 - Manual query editing and an alternative-beatmap picker when the top match isn't the one you want.
 

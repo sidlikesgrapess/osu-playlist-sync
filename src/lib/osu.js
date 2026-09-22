@@ -2,6 +2,7 @@
  * osu! API v2 client and beatmap search helper.
  * Handles OAuth2 Client Credentials grant and querying beatmapsets.
  */
+import { strictnessProfile } from './matchStrictness.js';
 
 let cachedToken = null;
 let tokenExpiresAt = 0;
@@ -482,17 +483,30 @@ export function artistVerdict(beatmap, targetArtist, aliases = null) {
  * @param {object} [options]
  * @param {'high'|'low'|'none'} [options.artistConfidence]  how far the artist string is trusted
  * @param {Set<string>} [options.aliases]                   alias set from the artist probe
+ * @param {number} [options.titleFloor=0.5]                 below this title similarity, refuse outright
+ * @param {number} [options.maxArtistRung=6]                deepest artist-ladder rung still counted as the same person
  */
 export function scoreBeatmapMatch(beatmap, targetTitle = '', targetArtist = '', options = {}) {
-  const { artistConfidence = 'high', aliases = null } = options;
+  const {
+    artistConfidence = 'high',
+    aliases = null,
+    titleFloor = 0.5,
+    maxArtistRung = 6,
+  } = options;
 
   const tSim = titleSimilarity(beatmap, targetTitle);
-  if (targetTitle && tSim < 0.5) return -Infinity;
+  if (targetTitle && tSim < titleFloor) return -Infinity;
 
   let score = targetTitle ? 160 * tSim - 60 : 0;
 
   if (targetArtist) {
-    const { verdict } = artistVerdict(beatmap, targetArtist, aliases);
+    const raw = artistVerdict(beatmap, targetArtist, aliases);
+
+    // Strictness decides how far down the ladder still counts as the same person. The rungs
+    // are ordered by how much they prove: 1 exact, 2 corpus alias, then progressively
+    // weaker inference down to a bigram-similarity guess at 6. Capping the rung turns the
+    // ladder into the strictness control it already implicitly was.
+    const verdict = raw.verdict !== 'DIFFERENT' && raw.rung > maxArtistRung ? 'DIFFERENT' : raw.verdict;
 
     if (artistConfidence === 'none') {
       // The artist string was checked against the corpus and is not a real osu! artist
@@ -668,9 +682,14 @@ export async function searchOsuBeatmaps(query, options = {}) {
   // provisionally at 'low' -- which never hard-rejects -- and the real verdict is settled
   // after the loop, when the candidates themselves can answer it without an extra call.
   const structuredArtist = options.source === 'spotify' || options.source === 'apple';
+  // One slider, three knobs -- see src/lib/matchStrictness.js for why a bare cutoff could
+  // not express either end of the range.
+  const strict = strictnessProfile(options.strictness);
+  const floors = { titleFloor: strict.titleFloor, maxArtistRung: strict.maxArtistRung };
+
   let artistConfidence = targetArtist ? (structuredArtist ? 'high' : 'low') : 'none';
   let aliases = null;
-  let scoreOptions = { artistConfidence, aliases };
+  let scoreOptions = { artistConfidence, aliases, ...floors };
 
   const queriesToRun = Array.from(
     new Set([
@@ -748,7 +767,7 @@ export async function searchOsuBeatmaps(query, options = {}) {
     const verdict = await verifyLowConfidenceArtist(targetArtist, [...allFoundSets, ...gatedOut], token);
     artistConfidence = verdict.artistConfidence;
     aliases = verdict.aliases;
-    scoreOptions = { artistConfidence, aliases };
+    scoreOptions = { artistConfidence, aliases, ...floors };
 
     const rescored = [];
     for (const bm of [...allFoundSets, ...gatedOut]) {
@@ -764,10 +783,9 @@ export async function searchOsuBeatmaps(query, options = {}) {
   // Sort candidate mapsets by match score descending
   allFoundSets.sort((a, b) => (b._score || 0) - (a._score || 0));
 
-  // Minimum threshold: user-adjustable via the Match Strictness slider, 70 by default.
-  const minThreshold = typeof options.minScore === 'number' && !Number.isNaN(options.minScore)
-    ? options.minScore
-    : 70;
+  // Derived from the same slider that set the floors above, so the cutoff can never
+  // disagree with them.
+  const minThreshold = strict.minScore;
   const filteredSets = allFoundSets.filter(s => Number.isFinite(s._score) && s._score >= minThreshold);
 
   const formatted = filteredSets.map(s => ({ ...formatBeatmapset(s), matchScore: s._score }));

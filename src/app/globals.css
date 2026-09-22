@@ -282,3 +282,55 @@ button, a, input, select {
   }
 }
 
+
+/* ── Match Strictness slider ──────────────────────────────────────────────────
+   Styling lives here because a range input is themed entirely through
+   ::-*-slider-thumb / ::-*-track pseudo-elements, which style={{}} cannot reach.
+
+   Uses the same pink accent as the rest of the UI (osu-btn-pink, wave bars, scrollbar
+   hover) and the same muted track/border tones as osu-glass, not invented colors. The
+   fill position is passed in from React as --fill, since the track gradient needs it. */
+
+.osu-strictness {
+  -webkit-appearance: none;
+  appearance: none;
+  width: 100%;
+  height: 6px;
+  background: transparent;
+  cursor: pointer;
+  margin: 0;
+}
+
+.osu-strictness:focus { outline: none; }
+
+.osu-strictness::-webkit-slider-runnable-track {
+  height: 6px;
+  border-radius: 3px;
+  background: linear-gradient(90deg, #eb5597 0%, #ff66aa var(--fill, 50%), #383344 var(--fill, 50%));
+}
+
+.osu-strictness::-moz-range-track {
+  height: 6px;
+  border-radius: 3px;
+  background: linear-gradient(90deg, #eb5597 0%, #ff66aa var(--fill, 50%), #383344 var(--fill, 50%));
+  border: none;
+}
+
+.osu-strictness::-webkit-slider-thumb {
+  -webkit-appearance: none;
+  width: 12px;
+  height: 12px;
+  border-radius: 50%;
+  border: 2px solid #ffffff;
+  background: #ff66aa;
+  cursor: pointer;
+}
+
+.osu-strictness::-moz-range-thumb {
+  width: 12px;
+  height: 12px;
+  border-radius: 50%;
+  border: 2px solid #ffffff;
+  background: #ff66aa;
+  cursor: pointer;
+}

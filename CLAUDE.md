@@ -86,7 +86,13 @@ sync when the song shape changes.
 
 `searchOsuBeatmaps` (`src/lib/osu.js`) runs several query variants, pools every candidate
 across all of them, scores each with `scoreBeatmapMatch`, sorts by that score, and drops
-anything under `minScore` (default 70, user-controlled by the Match Strictness slider).
+anything under a score cutoff. That cutoff is no longer a number the UI hands in: the Match
+Strictness slider is a 0-100 value, and `src/lib/matchStrictness.js` turns it into three
+knobs at once (`titleFloor`, `minScore`, `maxArtistRung`). A bare cutoff could not express
+either end of the range — it can only filter what the scorer already chose to keep, so 0
+could not reach past the hard title floor and 100 was reachable by a non-exact match. Change
+the curve there, never in `osu.js`, and remember 50 must keep reproducing floor 0.50 /
+cutoff 70 because that is what every `npm run bench` number was measured against.
 It early-exits at score ≥ 150. The osu! API's own `relevance_desc` order is deliberately
 ignored.
 
