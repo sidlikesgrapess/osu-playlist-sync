@@ -1,0 +1,40 @@
+# TODO
+
+## Done
+
+- The slider UI and mechanishm has to be remade for the new UI. done
+- remove the icon from Search all. done
+- match slider to the side?. done (not needed)
+- tab change reloads songs. player search is not affected. done
+- If beatmap not available then put a grey/ muted pink color cross X on the checkmark.
+  If beatmap is has a artist match flag then have a small red exclamation mark next to
+  the checkbox. done
+- on adding playlists after the first one (at the bottom of the queue) have a pop up
+  notification similar to the download one. done
+- No matching beatmapset found — the artist could not be verified has to be worded
+  clearer. done
+- Pulling Ranked and LOved re fetches the list. Fix that. done
+- can slider refetch be stopped since we already have everything?. done (resolved with
+  a button)
+
+## Remaining
+
+- select all exact matches
+- memory leak? the cached beatmaps and pics have to be deleted when the user pulls up a
+  new search or player search (is song preview cached?)
+- song preview should show a loading or errors. (network)
+- breakcore playlist has 11 songs but only 7 are fetched.
+- are we loading every image and beatmap for the player search at once? is it expensive?
+  if yes then we could have dynamic scroll based loading
+- the player search menu cards(eg - most played) are very small. we could have a infinite
+  expand menu with the title eg Most played" header on top of the screen docked like the
+  search bar. The animation should be fluid and similar to the searhbar. Once one card
+  ends the next card docks to the top like Functions in an IDE like VSCode.
+- maybe a little bounce on every hover animation? toggleable
+
+## Long term goals
+
+- eventually expand to enable creation of playlist from osu collections or lists or
+  beatmaps. LT Goal
+- Need a full remake of the code, its too specific and small goal focused. A full rebuild
+  would be more consistent. LT Goal
