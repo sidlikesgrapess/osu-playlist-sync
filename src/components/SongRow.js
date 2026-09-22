@@ -26,6 +26,7 @@ export default function SongRow({
   const match = song.matchedBeatmap;
   const hasMatch = Boolean(match);
   const statusStyle = getStatusBadgeStyle(match?.status);
+  const rejection = describeRejection(song.rejection);
 
   const handleQuerySubmit = (e) => {
     e.preventDefault();
@@ -45,19 +46,30 @@ export default function SongRow({
       onMouseEnter={() => osuAudio.playHover()}
     >
       {/* osu! Lazer Checkbox Column */}
-      <td style={{ padding: '8px 6px 8px 14px', textAlign: 'center', width: '32px' }}>
-        <OsuCheckbox
-          id={`checkbox-song-${song.id}`}
-          checked={isSelected && hasMatch}
-          disabled={!hasMatch}
-          onChange={() => {
-            if (hasMatch) {
-              osuAudio.playClick();
-              onToggleSelect(song.id);
-            }
-          }}
-          title={hasMatch ? 'Select beatmap' : 'Beatmap match required to select'}
-        />
+      <td style={{ padding: '8px 6px 8px 14px', textAlign: 'center', width: '44px' }}>
+        <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '3px' }}>
+          <OsuCheckbox
+            id={`checkbox-song-${song.id}`}
+            checked={isSelected && hasMatch}
+            disabled={!hasMatch}
+            unavailable={song.hasSearched && !hasMatch}
+            onChange={() => {
+              if (hasMatch) {
+                osuAudio.playClick();
+                onToggleSelect(song.id);
+              }
+            }}
+            title={hasMatch ? 'Select beatmap' : 'No beatmap found for this song'}
+          />
+          {match?.artistOverride && (
+            <span
+              title="Artist does not match. Check before downloading"
+              style={{ color: '#ff5555', fontSize: '0.82rem', fontWeight: 900, lineHeight: 1, flexShrink: 0 }}
+            >
+              !
+            </span>
+          )}
+        </div>
       </td>
 
       {/* Index */}
@@ -397,7 +409,8 @@ export default function SongRow({
         ) : (
           <div style={{ display: 'flex', alignItems: 'center', gap: '6px' }}>
             <span style={{ color: '#8b7d95', fontSize: '0.78rem', fontWeight: 600 }}>
-              {describeRejection(song.rejection)}
+              {rejection.message}
+              {rejection.hint && <em style={{ opacity: 0.8 }}> ({rejection.hint})</em>}
             </span>
             <button
               onClick={() => setIsEditingQuery(true)}

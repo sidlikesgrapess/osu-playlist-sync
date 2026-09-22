@@ -23,7 +23,7 @@ export default function PlayerResults({ users, total, page = 1, onPageChange, on
         marginBottom: '8px',
       }}>
         {totalFound.toLocaleString()} player{totalFound === 1 ? '' : 's'} found
-        {totalPages > 1 && ` — showing ${rangeStart}-${rangeEnd}`}
+        {totalPages > 1 && `, showing ${rangeStart} to ${rangeEnd}`}
       </div>
 
       <div style={{

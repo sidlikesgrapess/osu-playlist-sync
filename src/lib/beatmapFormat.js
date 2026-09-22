@@ -39,30 +39,49 @@ export function getStatusBadgeStyle(status = '') {
   return STATUS_BADGE_STYLES[String(status).toLowerCase()] || DEFAULT_STATUS_BADGE;
 }
 
+/** The aside every refusal the slider can undo ends with, italicised by the caller. */
+const LOWER_STRICTNESS_HINT = 'try lowering the strictness';
+
 /**
  * The line shown where a beatmap would be, when the matcher returned nothing.
  *
  * "No beatmaps found" and "this song is on osu!, but by someone else" are different
  * outcomes, and collapsing them into one message is what makes a deliberate refusal look
  * like a failure. The artist gate only feels correct if it can say why it refused.
+ *
+ * Returns `{ message, hint }` rather than one string because the hint is rendered in
+ * italics. The alternative is finding the parenthetical again with a regex at each call
+ * site, which quietly makes every future message's punctuation load-bearing.
+ *
+ * `hint` is null wherever the slider is not the answer: a wrong-artist refusal already
+ * shows the map it found, so loosening would change nothing the user can see.
  */
 export function describeRejection(rejection) {
-  if (!rejection) return 'No matching beatmapset found';
+  if (!rejection) return { message: 'No matching beatmapset found', hint: null };
 
   switch (rejection.kind) {
     case 'wrong-artist':
       // Short on purpose: the beatmap itself is shown right alongside, badged with the
       // artist mismatch, so naming the other artist here would only repeat it.
-      return rejection.artist
-        ? `Found this song but it's not by ${rejection.artist}`
-        : 'Found this song but by a different artist';
+      return {
+        message: rejection.artist
+          ? `Found this song but it's not by ${rejection.artist}`
+          : 'Found this song but by a different artist',
+        hint: null,
+      };
     case 'artist-absent':
-      return rejection.artist
-        ? `${rejection.artist} has no beatmaps on osu!`
-        : 'This artist has no beatmaps on osu!';
+      return {
+        message: rejection.artist
+          ? `${rejection.artist} has no beatmaps on osu!`
+          : 'This artist has no beatmaps on osu!',
+        hint: LOWER_STRICTNESS_HINT,
+      };
     case 'artist-unknown':
-      return 'No matching beatmapset found — the artist could not be verified';
+      return {
+        message: 'No matching beatmapset found. The artist does not match',
+        hint: LOWER_STRICTNESS_HINT,
+      };
     default:
-      return 'No matching beatmapset found';
+      return { message: 'No matching beatmapset found', hint: LOWER_STRICTNESS_HINT };
   }
 }

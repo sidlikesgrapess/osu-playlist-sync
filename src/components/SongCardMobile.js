@@ -26,6 +26,7 @@ export default function SongCardMobile({
   const match = song.matchedBeatmap;
   const hasMatch = Boolean(match);
   const statusStyle = getStatusBadgeStyle(match?.status);
+  const rejection = describeRejection(song.rejection);
 
   const handleQuerySubmit = (e) => {
     e.preventDefault();
@@ -51,19 +52,28 @@ export default function SongCardMobile({
     >
       {/* Top Bar: Checkbox + Number + YouTube Title */}
       <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
-        <div style={{ flexShrink: 0 }}>
+        <div style={{ flexShrink: 0, display: 'inline-flex', alignItems: 'center', gap: '3px' }}>
           <OsuCheckbox
             id={`checkbox-mobile-song-${song.id}`}
             checked={isSelected && hasMatch}
             disabled={!hasMatch}
+            unavailable={song.hasSearched && !hasMatch}
             onChange={() => {
               if (hasMatch) {
                 osuAudio.playClick();
                 onToggleSelect(song.id);
               }
             }}
-            title={hasMatch ? 'Select beatmap' : 'Beatmap match required'}
+            title={hasMatch ? 'Select beatmap' : 'No beatmap found for this song'}
           />
+          {match?.artistOverride && (
+            <span
+              title="Artist does not match. Check before downloading"
+              style={{ color: '#ff5555', fontSize: '0.82rem', fontWeight: 900, lineHeight: 1, flexShrink: 0 }}
+            >
+              !
+            </span>
+          )}
         </div>
 
         <span style={{ fontSize: '0.72rem', color: '#8b7d95', fontWeight: 800, minWidth: '18px' }}>
@@ -340,7 +350,8 @@ export default function SongCardMobile({
       ) : (
         <div style={{ display: 'flex', alignItems: 'center', gap: '6px', padding: '4px 0' }}>
           <span style={{ color: '#8b7d95', fontSize: '0.74rem', fontWeight: 600 }}>
-            {describeRejection(song.rejection)}
+            {rejection.message}
+            {rejection.hint && <em style={{ opacity: 0.8 }}> ({rejection.hint})</em>}
           </span>
           <button
             onClick={() => setIsEditingQuery(true)}

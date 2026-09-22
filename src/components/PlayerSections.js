@@ -110,15 +110,25 @@ function BeatmapRow({ song, rowKey, isSelected, onToggleSelect, onDownloadSingle
         flexWrap: 'wrap',
       }}
     >
-      <OsuCheckbox
-        id={`checkbox-${rowKey}`}
-        checked={isSelected}
-        onChange={() => {
-          osuAudio.playClick();
-          onToggleSelect(song.id);
-        }}
-        title="Select beatmap for batch download"
-      />
+      <div style={{ display: 'inline-flex', alignItems: 'center', gap: '3px', flexShrink: 0 }}>
+        <OsuCheckbox
+          id={`checkbox-${rowKey}`}
+          checked={isSelected}
+          onChange={() => {
+            osuAudio.playClick();
+            onToggleSelect(song.id);
+          }}
+          title="Select beatmap for batch download"
+        />
+        {match.artistOverride && (
+          <span
+            title="Artist does not match. Check before downloading"
+            style={{ color: '#ff5555', fontSize: '0.82rem', fontWeight: 900, lineHeight: 1, flexShrink: 0 }}
+          >
+            !
+          </span>
+        )}
+      </div>
 
       {/* Cover + preview */}
       <div className="osu-thumb-container" style={{

@@ -1,12 +1,13 @@
 'use client';
 
-import { Check, Minus } from 'lucide-react';
+import { Check, Minus, X } from 'lucide-react';
 import { osuAudio } from '@/lib/soundEffects';
 
 export default function OsuCheckbox({
   checked = false,
   indeterminate = false,
   disabled = false,
+  unavailable = false,
   onChange,
   title = '',
   size = 18,
@@ -33,7 +34,9 @@ export default function OsuCheckbox({
         background: isChecked || indeterminate ? '#ff66aa' : '#1a1822',
         border: `1.5px solid ${
           disabled
-            ? 'rgba(255, 255, 255, 0.1)'
+            ? unavailable
+              ? 'rgba(255, 102, 170, 0.28)'
+              : 'rgba(255, 255, 255, 0.1)'
             : isChecked || indeterminate
             ? '#ff66aa'
             : 'rgba(255, 255, 255, 0.2)'
@@ -41,8 +44,9 @@ export default function OsuCheckbox({
         display: 'inline-flex',
         alignItems: 'center',
         justifyContent: 'center',
+        verticalAlign: 'middle',
         cursor: disabled ? 'not-allowed' : 'pointer',
-        opacity: disabled ? 0.25 : 1,
+        opacity: disabled ? (unavailable ? 0.9 : 0.25) : 1,
         transition: 'background-color 0.12s ease, border-color 0.12s ease',
         userSelect: 'none',
         flexShrink: 0,
@@ -54,6 +58,9 @@ export default function OsuCheckbox({
       )}
       {indeterminate && (
         <Minus size={size - 5} color="#ffffff" strokeWidth={3.5} />
+      )}
+      {unavailable && !isChecked && !indeterminate && (
+        <X size={size - 5} color="#9c7d8d" strokeWidth={3} />
       )}
     </div>
   );
