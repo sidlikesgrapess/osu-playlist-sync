@@ -518,8 +518,16 @@ export default function Home() {
     searchTargetSongs(reset, pageSongs.map(s => s.id), nextMode, nextStatus, nextThreshold);
   };
 
-  // Re-search when user changes Mode or Status filter
+  // Re-search when user changes Mode or Status filter.
+  //
+  // Each of these bails when the value did not actually move. That is not a
+  // micro-optimisation: rematchVisiblePage throws away every match on the page
+  // and re-searches it, so a handler firing with an unchanged value costs a full
+  // page of osu! API calls and silently clears the user's selection. The controls
+  // cannot promise they only fire on a real change -- see the slider below -- so
+  // the promise is kept here, once, for all three.
   const handleModeChange = (newMode) => {
+    if (newMode === mode) return;
     setMode(newMode);
 
     if (playerProfile) {
@@ -530,6 +538,7 @@ export default function Home() {
   };
 
   const handleStatusFilterChange = (newStatus) => {
+    if (newStatus === statusFilter) return;
     setStatusFilter(newStatus);
 
     if (playerProfile) {
@@ -541,7 +550,14 @@ export default function Home() {
 
   // Re-search when the user drags the Match Strictness slider. Player sections
   // aren't affected — their beatmaps are pre-matched, not fuzzy-scored.
+  //
+  // The equality guard matters most here. The slider commits on key-up so a drag
+  // does not re-search at every step, and once it has been touched it holds DOM
+  // focus. Alt-tabbing away therefore delivers the key-up for the window switch
+  // straight to it, which was re-searching the whole page on every tab change for
+  // a value that never moved.
   const handleMatchThresholdChange = (newThreshold) => {
+    if (newThreshold === matchThreshold) return;
     setMatchThreshold(newThreshold);
     if (playerProfile) return;
     rematchVisiblePage(mode, statusFilter, newThreshold);
