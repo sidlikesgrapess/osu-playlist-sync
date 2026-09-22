@@ -20,6 +20,7 @@
 ## Remaining
 
 - select all exact matches
+- mode switcher has yt,spotify, AM, single song combine them into playlist/song search.
 - memory leak? the cached beatmaps and pics have to be deleted when the user pulls up a
   new search or player search (is song preview cached?)
 - song preview should show a loading or errors. (network)
