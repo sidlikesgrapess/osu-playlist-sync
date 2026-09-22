@@ -37,7 +37,9 @@ export default function SetupGuideModal({ isOpen, onClose, systemStatus }) {
     if (!isOpen) return;
     let cancelled = false;
 
-    fetch('/api/github/commits')
+    // The response carries no Cache-Control, so without this the browser is free to
+    // reuse a heuristically cached copy and show an old changelog on every open.
+    fetch('/api/github/commits', { cache: 'no-store' })
       .then(res => res.json())
       .then(data => {
         if (!cancelled) setCommits(data.commits || []);
