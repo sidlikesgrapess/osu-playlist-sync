@@ -50,6 +50,22 @@ const pillStyle = (isActive, { color, activeText = '#ffffff', activeBorder, radi
   fontFamily: 'inherit',
 });
 
+// Greyed until the slider disagrees with what is on screen, so the button doubles as the
+// readout for whether the current matches are stale.
+const refetchButtonStyle = (enabled) => ({
+  background: enabled ? '#ff66aa' : '#272332',
+  color: enabled ? '#ffffff' : '#5f5768',
+  border: `1px solid ${enabled ? '#ff66aa' : 'rgba(255, 255, 255, 0.06)'}`,
+  borderRadius: '6px',
+  padding: '5px 13px',
+  fontSize: '0.72rem',
+  fontWeight: 800,
+  fontFamily: 'inherit',
+  cursor: enabled ? 'pointer' : 'not-allowed',
+  whiteSpace: 'nowrap',
+  transition: 'background 0.15s ease, color 0.15s ease, border-color 0.15s ease',
+});
+
 const sampleButtonStyle = {
   background: '#231f2d',
   border: '1px solid rgba(255, 255, 255, 0.08)',
@@ -67,9 +83,8 @@ const sampleButtonStyle = {
   whiteSpace: 'nowrap',
 };
 
-export default function PlaylistInput({ onFetch, isLoading, hasSongs, mode, setMode, statusFilter, setStatusFilter, matchThreshold, setMatchThreshold }) {
+export default function PlaylistInput({ onFetch, isLoading, hasSongs, mode, setMode, statusFilter, setStatusFilter, matchThreshold, setMatchThreshold, canRefetchStrictness, onStrictnessRefetch }) {
   const [url, setUrl] = useState('');
-  const [thresholdPreview, setThresholdPreview] = useState(matchThreshold);
   const [isDocked, setIsDocked] = useState(false);
   const [selectedPlatform, setSelectedPlatform] = useState('auto');
   const [isPlatformMenuOpen, setIsPlatformMenuOpen] = useState(false);
@@ -80,11 +95,6 @@ export default function PlaylistInput({ onFetch, isLoading, hasSongs, mode, setM
   useEffect(() => {
     setMounted(true);
   }, []);
-
-  // Keep the live-dragged preview in sync if the threshold changes elsewhere.
-  useEffect(() => {
-    setThresholdPreview(matchThreshold);
-  }, [matchThreshold]);
 
   const updateMenuPos = () => {
     if (menuRef.current) {
@@ -269,62 +279,77 @@ export default function PlaylistInput({ onFetch, isLoading, hasSongs, mode, setM
             </div>
           </div>
 
-          {/* Match Strictness: slider on left, description on right */}
+          {/* Match Strictness.
+              One full-width line: caption, then the slider taking every pixel left over,
+              then the reading, then Refetch pinned to the right edge. The slider used to
+              be a fixed 220px at the far left, which left most of the row empty on a wide
+              window and made the three controls look unrelated to each other. */}
           <div style={{
             display: 'flex',
-            flexDirection: 'column',
-            gap: '6px',
+            alignItems: 'center',
+            gap: '16px',
+            flexWrap: 'wrap',
             borderBottom: isDocked ? 'none' : '1px solid rgba(255, 255, 255, 0.07)',
             paddingBottom: isDocked ? '0' : '10px',
             transition: 'all 0.25s ease',
           }}>
-            <span style={{ fontSize: '0.72rem', color: '#887c93', fontWeight: 800, textTransform: 'uppercase' }}>
+            <span style={{
+              flex: '0 0 auto',
+              fontSize: '0.72rem',
+              color: '#887c93',
+              fontWeight: 800,
+              textTransform: 'uppercase',
+              whiteSpace: 'nowrap',
+            }}>
               Match Strictness
             </span>
-            <div style={{
-              display: 'flex',
-              alignItems: 'center',
-              gap: '16px',
-            }}>
-              {/* Slider: fixed, modest width */}
-              <div style={{ flex: '0 0 220px' }}>
-              <input
-                id="match-strictness-slider"
-                className="osu-strictness"
-                type="range"
-                min={0}
-                max={100}
-                step={25}
-                value={thresholdPreview}
-                aria-label="Match strictness"
-                aria-valuetext={`${thresholdPreview} of 100, ${strictnessLabel(thresholdPreview)}: ${strictnessSummary(thresholdPreview)}`}
-                onChange={(e) => setThresholdPreview(Number(e.target.value))}
-                onMouseUp={(e) => {
-                  osuAudio.playClick();
-                  setMatchThreshold(Number(e.target.value));
-                }}
-                onTouchEnd={(e) => {
-                  osuAudio.playClick();
-                  setMatchThreshold(Number(e.target.value));
-                }}
-                onKeyUp={(e) => {
-                  osuAudio.playClick();
-                  setMatchThreshold(Number(e.target.value));
-                }}
-                style={{ '--fill': `${thresholdPreview}%`, width: '100%' }}
-              />
-            </div>
 
-              {/* Description: sits right beside the slider, not stretched to the edge */}
-              <div style={{ flex: '0 1 auto', minWidth: '0' }}>
-                <div style={{ fontSize: '0.72rem', color: '#887c93', fontWeight: 800, textTransform: 'uppercase' }}>
-                  {strictnessLabel(thresholdPreview)}
-                </div>
-                <div style={{ fontSize: '0.68rem', color: '#6f6578', fontWeight: 600, marginTop: '2px' }}>
-                  {strictnessSummary(thresholdPreview)}
-                </div>
+            {/* The elastic member: it absorbs the width the row does not otherwise use,
+                so nothing to its right ever shifts when a label changes length. */}
+            <input
+              id="match-strictness-slider"
+              className="osu-strictness"
+              type="range"
+              min={0}
+              max={100}
+              step={25}
+              value={matchThreshold}
+              aria-label="Match strictness"
+              aria-valuetext={`${matchThreshold} of 100, ${strictnessLabel(matchThreshold)}: ${strictnessSummary(matchThreshold)}`}
+              onChange={(e) => {
+                osuAudio.playClick();
+                setMatchThreshold(Number(e.target.value));
+              }}
+              style={{ '--fill': `${matchThreshold}%`, flex: '1 1 180px', minWidth: '140px' }}
+            />
+
+            {/* Right-aligned and fixed-width: the summary is the longest thing on the row
+                and the widest reading sets the column, so the button never shuffles. */}
+            <div style={{ flex: '0 0 auto', width: '240px', textAlign: 'right' }}>
+              <div style={{ fontSize: '0.72rem', color: '#c6b8ce', fontWeight: 800, textTransform: 'uppercase' }}>
+                {strictnessLabel(matchThreshold)}
+              </div>
+              <div style={{ fontSize: '0.68rem', color: '#6f6578', fontWeight: 600, marginTop: '2px' }}>
+                {strictnessSummary(matchThreshold)}
               </div>
             </div>
+
+            <button
+              id="strictness-refetch-btn"
+              type="button"
+              disabled={!canRefetchStrictness}
+              onClick={() => {
+                osuAudio.playClick();
+                onStrictnessRefetch?.();
+              }}
+              onMouseEnter={() => canRefetchStrictness && osuAudio.playHover()}
+              title={canRefetchStrictness
+                ? 'Search again at this strictness'
+                : 'Move the slider to search again at a new strictness'}
+              style={refetchButtonStyle(canRefetchStrictness)}
+            >
+              Refetch
+            </button>
           </div>
 
           {/* Clean Solid Search Bar with Platform Dropdown */}

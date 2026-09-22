@@ -88,6 +88,10 @@ export default function Home() {
   const [mode, setMode] = useState('all');
   const [statusFilter, setStatusFilter] = useState('any');
   const [matchThreshold, setMatchThreshold] = useState(DEFAULT_STRICTNESS);
+  // The strictness the matches currently on screen were searched at. It trails
+  // `matchThreshold` whenever the slider has moved but Refetch has not been pressed,
+  // and that gap is the only thing that enables the button.
+  const [appliedStrictness, setAppliedStrictness] = useState(DEFAULT_STRICTNESS);
   const [selectedIds, setSelectedIds] = useState(new Set());
   const [downloadingIds, setDownloadingIds] = useState(new Set());
   const [isDownloadingZip, setIsDownloadingZip] = useState(false);
@@ -400,15 +404,31 @@ export default function Home() {
   };
 
   // Search osu! API for specific target song IDs in controlled batches
-  const searchTargetSongs = async (baseSongs, targetIds, currentMode, currentStatus, currentStrictness = matchThreshold) => {
+  const searchTargetSongs = async (baseSongs, targetIds, currentMode, currentStatus, explicitStrictness = null) => {
     if (!targetIds || targetIds.length === 0) return;
     const targetSet = new Set(targetIds);
 
+    // Which strictness these rows get searched at.
+    //
+    // Only Refetch names one. Everything else is filling in rows the user has not seen
+    // yet (a new page, an appended playlist, Search All), and those must agree with the
+    // rows already on screen, not with wherever the slider happens to be sitting: moving
+    // it and then paging would otherwise leave one table holding two strictnesses with
+    // nothing to tell them apart. With nothing searched yet there is nothing to agree
+    // with, so the slider wins and the number on it is honest for the next playlist.
+    const basis = baseSongs || songs;
+    const currentStrictness = explicitStrictness ?? (
+      basis.some(s => s.hasSearched) ? appliedStrictness : matchThreshold
+    );
+
+    // Every search funnels through here, so this is the one place that can honestly
+    // say what strictness the visible matches were produced at.
+    setAppliedStrictness(currentStrictness);
     setIsSearching(true);
     setSearchProgress(0);
 
     // Mark targets as searching
-    let updated = (baseSongs || songs).map(s => {
+    let updated = basis.map(s => {
       if (targetSet.has(s.id)) {
         return { ...s, isSearching: true };
       }
@@ -615,20 +635,37 @@ export default function Home() {
     rematchVisiblePage(mode, newStatus, matchThreshold);
   };
 
-  // Re-search when the user drags the Match Strictness slider. Player sections
-  // aren't affected — their beatmaps are pre-matched, not fuzzy-scored.
+  // Moving the Match Strictness slider only changes the setting. It never searches.
   //
-  // The equality guard matters most here. The slider commits on key-up so a drag
-  // does not re-search at every step, and once it has been touched it holds DOM
-  // focus. Alt-tabbing away therefore delivers the key-up for the window switch
-  // straight to it, which was re-searching the whole page on every tab change for
-  // a value that never moved.
+  // Dragging it used to commit on mouse-up, which made every exploratory nudge cost a
+  // full page of osu! API calls and silently clear the selection. Worse, the slider
+  // keeps DOM focus once touched, so the key-up from an alt-tab landed on it and
+  // re-searched the page for a value that had not moved. Both problems were really the
+  // same one: the control decided when to spend calls, and it had no way of knowing
+  // whether the user was done. Refetch below is the user saying so.
+  //
+  // The new value still applies to any *fresh* search immediately, so the number on the
+  // slider is never a lie about what the next playlist will be matched at.
   const handleMatchThresholdChange = (newThreshold) => {
-    if (newThreshold === matchThreshold) return;
     setMatchThreshold(newThreshold);
-    if (playerProfile) return;
-    rematchVisiblePage(mode, statusFilter, newThreshold);
   };
+
+  // Spend the calls, now that the user has asked for it. Player sections are excluded
+  // for the same reason they always were: their beatmaps are pre-matched, not scored.
+  const handleStrictnessRefetch = () => {
+    if (playerProfile || matchThreshold === appliedStrictness) return;
+    rematchVisiblePage(mode, statusFilter, matchThreshold);
+  };
+
+  // The slider has moved away from what the visible matches were built with, and there
+  // is something on screen worth rebuilding. Held here rather than in the component
+  // because only page.js knows whether a search is already running.
+  const canRefetchStrictness =
+    !playerProfile &&
+    songs.length > 0 &&
+    !isSearching &&
+    !isLoading &&
+    matchThreshold !== appliedStrictness;
 
   // Manual query edit & rematch for a single song
   const handleManualSearch = async (songId, customQuery) => {
@@ -849,6 +886,8 @@ export default function Home() {
           setStatusFilter={handleStatusFilterChange}
           matchThreshold={matchThreshold}
           setMatchThreshold={handleMatchThresholdChange}
+          canRefetchStrictness={canRefetchStrictness}
+          onStrictnessRefetch={handleStrictnessRefetch}
         />
 
         {/* Error Notification */}
