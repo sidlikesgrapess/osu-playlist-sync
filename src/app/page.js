@@ -16,6 +16,7 @@ import { GitHubIcon } from '@/components/Icons';
 import { Star } from 'lucide-react';
 import { osuAudio } from '@/lib/soundEffects';
 import { DEFAULT_STRICTNESS } from '@/lib/matchStrictness';
+import { isRankedStatus } from '@/lib/beatmapFormat';
 import JSZip from 'jszip';
 
 const REPO_URL = 'https://github.com/sidlikesgrapess/osu-playlist-sync';
@@ -550,6 +551,48 @@ export default function Home() {
     rematchVisiblePage(newMode, statusFilter, matchThreshold);
   };
 
+  // Re-pick every searched song's match from the candidates it already holds.
+  //
+  // Only correct when the new status filter accepts a subset of the old one, so
+  // `allMatches` is guaranteed to contain the new answer somewhere in it. It is
+  // already sorted by score, so the best survivor is simply the first one left.
+  const narrowMatchesToRanked = () => {
+    const narrowed = songs.map(song => {
+      if (!song.hasSearched) return song;
+
+      const matches = song.allMatches || [];
+      const kept = matches.filter(set => isRankedStatus(set.status));
+      if (kept.length === matches.length) return song;
+
+      return {
+        ...song,
+        allMatches: kept,
+        matchedBeatmap: kept[0] || null,
+        // Losing every candidate to the filter is not the same as never finding one,
+        // and saying so would point the user at the wrong control.
+        rejection: kept.length === 0 ? { kind: 'status-filtered' } : song.rejection,
+      };
+    });
+
+    setSongs(narrowed);
+
+    // Selections survive the narrowing unless what they pointed at did not. A song
+    // whose new best candidate is artist-flagged is dropped for the same reason one
+    // is never auto-selected: it must not ride along in a bulk download.
+    setSelectedIds(prev => {
+      const next = new Set(prev);
+      for (const song of narrowed) {
+        if (!next.has(song.id)) continue;
+        if (!song.matchedBeatmap || song.matchedBeatmap.artistOverride) next.delete(song.id);
+      }
+      return next;
+    });
+  };
+
+  // True only where the new filter accepts a subset of what the old one did. With two
+  // filters that is a single transition, and anything else has to go back to osu!.
+  const isNarrowing = (from, to) => from === 'any' && to === 'ranked';
+
   const handleStatusFilterChange = (newStatus) => {
     if (newStatus === statusFilter) return;
     setStatusFilter(newStatus);
@@ -558,6 +601,17 @@ export default function Home() {
       reloadPlayerSections(mode, newStatus);
       return;
     }
+
+    // Narrowing costs nothing: the wider search already returned these candidates and
+    // every one carries its status. Widening cannot be done locally at all, because
+    // `s=ranked` goes to the osu! API itself, so the unranked sets were never fetched.
+    // A search still in flight is left to refetch too, since its results were asked
+    // for under the old filter and would land unfiltered after this returns.
+    if (isNarrowing(statusFilter, newStatus) && !isSearching) {
+      narrowMatchesToRanked();
+      return;
+    }
+
     rematchVisiblePage(mode, newStatus, matchThreshold);
   };
 

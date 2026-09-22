@@ -3,6 +3,7 @@
  * Handles OAuth2 Client Credentials grant and querying beatmapsets.
  */
 import { strictnessProfile } from './matchStrictness.js';
+import { isRankedStatus } from './beatmapFormat.js';
 
 let cachedToken = null;
 let tokenExpiresAt = 0;
@@ -735,7 +736,7 @@ export async function searchOsuBeatmaps(query, options = {}) {
         let sets = data.beatmapsets || [];
 
         if (isRankedOnly) {
-          sets = sets.filter(bm => bm.status === 'ranked' || bm.status === 'loved' || bm.status === 'qualified');
+          sets = sets.filter(bm => isRankedStatus(bm.status));
         }
 
         for (const bm of sets) {

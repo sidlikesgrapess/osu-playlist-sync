@@ -24,6 +24,21 @@ export function formatCompactNumber(num) {
   return val.toLocaleString();
 }
 
+/**
+ * What the "Ranked & Loved" filter accepts.
+ *
+ * Lives here, client-safe, because page.js narrows an already-fetched candidate list
+ * with it while osu.js filters the search pool with it. If those two ever disagreed,
+ * narrowing the filter locally would keep a different set of beatmaps than refetching
+ * with it would, which is the one thing the local path has to get exactly right.
+ */
+const RANKED_AND_LOVED = ['ranked', 'loved', 'qualified'];
+
+/** Whether a beatmapset status passes the "Ranked & Loved" filter. */
+export function isRankedStatus(status) {
+  return RANKED_AND_LOVED.includes(String(status).toLowerCase());
+}
+
 const STATUS_BADGE_STYLES = {
   ranked: { bg: '#44bbee', color: '#081a24' },
   loved: { bg: '#ff66aa', color: '#ffffff' },
@@ -80,6 +95,13 @@ export function describeRejection(rejection) {
       return {
         message: 'No matching beatmapset found. The artist does not match',
         hint: LOWER_STRICTNESS_HINT,
+      };
+    case 'status-filtered':
+      // The match was found and then hidden, so the generic "nothing found" would be
+      // untrue and would point at the wrong control.
+      return {
+        message: 'Found this song but no ranked or loved beatmap',
+        hint: 'switch the filter to All',
       };
     default:
       return { message: 'No matching beatmapset found', hint: LOWER_STRICTNESS_HINT };
