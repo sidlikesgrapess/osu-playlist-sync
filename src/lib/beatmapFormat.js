@@ -7,10 +7,12 @@
 export function getStarColor(stars) {
   if (!stars) return '#c6b8ce';
   if (stars < 2.5) return '#4fc3f7';
-  if (stars < 4.0) return '#81c784';
-  if (stars < 5.3) return '#ffb74d';
-  if (stars < 6.5) return '#ff8a80';
-  return '#ba68c8';
+  if (stars < 3.0) return '#81c784';
+  if (stars < 4.0) return '#ffb74d';
+  if (stars < 5.3) return '#ff8a80';
+  if (stars < 6.5) return '#e170c3';
+  if (stars < 7.9) return '#8374c7';
+  return '#70408a';
 }
 
 /** 1234 -> "1.2K", 1500000 -> "1.5M". */

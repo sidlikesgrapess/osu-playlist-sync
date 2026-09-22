@@ -1,6 +1,6 @@
 'use client';
 
-import { Download, Archive, CheckCircle2, Share2, Trash2, Sparkles } from 'lucide-react';
+import { Download, Archive, CheckCircle2, Share2, Trash2 } from 'lucide-react';
 import { osuAudio } from '@/lib/soundEffects';
 
 export default function StatsBar({
@@ -112,7 +112,6 @@ export default function StatsBar({
             }}
             title="Query beatmaps for all unsearched songs"
           >
-            <Sparkles size={12} />
             <span>Search All ({unsearchedCount})</span>
           </button>
         )}

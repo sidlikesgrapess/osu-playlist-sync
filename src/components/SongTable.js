@@ -4,7 +4,7 @@ import { useState, useRef, useEffect } from 'react';
 import SongRow from './SongRow';
 import SongCardMobile from './SongCardMobile';
 import OsuCheckbox from './OsuCheckbox';
-import { X, Check, Search, ChevronLeft, ChevronRight, Sparkles, Heart, Play } from 'lucide-react';
+import { X, Check, Search, ChevronLeft, ChevronRight, Heart, Play } from 'lucide-react';
 import { osuAudio } from '@/lib/soundEffects';
 import { getStarColor, formatCompactNumber, getStatusBadgeStyle } from '@/lib/beatmapFormat';
 
@@ -299,7 +299,6 @@ export default function SongTable({
                 }}
                 title="Query beatmaps for all unsearched pages"
               >
-                <Sparkles size={11} />
                 <span>Search all remaining ({unsearchedCount})</span>
               </button>
             )}
