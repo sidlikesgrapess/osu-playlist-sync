@@ -1,8 +1,31 @@
-# osu!Sync
+<div align="center">
 
-Turn playlists, songs, or any osu! player's top plays and favourites into downloadable osu! beatmaps — no manual searching, no API key of your own required.
+# [osu!Sync](https://github.com/sidlikesgrapess/osu-playlist-sync)
+
+*Turn playlists, songs, or any osu! player's top plays and favourites into downloadable osu! beatmaps, no manual searching, no API key of your own required*
+
+[![Website](https://img.shields.io/badge/Website-osu--playlist--sync.vercel.app-1e90ff?style=flat&logo=vercel&logoColor=white)](https://osu-playlist-sync.vercel.app/)
+[![Stars](https://img.shields.io/github/stars/sidlikesgrapess/osu-playlist-sync?style=flat&logo=github&label=Stars&color=181717)](https://github.com/sidlikesgrapess/osu-playlist-sync/stargazers)
+
+</div>
 
 Point it at a **YouTube / Spotify / Apple Music** playlist, a single song, or an **osu! player's profile**, and it finds the matching beatmapsets and lets you download them one at a time or as a ZIP.
+
+---
+
+## Screenshots
+
+<div align="center">
+
+<img src="images/desktop_playlist_search_results.png" alt="A Spotify playlist matched against osu!, showing each song's beatmap, editable query, and the songs that were rejected or flagged for a mismatched artist" width="100%">
+
+<sub>A Spotify playlist matched against osu!: every track gets a beatmap, an editable query, or a reason it was refused.</sub>
+
+<img src="images/desktop_mrekk_result.png" alt="An osu! player profile loaded in the app, with rank and pp on the banner and collapsible Best Performances, Most Played and Favourites sections" width="100%">
+
+<sub>Any player's profile, with Best Performances, Most Played and Favourites ready to tick and download.</sub>
+
+</div>
 
 ---
 
@@ -72,15 +95,6 @@ Open [http://localhost:3000](http://localhost:3000).
 
 ---
 
-## Production Deployment (Vercel)
-
-1. Push this repository to GitHub.
-2. Import the project on [Vercel](https://vercel.com).
-3. In **Project Settings → Environment Variables**, set `OSU_CLIENT_ID`, `OSU_CLIENT_SECRET`, and optionally `DEFAULT_MIRROR`.
-4. In your [osu! OAuth Settings](https://osu.ppy.sh/home/account/edit#oauth), make sure the application uses the **Client Credentials** grant type.
-
----
-
 ## Architecture & Data Flow
 
 ```mermaid
@@ -104,94 +118,47 @@ All osu! API calls run through a single client-credentials token (`/lib/osu.js`)
 
 ## How matching works
 
-### The problem
+osu! has more than one song called *Monster*. Rank on title alone and you get handed a
+stranger's song, and because the title matched perfectly, no "be stricter" setting can
+remove it. So the rule is: **the artist has to match, or you get nothing.**
 
-osu! has more than one song called *Monster*. It has several called *Faded*, *Alone* and
-*Sunflower*. A matcher that ranks on title alone will confidently hand you a stranger's song
-and call it a match — and because the title matched *perfectly*, no "be stricter" setting can
-filter it out. Being stricter only throws away correct results; the wrong one scores at the
-very top either way.
+### The pipeline
 
-So the rule here is simple: **the artist has to match, or you get nothing.**
+1. **Clean the title.** `Nightcore`, `Official Video`, `+HDHR` and friends are stripped so
+   the search returns something at all.
+2. **Search a few ways.** Artist + title, the raw text, the bare title. Everything found
+   goes into one pile, and osu!'s own ranking is ignored.
+3. **Score every candidate.** Mostly title similarity, with an exact title beating a partial
+   one, plus small nudges for ranked and popular maps.
+4. **Check the artist.** Exact name, a spelling osu!'s own maps prove is the same person
+   (`かめりあ` is `Camellia`), reordered or romanised names, or a credit in the tags.
+5. **Refuse a wrong artist outright.** It is a gate, not a penalty: a perfect title can
+   never buy back the wrong artist.
+6. **But only trust names worth trusting.** Spotify and Apple give a real artist. YouTube
+   gives a channel that might be `Nightcore Gaming`, so it is checked against osu! before it
+   is allowed to reject anything.
+7. **Cut by strictness, then explain.** The slider trades how many results you see against
+   how sure they are. If nothing survives, you are told which kind of nothing: wrong artist,
+   artist not on osu! at all, or no match.
 
-### What that means in practice
+Rejected maps are still shown, labelled and unticked, so they can never join a bulk ZIP by
+accident.
 
-When osu! has your song but under a different artist, you don't get a wrong beatmap and you
-don't get a bare "not found" either. You get told which one it is:
+### Does it work?
 
-| What happened | What you see |
-| --- | --- |
-| The song is on osu!, by someone else | *Could not find one by Justin Bieber. Closest match:* — followed by the beatmap it did find |
-| The artist has no maps on osu! at all | *HUGEL, SOLTO (FR) has no beatmaps on osu!* |
-| Nothing matched the title either | *No matching beatmapset found* |
+`bench/` replays captured osu! responses with human-labelled answers, so changes are measured
+rather than guessed. On 37 deliberately hard fixtures:
 
-**Flagging isn't hiding.** The nearest beatmap is still shown as a normal row — cover art,
-star rating, the alternative-version picker, download, all of it — introduced by a line
-saying no map by that artist exists. What the gate changes is that it arrives **unticked**,
-so it never joins a bulk ZIP unless you pick it yourself. You get the information and the
-choice; what you don't get is a stranger's song quietly presented as a confident match.
-
-The **Match Strictness** slider still works, but it no longer quietly controls whether you get
-someone else's song. It trades how many results you see against how sure they are; artist
-correctness is not on that dial.
-
-### Deciding whether two artist names are the same person
-
-This is the hard half, because the same artist is written a dozen ways. `ヨルシカ` and
-`Yorushika`. `米津玄師` and `Yonezu Kenshi`. `Tuyu` and `Tsuyu`. `Steve Lacy` and
-`SteveLacyVEVO`. A cover where osu! credits the singer and the original artist is only in the
-tags. All of those have to still count as a match, or being strict just breaks the app.
-
-Rather than guess with string similarity, the matcher asks osu! *what it has by that artist*
-and reads the answer off the corpus. Every beatmapset carries both a romanised and a native
-artist field, so **osu! is already a dictionary of artist aliases** — `かめりあ` is known to be
-`Camellia` because other maps spell it both ways. No hand-written alias table, and it works
-for artists nobody thought to list.
-
-Names are checked in order — exact match, a corpus-learned alias, whole-word containment,
-romanisation folding (`Tsuyu`/`Tuyu`), artist credited in the tags — and the first one that
-fits wins. If none fit, it's a different artist.
-
-### Not all artist names are trustworthy
-
-A Spotify or Apple Music track comes with a real artist field. A YouTube video comes with a
-channel name, which might be `Nightcore Gaming`. So how much the artist is trusted depends on
-where it came from: **a trusted artist may reject a match, an untrusted one may only confirm
-one.** An unverifiable artist is checked against osu! first — `Nightcore Gaming` has 4 maps, so
-it isn't a real artist and isn't allowed to vouch for anything. That check is skipped whenever
-a result already names the artist exactly, which keeps it to about 0.2 extra API calls per
-track.
-
-### Does it actually work?
-
-`bench/` is a benchmark that replays captured osu! API responses through the matcher, so
-changes are measured rather than guessed. Verdicts on which candidates are really by the
-right artist are human-labelled, because letting the matcher grade its own homework would
-measure nothing.
-
-On 37 fixtures chosen to be hard — J-pop romanisations, colliding titles, covers, noisy
-YouTube titles, artists absent from osu!, obscure artists whose songs share a title with a
-famous one:
-
-| | correct match | **wrong artist** | returned nothing, correctly |
+| | correct match | **wrong artist** | correctly returned nothing |
 | --- | --- | --- | --- |
 | Before | 78.4% | **2.7%** | 16.2% |
 | After | **83.8%** | **0%** | 16.2% |
 
-The percentage isn't the point — the *shape* is. Sweeping the strictness slider from loosest
-to strictest, the old matcher returns its wrong answer at **every** setting, because that
-answer scored at the very top of the range. Being stricter cost correct results and removed
-none of the wrong one. The new matcher holds at zero across the whole sweep.
+The old matcher returned its wrong answer at *every* strictness setting; the new one stays at
+zero across the whole sweep. On 50 real Spotify tracks it returns 33 maps where the old one
+returned 34, and the one it dropped was wrong.
 
-Checked against 50 real tracks from a live Spotify playlist, the old matcher returned 34
-beatmaps and the new one returns 33. The one it stopped returning was *"Have you been naughty
-or nice? (Game Ver.)" by Flambe!*, offered for Morgan Wallen's *Been By Now*.
+> The fixtures over-represent hard cases, so 83.8% is a target to beat, not everyday
+> accuracy. Only the wrong-artist column is meant to stay at zero.
 
-> These fixtures deliberately over-represent hard cases, so 83.8% is a number to improve
-> against — not an estimate of everyday accuracy. Fixtures are added whenever a real
-> mismatch turns up, so the percentage moves as the suite gets harder; only the
-> wrong-artist column is meant to stay at zero.
-
-Run it yourself with `npm run bench`; details in [`bench/README.md`](bench/README.md).
-
----
+Run it with `npm run bench`; details in [`bench/README.md`](bench/README.md).
