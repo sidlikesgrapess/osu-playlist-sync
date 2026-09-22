@@ -802,8 +802,13 @@ export async function searchOsuBeatmaps(query, options = {}) {
   if (formatted.length === 0) {
     // Look in the gated-out pile too — a wrong-artist candidate is refused precisely
     // because it matched the title, so it is never in allFoundSets.
+    //
+    // The bar comes from the slider, not from a constant. The gate is absolute and the
+    // slider must not weaken it, so this is the only lever that lets 0 mean what it says:
+    // at 0 it admits the whole gated pile, and the row shows those candidates flagged
+    // instead of a bare "no beatmaps by this artist" for maps osu! plainly returned.
     const titleMatches = [...gatedOut, ...allFoundSets]
-      .filter(s => titleSimilarity(s, targetTitle) >= 0.92);
+      .filter(s => titleSimilarity(s, targetTitle) >= strict.salvageFloor);
 
     // Only on failure, and only for an artist we did not already probe: one call to tell
     // "this artist has nothing on osu!" apart from "this song of theirs is not mapped".

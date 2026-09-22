@@ -16,11 +16,19 @@
  *   `titleFloor`     how close the title must be before the candidate is considered at all
  *   `maxArtistRung`  how far down the artist ladder still counts as the same person
  *   `minScore`       the familiar score cutoff, now derived rather than typed in
+ *   `salvageFloor`   how close a GATED candidate's title must be to be shown anyway, flagged
  *
  * What it deliberately does NOT change is the artist gate itself. A confident DIFFERENT is
  * -Infinity at every setting, including 0 — those candidates still come back, flagged and
  * unticked, which is what "show me everything" should mean. Letting the slider switch the
  * gate off would restore the exact bug the gate exists to prevent (see CLAUDE.md).
+ *
+ * `salvageFloor` is what makes that promise true. The gate is absolute, so at 0 every knob
+ * above can be wide open and the row still comes back empty with a bare "no beatmaps by this
+ * artist" — the candidates existed, they were just gated, and the salvage that shows them
+ * anyway used to sit at a hardcoded 0.92 the slider could not reach. Loosening the gate to
+ * fix that would be the wrong lever; loosening what we are willing to SHOW is the right one,
+ * because a salvaged candidate is flagged and never auto-selected either way.
  */
 
 export const DEFAULT_STRICTNESS = 50;
@@ -30,10 +38,11 @@ const lerp = (a, b, t) => a + (b - a) * t;
 /**
  * Anchored at three points, linear between them:
  *
- *   |            |   0 (loosest)  |  50 (default)  |  100 (strictest)  |
- *   | titleFloor |      0.00      |      0.50      |       1.00        |
- *   | minScore   |      -100      |        70      |        100        |
- *   | artistRung |         6      |         6      |          3        |
+ *   |              |   0 (loosest)  |  50 (default)  |  100 (strictest)  |
+ *   | titleFloor   |      0.00      |      0.50      |       1.00        |
+ *   | minScore     |      -100      |        70      |        100        |
+ *   | artistRung   |         6      |         6      |          3        |
+ *   | salvageFloor |      0.00      |      0.92      |       0.92        |
  *
  * 50 reproduces the previous default exactly (floor 0.50, cutoff 70), so the middle of the
  * slider is the behaviour every benchmark number was measured against.
@@ -58,6 +67,12 @@ const lerp = (a, b, t) => a + (b - a) * t;
  * `minScore` is capped at 100 rather than pushed to the top of the range because at 100 the
  * floors *are* the filter; a cutoff racing them would start rejecting exact matches for
  * being unranked and unpopular.
+ *
+ * `salvageFloor` rides the same curve as `titleFloor` so the two can never disagree about
+ * what counts as the same song, and it stops climbing above the default: 0.92 is the
+ * containment tier, the loosest rung that still means "this really is that song", and a
+ * salvaged candidate is a labelled non-match, not a match. Tightening it further at the
+ * strict end would only delete the explanation, never a selection.
  */
 export function strictnessProfile(strictness) {
   const raw = Number(strictness);
@@ -78,11 +93,23 @@ export function strictnessProfile(strictness) {
     // unrelated title scores past 70 on artist credit alone (Ado's *Gira Gira* answering a
     // search for *Usseewa*). The loose end gets its range; the default keeps its guarantee.
     const floorT = Math.min(1, Math.max(0, (s - 25) / 25));
-    return { strictness: s, titleFloor: lerp(0, 0.5, floorT), minScore: lerp(-100, 70, t), maxArtistRung: 6 };
+    return {
+      strictness: s,
+      titleFloor: lerp(0, 0.5, floorT),
+      minScore: lerp(-100, 70, t),
+      maxArtistRung: 6,
+      salvageFloor: lerp(0, 0.92, floorT),
+    };
   }
 
   const t = (s - 50) / 50;
-  return { strictness: s, titleFloor: lerp(0.50, 1.00, t), minScore: lerp(70, 100, t), maxArtistRung: lerp(6, 3, t) };
+  return {
+    strictness: s,
+    titleFloor: lerp(0.50, 1.00, t),
+    minScore: lerp(70, 100, t),
+    maxArtistRung: lerp(6, 3, t),
+    salvageFloor: 0.92,
+  };
 }
 
 /** Short name for the current setting. */
