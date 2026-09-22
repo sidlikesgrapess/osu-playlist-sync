@@ -370,6 +370,19 @@ export default function Home() {
       setSongs(combinedSongs);
       setIsLoading(false);
 
+      // An append is the one load with nothing to show for itself: the rows land at the
+      // bottom of the queue, usually off-screen, and the page does not move. The first
+      // playlist needs no toast because it fills the whole table. Nothing is announced for
+      // an empty result either -- that means the scrape failed, and the error says so.
+      if (isAppending && newSongs.length > 0) {
+        const from = data.playlistTitle ? ` from ${data.playlistTitle}` : '';
+        pushToast(
+          'Added to queue bottom',
+          `${newSongs.length} song${newSongs.length === 1 ? '' : 's'}${from} · ${combinedSongs.length} in queue`,
+          'queue',
+        );
+      }
+
       // Only search whatever page is currently visible — never songs the user
       // can't see yet. Everything else is picked up lazily via pagination.
       const pageForSearch = isAppending ? currentPage : 1;
@@ -623,9 +636,9 @@ export default function Home() {
     setSelectedIds(new Set());
   };
 
-  const pushToast = (title, detail) => {
+  const pushToast = (title, detail, kind = 'download') => {
     const id = `toast_${Date.now()}_${Math.random().toString(36).slice(2, 7)}`;
-    setToasts(prev => [...prev, { id, title, detail }]);
+    setToasts(prev => [...prev, { id, title, detail, kind }]);
   };
 
   const dismissToast = (id) => {

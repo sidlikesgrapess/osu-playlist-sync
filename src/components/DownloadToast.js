@@ -1,7 +1,17 @@
 'use client';
 
 import { useEffect, useRef, useState } from 'react';
-import { CheckCircle2 } from 'lucide-react';
+import { CheckCircle2, ListPlus } from 'lucide-react';
+
+/**
+ * The badge is the only thing that varies between toasts. Green check for a finished
+ * transfer, osu! pink for something the app added, so the two are distinguishable at a
+ * glance without reading either one.
+ */
+const TOAST_KINDS = {
+  download: { Icon: CheckCircle2, color: '#00cc77', tint: 'rgba(0, 204, 119, 0.14)' },
+  queue: { Icon: ListPlus, color: '#ff66aa', tint: 'rgba(255, 102, 170, 0.14)' },
+};
 
 const AUTO_DISMISS_MS = 5000;
 const SLIDE_MS = 420;
@@ -27,6 +37,10 @@ function ToastCard({ toast, onDismiss }) {
   const [leaving, setLeaving] = useState(false);
   const [physicsOn, setPhysicsOn] = useState(false);
   const [grabbing, setGrabbing] = useState(false);
+
+  // An unknown or missing kind falls back to the download badge, so callers that
+  // predate the variant keep working untouched.
+  const { Icon, color, tint } = TOAST_KINDS[toast.kind] || TOAST_KINDS.download;
 
   // Animation values live in refs so the RAF loop can drive the DOM directly.
   const phys = useRef({ x: 0, y: 0, vx: 0, vy: 0, opacity: 1, mode: 'idle' });
@@ -183,13 +197,13 @@ function ToastCard({ toast, onDismiss }) {
         width: '30px',
         height: '30px',
         borderRadius: '8px',
-        background: 'rgba(0, 204, 119, 0.14)',
+        background: tint,
         display: 'flex',
         alignItems: 'center',
         justifyContent: 'center',
         flexShrink: 0,
       }}>
-        <CheckCircle2 size={17} color="#00cc77" />
+        <Icon size={17} color={color} />
       </div>
 
       <div style={{ minWidth: 0, flex: 1 }}>
