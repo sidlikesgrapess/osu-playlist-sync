@@ -26,12 +26,7 @@ const supplement = existsSync(SUPPLEMENT_FILE)
   : {};
 
 // (fixture, query) pairs allowed to go unanswered, each with its reason.
-// Temporary: the two queries F-28's cleaner newly sends for colon-title, which
-// bench/snapshots never captured. The supplement capture that follows answers them.
-const UNCOVERED_ALLOWED = [
-  { fixture: 'colon-title', query: 'ASIAN KUNG-FU GENERATION Re:Re', reason: 'new F-28 query, capture pending' },
-  { fixture: 'colon-title', query: 'Re:Re', reason: 'new F-28 query, capture pending' },
-];
+const UNCOVERED_ALLOWED = [];
 
 // The first real post-F-28 run's own count (recorded in that commit). Never the bench
 // model's 55 or the hybrid spike's 56.
@@ -159,8 +154,7 @@ test('check R: the real matcher over every fixture', async () => {
   for (const u of run.uncovered) console.log(`  uncovered ${u.fixture} :: ${JSON.stringify(u.query)}`);
   for (const row of run.rows) console.log(`  ${row}`);
 
-  // 30 until the supplement answers colon-title's new queries; then 31.
-  assert.ok(run.tally.hit >= 30, `hit ${run.tally.hit}`);
+  assert.ok(run.tally.hit >= 31, `hit ${run.tally.hit}`);
   assert.equal(run.tally.wrongArtist, 0);
   assert.ok(run.tally.correctAbstain >= 6, `correctAbstain ${run.tally.correctAbstain}`);
   const allowed = new Set(UNCOVERED_ALLOWED.map(a => `${a.fixture}\u0000${a.query}`));
