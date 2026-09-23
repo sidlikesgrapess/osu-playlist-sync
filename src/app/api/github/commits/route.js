@@ -1,4 +1,5 @@
-import { NextResponse } from 'next/server';
+import { fetchJson } from '@/lib/http';
+import { checkRateLimit, rateLimitResponse } from '@/lib/rateLimit';
 
 const REPO = 'sidlikesgrapess/osu-playlist-sync';
 const COMMIT_COUNT = 5;
@@ -26,6 +27,14 @@ const CACHE_TTL_MS = 120_000;
 // instance, which leaves room for a second warm one.
 let cache = { commits: null, fetchedAt: 0 };
 
+// The memory cache above is per instance; this lets the CDN in front of every instance hold
+// a good list too, so the egress IP they share spends even fewer of its 60 an hour. It is
+// sent only with a list GitHub actually answered: a fallback served while GitHub is failing,
+// and the 429 below, must never be held at the edge for two minutes.
+const CDN_CACHE = 's-maxage=120, stale-while-revalidate=300';
+
+const RATE_LIMIT = { bucket: 'githubCommits', limit: 20, windowMs: 60_000 };
+
 /** Splits a conventional-commit subject into its type and human-readable part. */
 function parseSubject(message) {
   const subject = String(message || '').split('\n')[0].trim();
@@ -37,36 +46,40 @@ function parseSubject(message) {
 
 /** The last good list, or an empty one. Used whenever a refetch can't be trusted. */
 function fallback() {
-  return NextResponse.json({ commits: cache.commits || [] });
+  return Response.json({ commits: cache.commits || [] });
 }
 
-export async function GET() {
+/** A list GitHub answered, fresh or from the memory cache: the only response the CDN may keep. */
+function goodList(commits) {
+  return Response.json({ commits }, { headers: { 'Cache-Control': CDN_CACHE } });
+}
+
+export async function GET(request) {
+  const limited = checkRateLimit(request, RATE_LIMIT);
+  if (!limited.ok) return rateLimitResponse(limited.retryAfterSec);
+
   if (cache.commits && Date.now() - cache.fetchedAt < CACHE_TTL_MS) {
-    return NextResponse.json({ commits: cache.commits });
+    return goodList(cache.commits);
   }
 
   try {
-    const res = await fetch(
-      `https://api.github.com/repos/${REPO}/commits?per_page=${COMMIT_COUNT}`,
-      {
-        headers: {
-          Accept: 'application/vnd.github+json',
-          'User-Agent': 'osu-playlist-sync',
-        },
-        // The TTL above is the only cache. Letting Next cache this too would put
-        // back the stale-while-revalidate behaviour this route just got rid of.
-        cache: 'no-store',
-      }
-    );
-
-    if (!res.ok) {
-      // Rate limited or down. Keep showing the last good list rather than
-      // blanking the changelog, and retry on the next request.
-      console.warn('[GitHub commits] responded', res.status);
+    // http.js always fetches with cache: 'no-store', so the TTL above stays the only
+    // server cache. Letting Next cache this too would put back the stale-while-revalidate
+    // behaviour this route got rid of.
+    let data;
+    try {
+      data = await fetchJson(`https://api.github.com/repos/${REPO}/commits?per_page=${COMMIT_COUNT}`, {
+        profile: 'server',
+        headers: { Accept: 'application/vnd.github+json' },
+        maxBytes: 500_000,
+      });
+    } catch (error) {
+      // Rate limited or down (http.js tags the status). Keep showing the last good list
+      // rather than blanking the changelog, and retry on the next request.
+      console.warn('[GitHub commits] fetch failed:', error?.status || error?.message || error);
       return fallback();
     }
 
-    const data = await res.json();
     const commits = (Array.isArray(data) ? data : []).map(entry => {
       const { type, text } = parseSubject(entry?.commit?.message);
       return {
@@ -79,9 +92,9 @@ export async function GET() {
     });
 
     cache = { commits, fetchedAt: Date.now() };
-    return NextResponse.json({ commits });
+    return goodList(commits);
   } catch (error) {
-    console.warn('[GitHub commits] fetch failed:', error?.message || error);
+    console.warn('[GitHub commits] unreadable response:', error?.message || error);
     return fallback();
   }
 }
