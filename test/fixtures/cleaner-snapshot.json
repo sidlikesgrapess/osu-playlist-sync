@@ -1,0 +1,606 @@
+{
+  "note": "A7 cleaner diff snapshot. Regenerate with UPDATE_CLEANER_SNAPSHOT=1 and list every change in the commit.",
+  "fixtures": {
+    "ado-gira": {
+      "input": {
+        "rawTitle": "ギラギラ",
+        "channelTitle": "Ado",
+        "source": "spotify"
+      },
+      "output": {
+        "title": "ギラギラ",
+        "artist": "Ado",
+        "cleanQuery": "Ado ギラギラ",
+        "queries": [
+          "Ado ギラギラ",
+          "ギラギラ"
+        ]
+      }
+    },
+    "ado-usseewa": {
+      "input": {
+        "rawTitle": "うっせぇわ",
+        "channelTitle": "Ado",
+        "source": "spotify"
+      },
+      "output": {
+        "title": "うっせぇわ",
+        "artist": "Ado",
+        "cleanQuery": "Ado うっせぇわ",
+        "queries": [
+          "Ado うっせぇわ",
+          "うっせぇわ"
+        ]
+      }
+    },
+    "alone-marshmello": {
+      "input": {
+        "rawTitle": "Alone",
+        "channelTitle": "Marshmello",
+        "source": "spotify"
+      },
+      "output": {
+        "title": "Alone",
+        "artist": "Marshmello",
+        "cleanQuery": "Marshmello Alone",
+        "queries": [
+          "Marshmello Alone",
+          "Alone"
+        ]
+      }
+    },
+    "believer-imagine": {
+      "input": {
+        "rawTitle": "Believer",
+        "channelTitle": "Imagine Dragons",
+        "source": "spotify"
+      },
+      "output": {
+        "title": "Believer",
+        "artist": "Imagine Dragons",
+        "cleanQuery": "Imagine Dragons Believer",
+        "queries": [
+          "Imagine Dragons Believer",
+          "Believer"
+        ]
+      }
+    },
+    "camellia-ghost": {
+      "input": {
+        "rawTitle": "GHOST",
+        "channelTitle": "Camellia",
+        "source": "spotify"
+      },
+      "output": {
+        "title": "GHOST",
+        "artist": "Camellia",
+        "cleanQuery": "Camellia GHOST",
+        "queries": [
+          "Camellia GHOST",
+          "GHOST"
+        ]
+      }
+    },
+    "camellia-jp": {
+      "input": {
+        "rawTitle": "Exit This Earth's Atomosphere",
+        "channelTitle": "かめりあ",
+        "source": "spotify"
+      },
+      "output": {
+        "title": "Exit This Earth's Atomosphere",
+        "artist": "かめりあ",
+        "cleanQuery": "かめりあ Exit This Earth's Atomosphere",
+        "queries": [
+          "かめりあ Exit This Earth's Atomosphere",
+          "Exit This Earth's Atomosphere"
+        ]
+      }
+    },
+    "colon-title": {
+      "input": {
+        "rawTitle": "Re:Re:",
+        "channelTitle": "ASIAN KUNG-FU GENERATION",
+        "source": "spotify"
+      },
+      "output": {
+        "title": "Re",
+        "artist": "Re",
+        "cleanQuery": "Re Re",
+        "queries": [
+          "Re Re",
+          "Re",
+          "ASIAN KUNG-FU GENERATION Re"
+        ]
+      }
+    },
+    "eve-doku": {
+      "input": {
+        "rawTitle": "ドラマツルギー",
+        "channelTitle": "Eve",
+        "source": "spotify"
+      },
+      "output": {
+        "title": "ドラマツルギー",
+        "artist": "Eve",
+        "cleanQuery": "Eve ドラマツルギー",
+        "queries": [
+          "Eve ドラマツルギー",
+          "ドラマツルギー"
+        ]
+      }
+    },
+    "eve-kaikaikitan": {
+      "input": {
+        "rawTitle": "廻廻奇譚",
+        "channelTitle": "Eve",
+        "source": "spotify"
+      },
+      "output": {
+        "title": "廻廻奇譚",
+        "artist": "Eve",
+        "cleanQuery": "Eve 廻廻奇譚",
+        "queries": [
+          "Eve 廻廻奇譚",
+          "廻廻奇譚"
+        ]
+      }
+    },
+    "faded-alanwalker": {
+      "input": {
+        "rawTitle": "Faded",
+        "channelTitle": "Alan Walker",
+        "source": "spotify"
+      },
+      "output": {
+        "title": "Faded",
+        "artist": "Alan Walker",
+        "cleanQuery": "Alan Walker Faded",
+        "queries": [
+          "Alan Walker Faded",
+          "Faded"
+        ]
+      }
+    },
+    "generic-title-nobody": {
+      "input": {
+        "rawTitle": "Dream",
+        "channelTitle": "Nonexistent Artist Xyzzy",
+        "source": "spotify"
+      },
+      "output": {
+        "title": "Dream",
+        "artist": "Nonexistent Artist Xyzzy",
+        "cleanQuery": "Nonexistent Artist Xyzzy Dream",
+        "queries": [
+          "Nonexistent Artist Xyzzy Dream",
+          "Dream"
+        ]
+      }
+    },
+    "imagine-monster": {
+      "input": {
+        "rawTitle": "Monster",
+        "channelTitle": "Imagine Dragons",
+        "source": "spotify"
+      },
+      "output": {
+        "title": "Monster",
+        "artist": "Imagine Dragons",
+        "cleanQuery": "Imagine Dragons Monster",
+        "queries": [
+          "Imagine Dragons Monster",
+          "Monster"
+        ]
+      }
+    },
+    "nonexistent-artist": {
+      "input": {
+        "rawTitle": "Ordinary",
+        "channelTitle": "Alex Warren",
+        "source": "spotify"
+      },
+      "output": {
+        "title": "Ordinary",
+        "artist": "Alex Warren",
+        "cleanQuery": "Alex Warren Ordinary",
+        "queries": [
+          "Alex Warren Ordinary",
+          "Ordinary"
+        ]
+      }
+    },
+    "nonexistent-song": {
+      "input": {
+        "rawTitle": "Qwertzuiop Nonexistent Track",
+        "channelTitle": "Zxcvbnm Nobody",
+        "source": "spotify"
+      },
+      "output": {
+        "title": "Qwertzuiop Nonexistent Track",
+        "artist": "Zxcvbnm Nobody",
+        "cleanQuery": "Zxcvbnm Nobody Qwertzuiop Nonexistent Track",
+        "queries": [
+          "Zxcvbnm Nobody Qwertzuiop Nonexistent Track",
+          "Qwertzuiop Nonexistent Track"
+        ]
+      }
+    },
+    "reol-hibana": {
+      "input": {
+        "rawTitle": "ちるちる",
+        "channelTitle": "Reol",
+        "source": "spotify"
+      },
+      "output": {
+        "title": "ちるちる",
+        "artist": "Reol",
+        "cleanQuery": "Reol ちるちる",
+        "queries": [
+          "Reol ちるちる",
+          "ちるちる"
+        ]
+      }
+    },
+    "skillet-monster": {
+      "input": {
+        "rawTitle": "Monster",
+        "channelTitle": "Skillet",
+        "source": "spotify"
+      },
+      "output": {
+        "title": "Monster",
+        "artist": "Skillet",
+        "cleanQuery": "Skillet Monster",
+        "queries": [
+          "Skillet Monster",
+          "Monster"
+        ]
+      }
+    },
+    "sunflower-swaelee": {
+      "input": {
+        "rawTitle": "Sunflower",
+        "channelTitle": "Post Malone",
+        "source": "spotify"
+      },
+      "output": {
+        "title": "Sunflower",
+        "artist": "Post Malone",
+        "cleanQuery": "Post Malone Sunflower",
+        "queries": [
+          "Post Malone Sunflower",
+          "Sunflower"
+        ]
+      }
+    },
+    "tuyu-romaji": {
+      "input": {
+        "rawTitle": "くらべられっ子",
+        "channelTitle": "Tuyu",
+        "source": "spotify"
+      },
+      "output": {
+        "title": "くらべられっ子",
+        "artist": "Tuyu",
+        "cleanQuery": "Tuyu くらべられっ子",
+        "queries": [
+          "Tuyu くらべられっ子",
+          "くらべられっ子"
+        ]
+      }
+    },
+    "yoasobi-idol": {
+      "input": {
+        "rawTitle": "アイドル",
+        "channelTitle": "YOASOBI",
+        "source": "spotify"
+      },
+      "output": {
+        "title": "アイドル",
+        "artist": "YOASOBI",
+        "cleanQuery": "YOASOBI アイドル",
+        "queries": [
+          "YOASOBI アイドル",
+          "アイドル"
+        ]
+      }
+    },
+    "yoasobi-kaibutsu-jp": {
+      "input": {
+        "rawTitle": "怪物",
+        "channelTitle": "YOASOBI",
+        "source": "spotify"
+      },
+      "output": {
+        "title": "怪物",
+        "artist": "YOASOBI",
+        "cleanQuery": "YOASOBI 怪物",
+        "queries": [
+          "YOASOBI 怪物",
+          "怪物"
+        ]
+      }
+    },
+    "yoasobi-kaibutsu-ro": {
+      "input": {
+        "rawTitle": "Kaibutsu",
+        "channelTitle": "YOASOBI",
+        "source": "spotify"
+      },
+      "output": {
+        "title": "Kaibutsu",
+        "artist": "YOASOBI",
+        "cleanQuery": "YOASOBI Kaibutsu",
+        "queries": [
+          "YOASOBI Kaibutsu",
+          "Kaibutsu"
+        ]
+      }
+    },
+    "yoasobi-yorunikakeru": {
+      "input": {
+        "rawTitle": "夜に駆ける",
+        "channelTitle": "YOASOBI",
+        "source": "spotify"
+      },
+      "output": {
+        "title": "夜に駆ける",
+        "artist": "YOASOBI",
+        "cleanQuery": "YOASOBI 夜に駆ける",
+        "queries": [
+          "YOASOBI 夜に駆ける",
+          "夜に駆ける"
+        ]
+      }
+    },
+    "yonezu-kanden-jp": {
+      "input": {
+        "rawTitle": "Kanden",
+        "channelTitle": "米津玄師",
+        "source": "spotify"
+      },
+      "output": {
+        "title": "Kanden",
+        "artist": "米津玄師",
+        "cleanQuery": "米津玄師 Kanden",
+        "queries": [
+          "米津玄師 Kanden",
+          "Kanden"
+        ]
+      }
+    },
+    "yonezu-lemon-jp": {
+      "input": {
+        "rawTitle": "Lemon",
+        "channelTitle": "米津玄師",
+        "source": "spotify"
+      },
+      "output": {
+        "title": "Lemon",
+        "artist": "米津玄師",
+        "cleanQuery": "米津玄師 Lemon",
+        "queries": [
+          "米津玄師 Lemon",
+          "Lemon"
+        ]
+      }
+    },
+    "yonezu-lemon": {
+      "input": {
+        "rawTitle": "Lemon",
+        "channelTitle": "Kenshi Yonezu",
+        "source": "spotify"
+      },
+      "output": {
+        "title": "Lemon",
+        "artist": "Kenshi Yonezu",
+        "cleanQuery": "Kenshi Yonezu Lemon",
+        "queries": [
+          "Kenshi Yonezu Lemon",
+          "Lemon"
+        ]
+      }
+    },
+    "yonezu-peacesign-jp": {
+      "input": {
+        "rawTitle": "Peace Sign",
+        "channelTitle": "米津玄師",
+        "source": "spotify"
+      },
+      "output": {
+        "title": "Peace Sign",
+        "artist": "米津玄師",
+        "cleanQuery": "米津玄師 Peace Sign",
+        "queries": [
+          "米津玄師 Peace Sign",
+          "Peace Sign"
+        ]
+      }
+    },
+    "yonezu-shinigami-jp": {
+      "input": {
+        "rawTitle": "Shinigami",
+        "channelTitle": "米津玄師",
+        "source": "spotify"
+      },
+      "output": {
+        "title": "Shinigami",
+        "artist": "米津玄師",
+        "cleanQuery": "米津玄師 Shinigami",
+        "queries": [
+          "米津玄師 Shinigami",
+          "Shinigami"
+        ]
+      }
+    },
+    "yorushika-dakara": {
+      "input": {
+        "rawTitle": "だから僕は音楽を辞めた",
+        "channelTitle": "ヨルシカ",
+        "source": "spotify"
+      },
+      "output": {
+        "title": "だから僕は音楽を辞めた",
+        "artist": "ヨルシカ",
+        "cleanQuery": "ヨルシカ だから僕は音楽を辞めた",
+        "queries": [
+          "ヨルシカ だから僕は音楽を辞めた",
+          "だから僕は音楽を辞めた"
+        ]
+      }
+    },
+    "yorushika-ro": {
+      "input": {
+        "rawTitle": "Ame to Cappuccino",
+        "channelTitle": "Yorushika",
+        "source": "spotify"
+      },
+      "output": {
+        "title": "Ame to Cappuccino",
+        "artist": "Yorushika",
+        "cleanQuery": "Yorushika Ame to Cappuccino",
+        "queries": [
+          "Yorushika Ame to Cappuccino",
+          "Ame to Cappuccino"
+        ]
+      }
+    },
+    "yt-channel-artist-absent": {
+      "input": {
+        "rawTitle": "19°C",
+        "channelTitle": "Ohzora Kimishima",
+        "source": "youtube"
+      },
+      "output": {
+        "title": "19°C",
+        "artist": "Ohzora Kimishima",
+        "cleanQuery": "Ohzora Kimishima 19°C",
+        "queries": [
+          "Ohzora Kimishima 19°C",
+          "19°C"
+        ]
+      }
+    },
+    "yt-channel-artist": {
+      "input": {
+        "rawTitle": "Alan Walker - Faded (Official Video)",
+        "channelTitle": "MrSuicideSheep",
+        "source": "youtube"
+      },
+      "output": {
+        "title": "Faded",
+        "artist": "Alan Walker",
+        "cleanQuery": "Alan Walker Faded",
+        "queries": [
+          "Alan Walker Faded",
+          "Faded",
+          "Faded Alan Walker",
+          "MrSuicideSheep Faded"
+        ]
+      }
+    },
+    "yt-cover": {
+      "input": {
+        "rawTitle": "Lemon - Kenshi Yonezu | Covered by Rainych",
+        "channelTitle": "Rainych Ran",
+        "source": "youtube"
+      },
+      "output": {
+        "title": "Kenshi Yonezu",
+        "artist": "Lemon",
+        "cleanQuery": "Lemon Kenshi Yonezu",
+        "queries": [
+          "Lemon Kenshi Yonezu",
+          "Kenshi Yonezu",
+          "Kenshi Yonezu Lemon",
+          "Rainych Ran Kenshi Yonezu"
+        ]
+      }
+    },
+    "yt-dash-artist-absent": {
+      "input": {
+        "rawTitle": "Twinbed - Trouble I’m in (Lyrics)",
+        "channelTitle": "KHB",
+        "source": "youtube"
+      },
+      "output": {
+        "title": "Trouble I’m in",
+        "artist": "Twinbed",
+        "cleanQuery": "Twinbed Trouble I’m in",
+        "queries": [
+          "Twinbed Trouble I’m in",
+          "Trouble I’m in",
+          "Trouble I’m in Twinbed",
+          "KHB Trouble I’m in"
+        ]
+      }
+    },
+    "yt-nightcore-noise": {
+      "input": {
+        "rawTitle": "【Nightcore】 Faded (Lyrics) [1080p HD]",
+        "channelTitle": "Nightcore Gaming",
+        "source": "youtube"
+      },
+      "output": {
+        "title": "Faded",
+        "artist": "Nightcore Gaming",
+        "cleanQuery": "Nightcore Gaming Faded",
+        "queries": [
+          "Nightcore Gaming Faded",
+          "Faded"
+        ]
+      }
+    },
+    "yt-osu-replay": {
+      "input": {
+        "rawTitle": "Camellia - GHOST [Insane] +HDHR 99.45% FC 727pp",
+        "channelTitle": "osu! replays",
+        "source": "youtube"
+      },
+      "output": {
+        "title": "GHOST",
+        "artist": "Camellia",
+        "cleanQuery": "Camellia GHOST",
+        "queries": [
+          "Camellia GHOST",
+          "GHOST",
+          "GHOST Camellia",
+          "osu! replays GHOST"
+        ]
+      }
+    },
+    "yt-topic-obscure-artist": {
+      "input": {
+        "rawTitle": "Feeling",
+        "channelTitle": "Kaneko Lumi - Topic",
+        "source": "youtube"
+      },
+      "output": {
+        "title": "Feeling",
+        "artist": "Kaneko Lumi",
+        "cleanQuery": "Kaneko Lumi Feeling",
+        "queries": [
+          "Kaneko Lumi Feeling",
+          "Feeling"
+        ]
+      }
+    },
+    "yt-topic-verified-artist-collision": {
+      "input": {
+        "rawTitle": "Kiss Me!",
+        "channelTitle": "nihmune - Topic",
+        "source": "youtube"
+      },
+      "output": {
+        "title": "Kiss Me!",
+        "artist": "nihmune",
+        "cleanQuery": "nihmune Kiss Me!",
+        "queries": [
+          "nihmune Kiss Me!",
+          "Kiss Me!"
+        ]
+      }
+    }
+  }
+}
