@@ -1,166 +1,187 @@
 import { NextResponse } from 'next/server';
-import JSZip from 'jszip';
+import { fetchUpstream } from '@/lib/http';
+import { positiveIntId } from '@/lib/validate';
+import { checkRateLimit, rateLimitResponse } from '@/lib/rateLimit';
+import { PROXY_MIRRORS } from '@/lib/mirrors';
+import { contentDisposition } from '@/lib/filename';
+import { hasZipHead, MAX_PROXY_ARCHIVE_BYTES } from '@/lib/archive';
 
 export const dynamic = 'force-dynamic';
+export const maxDuration = 10;
 
 /**
- * Generate a valid minimal .osz archive fallback in case external mirror servers are down.
+ * The server-side fallback for a beatmap the browser could not fetch from a CORS mirror.
+ *
+ * It walks `PROXY_MIRRORS` only (the browser already tried `BROWSER_MIRRORS`) and relays
+ * the first real archive. Everything is bounded:
+ *   - one deadline for the whole request, headers and body alike, one second inside
+ *     `maxDuration` so the platform can still close the response itself;
+ *   - each mirror waits at most `min(remaining, 6 s)` for headers, so a hung first mirror
+ *     cannot take all of the time from the next;
+ *   - at most `MAX_PROXY_ARCHIVE_BYTES` are relayed, by Content-Length up front and by
+ *     counting as the bytes pass.
+ * When the cap or the deadline cuts the relay the stream is errored, never closed, so a
+ * truncated body is never presented to the client as a complete file. When every mirror
+ * fails the answer is a 502: nothing is ever made up in place of a real archive.
  */
-async function generateFallbackOsz(beatmapsetId, title, artist, creator = 'osu!sync') {
-  const zip = new JSZip();
-  const safeTitle = title || 'Beatmap';
-  const safeArtist = artist || 'Artist';
+const DEADLINE_MS = (maxDuration - 1) * 1000;
+const HEADER_WAIT_MS = 6000;
+const RATE_LIMIT = { bucket: 'download', limit: 30, windowMs: 60_000 };
+const ZIP_HEAD_BYTES = 4;
 
-  const osuFileContent = `osu file format v14
+class MirrorRejected extends Error {}
 
-[General]
-AudioFilename: audio.mp3
-AudioLeadIn: 0
-PreviewTime: -1
-Countdown: 0
-SampleSet: Normal
-StackLeniency: 0.7
-Mode: 0
-LetterboxInBreaks: 0
-WidescreenStoryboard: 1
+/** Reads until at least `n` bytes are buffered, or the body ends first. */
+async function readAtLeast(reader, n) {
+  const chunks = [];
+  let total = 0;
+  while (total < n) {
+    const { done, value } = await reader.read();
+    if (done) break;
+    chunks.push(value);
+    total += value.byteLength;
+  }
+  return { chunks, total };
+}
 
-[Editor]
-DistanceSpacing: 1.0
-BeatDivisor: 4
-GridSize: 32
-TimelineZoom: 1
+/** The first `n` bytes across `chunks`, which may each be shorter than `n`. */
+function firstBytes(chunks, n) {
+  const out = new Uint8Array(n);
+  let filled = 0;
+  for (const c of chunks) {
+    const take = c.subarray(0, n - filled);
+    out.set(take, filled);
+    filled += take.length;
+    if (filled === n) break;
+  }
+  return filled === n ? out : out.subarray(0, filled);
+}
 
-[Metadata]
-Title:${safeTitle}
-TitleUnicode:${safeTitle}
-Artist:${safeArtist}
-ArtistUnicode:${safeArtist}
-Creator:${creator}
-Version:Normal (osu!sync)
-Source:YouTube Sync
-Tags:youtube sync beatmap
-BeatmapID:0
-BeatmapSetID:${beatmapsetId}
+/**
+ * Opens one mirror and checks the start of what it sends. Returns the open reader and the
+ * chunks already read, or throws so the caller moves on to the next mirror.
+ */
+async function openMirror(mirror, id, { deadline, signal }) {
+  const remaining = deadline - Date.now();
+  if (remaining <= 0) throw new MirrorRejected('deadline passed');
 
-[Difficulty]
-HPDrainRate:5
-CircleSize:4
-OverallDifficulty:6
-ApproachRate:7
-SliderMultiplier:1.4
-SliderTickRate:1
+  const res = await fetchUpstream(mirror.url(id), {
+    profile: mirror.uaProfile || 'server',
+    timeoutMs: Math.min(remaining, HEADER_WAIT_MS),
+    signal,
+  });
 
-[TimingPoints]
-0,500,4,1,0,100,1,0
+  const lengthHeader = res.headers.get('content-length');
+  const declared = lengthHeader === null ? null : Number(lengthHeader);
+  if (declared !== null && declared > MAX_PROXY_ARCHIVE_BYTES) {
+    await res.body?.cancel().catch(() => {});
+    throw new MirrorRejected(`declares ${declared} bytes, over the cap`);
+  }
+  if (!res.body) throw new MirrorRejected('empty body');
 
-[HitObjects]
-256,192,1000,1,0,0:0:0:0:
-320,192,1500,1,0,0:0:0:0:
-384,192,2000,1,0,0:0:0:0:
-256,256,2500,1,0,0:0:0:0:
-`;
+  const reader = res.body.getReader();
+  const { chunks, total } = await readAtLeast(reader, ZIP_HEAD_BYTES);
+  if (!hasZipHead(firstBytes(chunks, ZIP_HEAD_BYTES))) {
+    await reader.cancel().catch(() => {});
+    throw new MirrorRejected('not a ZIP archive');
+  }
 
-  zip.file(`${safeArtist} - ${safeTitle} (${creator}) [Normal].osu`, osuFileContent);
-  // Add placeholder audio file
-  zip.file('audio.mp3', new Uint8Array([0xFF, 0xFB, 0x90, 0x64, 0x00, 0x00, 0x00, 0x00]));
+  // fetch has already decoded a compressed body, so its encoded length would be wrong here.
+  const relayLength = Number.isFinite(declared) && !res.headers.get('content-encoding') ? declared : null;
+  return { reader, chunks, total, declared: relayLength };
+}
 
-  return await zip.generateAsync({ type: 'nodebuffer' });
+/** The byte-counting relay. On the cap or the deadline it errors the stream, never closes it. */
+function relayStream({ reader, chunks, total }, { signal, onDone }) {
+  let sent = total;
+  let finished = false;
+  const finish = () => {
+    if (finished) return;
+    finished = true;
+    onDone();
+  };
+  const fail = (controller, err) => {
+    reader.cancel().catch(() => {});
+    controller.error(err);
+    finish();
+  };
+
+  return new ReadableStream({
+    start(controller) {
+      if (sent > MAX_PROXY_ARCHIVE_BYTES) {
+        fail(controller, new Error('Archive over the proxy byte cap'));
+        return;
+      }
+      for (const c of chunks) controller.enqueue(c);
+    },
+    async pull(controller) {
+      try {
+        if (signal.aborted) throw new Error('Proxy deadline reached');
+        const { done, value } = await reader.read();
+        if (done) {
+          controller.close();
+          finish();
+          return;
+        }
+        sent += value.byteLength;
+        if (sent > MAX_PROXY_ARCHIVE_BYTES) throw new Error('Archive over the proxy byte cap');
+        controller.enqueue(value);
+      } catch (err) {
+        fail(controller, signal.aborted ? new Error('Proxy deadline reached') : err);
+      }
+    },
+    cancel(reason) {
+      reader.cancel(reason).catch(() => {});
+      finish();
+    },
+  });
 }
 
 export async function GET(request) {
+  // Both checks run before any mirror is contacted.
+  const limited = checkRateLimit(request, RATE_LIMIT);
+  if (!limited.ok) return rateLimitResponse(limited.retryAfterSec);
+
+  let beatmapsetId;
   try {
-    const { searchParams } = new URL(request.url);
-    const beatmapsetId = searchParams.get('beatmapsetId');
-    const title = searchParams.get('title') || 'Beatmap';
-    const artist = searchParams.get('artist') || 'Unknown';
-    const creator = searchParams.get('creator') || 'osu!sync';
-    const mirror = searchParams.get('mirror') || process.env.DEFAULT_MIRROR || 'catboy.best';
+    beatmapsetId = positiveIntId(new URL(request.url).searchParams.get('beatmapsetId'), { name: 'beatmapsetId' });
+  } catch (err) {
+    return NextResponse.json({ error: err.message }, { status: err.status || 400 });
+  }
 
-    if (!beatmapsetId) {
-      return NextResponse.json({ error: 'beatmapsetId is required' }, { status: 400 });
-    }
+  const deadline = Date.now() + DEADLINE_MS;
+  const deadlineController = new AbortController();
+  const deadlineTimer = setTimeout(() => deadlineController.abort(), DEADLINE_MS);
+  const release = () => clearTimeout(deadlineTimer);
 
-    // Mirror priority endpoints
-    const mirrors = [
-      `https://catboy.best/d/${beatmapsetId}`,
-      `https://api.nerinyan.moe/d/${beatmapsetId}`,
-      `https://beatconnect.io/b/${beatmapsetId}`,
-      `https://direct.sayobot.cn/osu/${beatmapsetId}`,
-    ];
+  try {
+    for (const mirror of PROXY_MIRRORS) {
+      if (deadlineController.signal.aborted) break;
 
-    // Rearrange mirror order if specified
-    if (mirror === 'nerinyan.moe') {
-      mirrors.unshift(mirrors.splice(1, 1)[0]);
-    } else if (mirror === 'beatconnect.io') {
-      mirrors.unshift(mirrors.splice(2, 1)[0]);
-    }
-
-    let response = null;
-    let selectedMirror = '';
-
-    for (const url of mirrors) {
+      let opened;
       try {
-        const controller = new AbortController();
-        const timeoutId = setTimeout(() => controller.abort(), 6000);
-
-        const res = await fetch(url, {
-          headers: {
-            'User-Agent': 'osu-playlist-sync/1.0 (web-app)',
-          },
-          redirect: 'follow',
-          signal: controller.signal,
-        });
-
-        clearTimeout(timeoutId);
-
-        if (res.ok && res.body) {
-          const contentType = res.headers.get('content-type') || '';
-          // Verify it's not returning an HTML error page
-          if (!contentType.includes('text/html') || res.status === 200) {
-            response = res;
-            selectedMirror = url;
-            break;
-          }
-        }
+        opened = await openMirror(mirror, beatmapsetId, { deadline, signal: deadlineController.signal });
       } catch (err) {
-        // Continue to next mirror
-      }
-    }
-
-    const safeTitle = `${artist} - ${title}`.replace(/[/\\?%*:|"<>]/g, '_').trim();
-    const filename = `${beatmapsetId} ${safeTitle}.osz`;
-
-    if (response) {
-      const headers = new Headers();
-      headers.set('Content-Type', 'application/x-osu-beatmap-archive');
-      headers.set('Content-Disposition', `attachment; filename="${encodeURIComponent(filename)}"`);
-      headers.set('X-Selected-Mirror', selectedMirror);
-
-      const contentLength = response.headers.get('content-length');
-      if (contentLength) {
-        headers.set('Content-Length', contentLength);
+        console.warn(`[download] ${mirror.name} skipped for ${beatmapsetId}: ${err.status ?? ''} ${err.message}`);
+        continue;
       }
 
-      return new NextResponse(response.body, {
-        status: 200,
-        headers,
-      });
+      const headers = {
+        'Content-Type': 'application/x-osu-beatmap-archive',
+        'Content-Disposition': contentDisposition(`${beatmapsetId}.osz`),
+        'X-Selected-Mirror': mirror.name,
+      };
+      if (opened.declared !== null) headers['Content-Length'] = String(opened.declared);
+
+      const body = relayStream(opened, { signal: deadlineController.signal, onDone: release });
+      return new NextResponse(body, { status: 200, headers });
     }
 
-    // If all external mirrors fail or beatmap is simulated/offline, serve generated fallback .osz
-    const fallbackBuffer = await generateFallbackOsz(beatmapsetId, title, artist, creator);
-    const headers = new Headers();
-    headers.set('Content-Type', 'application/x-osu-beatmap-archive');
-    headers.set('Content-Disposition', `attachment; filename="${encodeURIComponent(filename)}"`);
-    headers.set('Content-Length', fallbackBuffer.length.toString());
-    headers.set('X-Selected-Mirror', 'fallback-generator');
-
-    return new NextResponse(fallbackBuffer, {
-      status: 200,
-      headers,
-    });
-  } catch (error) {
-    console.error('[Download Proxy Error]:', error);
-    return NextResponse.json({ error: error.message || 'Download failed' }, { status: 500 });
+    release();
+    return NextResponse.json({ error: 'No mirror could provide this beatmap right now' }, { status: 502 });
+  } catch (err) {
+    release();
+    console.error('[download] proxy failed:', err);
+    return NextResponse.json({ error: 'Download failed' }, { status: 500 });
   }
 }
