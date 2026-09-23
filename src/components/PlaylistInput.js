@@ -6,6 +6,7 @@ import { Loader2, Sparkles, ArrowRight, ChevronDown, Plus, User } from 'lucide-r
 import { YouTubeIcon, SpotifyIcon, AppleMusicIcon, MusicNoteIcon } from './Icons';
 import { osuAudio } from '@/lib/soundEffects';
 import { strictnessLabel, strictnessSummary } from '@/lib/matchStrictness';
+import { classifyInput } from '@/lib/platform';
 
 const GAME_MODES = [
   { id: 'all', label: 'All Modes', color: '#3d374a', activeText: '#ffffff', activeBorder: 'rgba(255, 255, 255, 0.2)' },
@@ -144,15 +145,13 @@ export default function PlaylistInput({ onFetch, isLoading, hasSongs, mode, setM
   }, []);
 
   // Determine active display icon based on user selection or auto-detection
+  // The same host classification the server uses (platform.js), so the icon never names a
+  // provider the server would refuse: a link is judged by its own host, not by a provider
+  // name appearing anywhere in the text.
   const detectPlatform = () => {
     if (selectedPlatform !== 'auto') return selectedPlatform;
-    const lower = url.toLowerCase().trim();
-    if (/osu\.ppy\.sh\/(users|u)\//.test(lower)) return 'player';
-    if (lower.includes('spotify.com')) return 'spotify';
-    if (lower.includes('music.apple.com')) return 'apple';
-    if (lower.includes('youtube.com') || lower.includes('youtu.be')) return 'youtube';
-    if (lower.length > 0 && !lower.startsWith('http')) return 'query';
-    return 'auto';
+    const { kind } = classifyInput(url);
+    return kind === 'invalid' ? 'auto' : kind;
   };
 
   const activePlatform = detectPlatform();

@@ -59,6 +59,7 @@ Understanding it explains most of the codebase:
   hasSearched, isSearching,                              // UI state, mutated in page.js
   matchedBeatmap, allMatches,                            // filled by /api/osu/search
   rejection }                                            // why the gate refused, when it did
+  (also artistFromTitle, beside extractedArtist)         // artist was split from the title, so never provider trust
 ```
 
 `source` is load-bearing, not decoration: it decides whether the artist is trusted enough to
