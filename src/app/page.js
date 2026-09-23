@@ -168,6 +168,13 @@ export default function Home() {
       const res = await fetch(`/api/osu/player?q=${encodeURIComponent(query)}&page=${page}`);
       const data = await res.json();
 
+      if (data.isDemo) {
+        setErrorMessage('Player search needs osu! API credentials.');
+        setIsSetupOpen(true);
+        setIsLoading(false);
+        return;
+      }
+
       if (!res.ok) throw new Error(data.error || 'Player search failed');
 
       if (data.type === 'profile') {
@@ -222,8 +229,15 @@ export default function Home() {
     setErrorMessage('');
 
     try {
-      const res = await fetch(`/api/osu/player?userId=${user.id}`);
+      const res = await fetch(`/api/osu/player?userId=${encodeURIComponent(user.id)}`);
       const data = await res.json();
+
+      if (data.isDemo) {
+        setErrorMessage('Player search needs osu! API credentials.');
+        setIsSetupOpen(true);
+        setIsLoading(false);
+        return;
+      }
 
       if (!res.ok) throw new Error(data.error || 'Could not load that player');
       applyPlayerProfile(data.user);

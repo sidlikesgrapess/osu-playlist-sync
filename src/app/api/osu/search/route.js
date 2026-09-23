@@ -1,14 +1,20 @@
 import { NextResponse } from 'next/server';
-import { searchOsuBeatmaps } from '@/lib/osu';
+import { searchOsuBeatmaps, getOsuAccessToken } from '@/lib/osu';
+import { checkRateLimit, rateLimitResponse } from '@/lib/rateLimit';
+import { ValidationError, boundedString } from '@/lib/validate';
+import { toRouteError, demoResponse } from '@/lib/osuRoute';
 
 export const dynamic = 'force-dynamic';
 
 export async function GET(request) {
+  const rate = checkRateLimit(request, { bucket: 'osuSearch', limit: 60, windowMs: 60_000 });
+  if (!rate.ok) return rateLimitResponse(rate.retryAfterSec);
+
   try {
     const { searchParams } = new URL(request.url);
-    const query = searchParams.get('q');
-    const title = searchParams.get('title') || '';
-    const artist = searchParams.get('artist') || '';
+    const query = boundedString(searchParams.get('q'), { name: 'q', max: 500, required: false });
+    const title = boundedString(searchParams.get('title'), { name: 'title', max: 500, required: false });
+    const artist = boundedString(searchParams.get('artist'), { name: 'artist', max: 500, required: false });
     const mode = searchParams.get('mode') || 'all';
     const status = searchParams.get('status') || 'ranked';
     // Provenance of the artist string: decides whether a wrong-artist verdict may reject.
@@ -22,10 +28,7 @@ export async function GET(request) {
     const strictness = strictnessParam !== null ? Number(strictnessParam) : undefined;
 
     if (!query && !title) {
-      return NextResponse.json(
-        { error: 'Query parameter "q" or "title" is required' },
-        { status: 400 }
-      );
+      throw new ValidationError('Query parameter "q" or "title" is required');
     }
 
     let extraQueries = [];
@@ -38,6 +41,8 @@ export async function GET(request) {
         extraQueries.push(fallbacksParam);
       }
     }
+
+    if (!(await getOsuAccessToken())) return demoResponse({ beatmapsets: [] });
 
     // Run smart scored search
     const result = await searchOsuBeatmaps(query || title, {
@@ -63,10 +68,6 @@ export async function GET(request) {
       artistConfidence: result.artistConfidence || null,
     });
   } catch (error) {
-    console.error('[osu! Search API Error]:', error);
-    return NextResponse.json(
-      { error: error.message || 'Internal server error while querying osu! API' },
-      { status: 500 }
-    );
+    return toRouteError(error, { notFoundMessage: 'No beatmaps found' });
   }
 }

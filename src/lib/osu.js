@@ -4,6 +4,7 @@
  */
 import { strictnessProfile } from './matchStrictness.js';
 import { isRankedStatus, upstreamStatusFor } from './beatmapFormat.js';
+import { UA_PROFILES } from './http.js';
 
 let cachedToken = null;
 let tokenExpiresAt = 0;
@@ -31,6 +32,7 @@ export async function getOsuAccessToken() {
       headers: {
         'Content-Type': 'application/x-www-form-urlencoded',
         'Accept': 'application/json',
+        'User-Agent': UA_PROFILES.server,
       },
       body: new URLSearchParams({
         client_id: clientId,
@@ -68,6 +70,7 @@ async function osuApiGet(path, token) {
     headers: {
       'Authorization': `Bearer ${token}`,
       'Accept': 'application/json',
+      'User-Agent': UA_PROFILES.server,
     },
   });
 
@@ -266,10 +269,11 @@ export async function getUserBeatmapCollection(userId, type, { limit = 100, mode
   // Only the score endpoints accept a ruleset filter directly.
   const modeParam = type === 'best' && mode && mode !== 'all' ? `&mode=${encodeURIComponent(mode)}` : '';
 
+  const user = encodeURIComponent(userId);
   const pathByType = {
-    best: `/users/${userId}/scores/best?limit=${limit}&offset=0${modeParam}`,
-    most_played: `/users/${userId}/beatmapsets/most_played?limit=${limit}&offset=0`,
-    favourite: `/users/${userId}/beatmapsets/favourite?limit=${limit}&offset=0`,
+    best: `/users/${user}/scores/best?limit=${limit}&offset=0${modeParam}`,
+    most_played: `/users/${user}/beatmapsets/most_played?limit=${limit}&offset=0`,
+    favourite: `/users/${user}/beatmapsets/favourite?limit=${limit}&offset=0`,
   };
 
   const path = pathByType[type];
