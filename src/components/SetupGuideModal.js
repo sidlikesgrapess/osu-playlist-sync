@@ -3,6 +3,7 @@
 import { useEffect, useState } from 'react';
 import { X, Rocket, ExternalLink } from 'lucide-react';
 import { osuAudio } from '@/lib/soundEffects';
+import { BROWSER_MIRRORS } from '@/lib/mirrors';
 
 const COMMIT_TYPES = {
   feat: { label: 'Feature', color: '#00cc77' },
@@ -52,7 +53,8 @@ export default function SetupGuideModal({ isOpen, onClose, systemStatus }) {
   if (!isOpen) return null;
 
   const osuConfigured = systemStatus?.osuConfigured ?? true;
-  const mirrorName = systemStatus?.defaultMirror || 'catboy.best';
+  // systemStatus is null until /api/status answers, and stays null if it fails.
+  const mirrorName = systemStatus?.defaultMirror || BROWSER_MIRRORS[0].name;
 
   return (
     <div style={{

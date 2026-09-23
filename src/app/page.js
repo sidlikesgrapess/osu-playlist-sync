@@ -17,8 +17,15 @@ import { Star } from 'lucide-react';
 import { osuAudio } from '@/lib/soundEffects';
 import { DEFAULT_STRICTNESS } from '@/lib/matchStrictness';
 import { isRankedStatus } from '@/lib/beatmapFormat';
-import { fetchBeatmapArchive, createProxyBudget } from '@/lib/beatmapDownload';
-import JSZip from 'jszip';
+import {
+  fetchBeatmapArchive,
+  createProxyBudget,
+  createPacer,
+  isAbortError,
+  shouldStartNewPart,
+} from '@/lib/beatmapDownload';
+import { osuFilename, sanitizeStem } from '@/lib/filename';
+import { beatmapsetPage } from '@/lib/mirrors';
 
 const REPO_URL = 'https://github.com/sidlikesgrapess/osu-playlist-sync';
 
@@ -62,6 +69,10 @@ const PLATFORM_BADGE = {
   query: { color: '#ff66aa', bg: 'rgba(255, 102, 170, 0.15)', border: 'rgba(255, 102, 170, 0.35)' },
 };
 
+// How long an object URL outlives its click. Revoking it synchronously can cancel
+// the save before the browser has started reading the blob (Safari and Firefox do).
+const REVOKE_DELAY_MS = 10_000;
+
 function downloadBlob(blob, filename) {
   if (typeof window === 'undefined') return;
   const url = URL.createObjectURL(blob);
@@ -71,7 +82,7 @@ function downloadBlob(blob, filename) {
   document.body.appendChild(a);
   a.click();
   document.body.removeChild(a);
-  URL.revokeObjectURL(url);
+  setTimeout(() => URL.revokeObjectURL(url), REVOKE_DELAY_MS);
 }
 
 export default function Home() {
@@ -737,32 +748,75 @@ export default function Home() {
     setToasts(prev => prev.filter(t => t.id !== id));
   };
 
+  // One batch (Download or ZIP) at a time. The ref is what stops a double click:
+  // the state would still read false on the second click, before React re-renders.
+  // The state is what the StatsBar buttons key on.
+  const batchInFlightRef = useRef(false);
+  const batchAbortRef = useRef(null);
+  const [isBatchActive, setIsBatchActive] = useState(false);
+
+  // One proxy allowance for the whole page session, not a fresh one per batch, so
+  // back to back batches during a mirror outage cannot each proxy their own share.
+  const proxyBudgetRef = useRef(null);
+  const sessionProxyBudget = () => {
+    if (!proxyBudgetRef.current) proxyBudgetRef.current = createProxyBudget();
+    return proxyBudgetRef.current;
+  };
+
+  // Returns the batch's AbortController, or null when a batch is already running.
+  const beginBatch = () => {
+    if (batchInFlightRef.current) return null;
+    batchInFlightRef.current = true;
+    const controller = new AbortController();
+    batchAbortRef.current = controller;
+    setIsBatchActive(true);
+    return controller;
+  };
+
+  const endBatch = (controller) => {
+    if (batchAbortRef.current !== controller) return;
+    batchAbortRef.current = null;
+    batchInFlightRef.current = false;
+    setIsBatchActive(false);
+  };
+
+  // The loops check the signal between items; an archive mid fetch is aborted too,
+  // and a cancelled item never falls back to the proxy.
+  const handleCancelBatch = () => {
+    batchAbortRef.current?.abort();
+  };
+
   // Download a single .osz file. Batch callers pass `silent` so only one toast
-  // fires, and a shared `budget` so the whole batch cannot fall back to the proxy.
-  const handleDownloadSingle = async (song, { silent = false, budget = null } = {}) => {
+  // fires, the session `budget` so a batch cannot fall back to the proxy without
+  // limit, and their `pacer` and `signal`.
+  const handleDownloadSingle = async (song, { silent = false, budget = null, pacer = null, signal = null } = {}) => {
     if (!song.matchedBeatmap) return false;
-    const beatmapId = song.matchedBeatmap.id;
+    const { id: beatmapId, artist, title } = song.matchedBeatmap;
 
     setDownloadingIds(prev => new Set(prev).add(song.id));
 
     try {
-      const result = await fetchBeatmapArchive(beatmapId, { budget });
+      const result = await fetchBeatmapArchive(beatmapId, { budget, pacer, signal });
       if (!result) throw new Error('Download failed');
 
-      const filename = `${beatmapId} ${song.matchedBeatmap.artist} - ${song.matchedBeatmap.title}.osz`.replace(/[\\/*?:"<>|]/g, '_');
-      downloadBlob(result.blob, filename);
+      downloadBlob(result.blob, osuFilename(beatmapId, artist, title));
       osuAudio.playSuccess();
 
       if (!silent) {
-        pushToast('Download completed', `${song.matchedBeatmap.artist} - ${song.matchedBeatmap.title}`);
+        pushToast('Download completed', `${artist} - ${title}`);
       }
       return true;
     } catch (err) {
+      if (isAbortError(err)) return false;
       console.error(`Download failed for mapset ${beatmapId}:`, err);
-      // Fallback: direct browser link. Only for a single click: in a batch every
-      // failure would open its own tab, and an outage fails most of the batch.
-      // The batch reports its skipped maps in one toast instead.
-      if (!silent) window.open(`https://catboy.best/d/${beatmapId}`, '_blank');
+      // Last resort: the map's osu! page, never a mirror that has just failed. Only
+      // for a single click: in a batch every failure would open its own tab, and an
+      // outage fails most of the batch. The batch reports its skipped maps in one
+      // toast instead.
+      if (!silent) {
+        window.open(beatmapsetPage(beatmapId), '_blank');
+        pushToast('Download failed', 'No mirror could send this map right now, so its osu! page is open instead.');
+      }
       return false;
     } finally {
       setDownloadingIds(prev => {
@@ -776,19 +830,38 @@ export default function Home() {
   // Only ticked beatmaps are ever downloaded.
   const getSelectedSongs = () => songs.filter(s => selectedIds.has(s.id) && s.matchedBeatmap);
 
+  const pushCancelledToast = (saved, total) => {
+    pushToast('Download cancelled', `${saved} of ${total} saved.`);
+  };
+
   // Download batch sequentially
   const handleDownloadBatch = async () => {
     const targetSongs = getSelectedSongs();
 
     if (targetSongs.length === 0) return;
 
-    const budget = createProxyBudget();
+    const controller = beginBatch();
+    if (!controller) return;
+    const { signal } = controller;
+    const budget = sessionProxyBudget();
+    // The bytes come from volunteer-run mirrors, so the loop paces itself.
+    const pacer = createPacer();
     let completed = 0;
-    for (const song of targetSongs) {
-      if (await handleDownloadSingle(song, { silent: true, budget })) completed++;
-      await new Promise(r => setTimeout(r, 600));
+
+    try {
+      for (let i = 0; i < targetSongs.length; i++) {
+        if (i > 0) await pacer.wait(signal);
+        if (signal.aborted) break;
+        if (await handleDownloadSingle(targetSongs[i], { silent: true, budget, pacer, signal })) completed++;
+      }
+    } finally {
+      endBatch(controller);
     }
 
+    if (signal.aborted) {
+      pushCancelledToast(completed, targetSongs.length);
+      return;
+    }
     if (completed > 0) {
       pushToast('Download completed', `${completed} beatmap${completed === 1 ? '' : 's'}`);
     }
@@ -800,60 +873,97 @@ export default function Home() {
     }
   };
 
-  // Bundle as .ZIP
+  // Bundle as .ZIP, in parts of at most MAX_ZIP_PART_BYTES. JSZip holds a part's
+  // inputs and its output at once, so the part cap is the only bound on memory.
   const handleDownloadZipBatch = async () => {
     const targetSongs = getSelectedSongs();
 
     if (targetSongs.length === 0) return;
 
+    const controller = beginBatch();
+    if (!controller) return;
+    const { signal } = controller;
+
     setIsDownloadingZip(true);
     setZipProgress(0);
-    const zip = new JSZip();
-    const budget = createProxyBudget();
+    const budget = sessionProxyBudget();
+    const pacer = createPacer();
+    const baseTitle = playerProfile
+      ? `${playerProfile.username}_osu_maps`
+      : playlistMeta?.title || 'osu_playlist_sync';
     let added = 0;
 
     try {
+      const { default: JSZip } = await import('jszip');
+      let zip = new JSZip();
+      let partBytes = 0;
+      let partCount = 0;
+      let partsSaved = 0;
+
+      // Generates and saves the current part, then drops it so its blobs can be freed.
+      const savePart = async (filename) => {
+        const content = await zip.generateAsync({ type: 'blob' });
+        downloadBlob(content, filename);
+        partsSaved++;
+        zip = new JSZip();
+        partBytes = 0;
+        partCount = 0;
+      };
+
       for (let i = 0; i < targetSongs.length; i++) {
-        const song = targetSongs[i];
-        const beatmapId = song.matchedBeatmap.id;
-        const filename = `${beatmapId} ${song.matchedBeatmap.artist} - ${song.matchedBeatmap.title}.osz`.replace(/[\\/*?:"<>|]/g, '_');
+        if (i > 0) await pacer.wait(signal);
+        if (signal.aborted) break;
+
+        const { id: beatmapId, artist, title } = targetSongs[i].matchedBeatmap;
+        const filename = osuFilename(beatmapId, artist, title);
 
         try {
-          const result = await fetchBeatmapArchive(beatmapId, { budget });
+          const result = await fetchBeatmapArchive(beatmapId, { budget, pacer, signal });
           if (result) {
+            // Nothing more is fetched until the full part has been saved and released.
+            if (shouldStartNewPart(partBytes, partCount, result.blob.size)) {
+              await savePart(`osuSync-part-${partsSaved + 1}.zip`);
+            }
             zip.file(filename, result.blob);
+            partBytes += result.blob.size;
+            partCount++;
             added++;
           }
         } catch (e) {
+          if (isAbortError(e)) break;
           console.warn(`Could not add ${filename} to zip:`, e);
         }
 
         setZipProgress(Math.round(((i + 1) / targetSongs.length) * 100));
-
-        // The bytes come from volunteer-run mirrors now, so this loop paces itself
-        // the way handleDownloadBatch already did. Without it a large selection
-        // hammers them as fast as the connection allows.
-        if (i < targetSongs.length - 1) await new Promise(r => setTimeout(r, 400));
       }
 
+      // A cancelled bundle still saves what it already fetched, rather than asking the
+      // mirrors for the same maps again next time.
+      if (partCount > 0) {
+        await savePart(partsSaved > 0 ? `osuSync-part-${partsSaved + 1}.zip` : `${sanitizeStem(baseTitle)}_beatmaps.zip`);
+      }
+
+      if (signal.aborted) {
+        pushCancelledToast(added, targetSongs.length);
+        return;
+      }
       if (added === 0) {
         pushToast('Nothing to bundle', 'No beatmap could be fetched. The mirrors may be busy, so try again shortly.');
         return;
       }
 
-      const zipContent = await zip.generateAsync({ type: 'blob' });
-      const baseTitle = playerProfile
-        ? `${playerProfile.username}_osu_maps`
-        : playlistMeta?.title || 'osu_playlist_sync';
-      const safeTitle = baseTitle.replace(/[\\/*?:"<>|]/g, '_');
-      downloadBlob(zipContent, `${safeTitle}_beatmaps.zip`);
-
       osuAudio.playSuccess();
-      pushToast('Download completed', `ZIP bundle · ${added} beatmap${added === 1 ? '' : 's'}`);
+      const partsNote = partsSaved > 1 ? ` in ${partsSaved} parts` : '';
+      pushToast('Download completed', `ZIP bundle · ${added} beatmap${added === 1 ? '' : 's'}${partsNote}`);
     } catch (err) {
       console.error('ZIP generation failed:', err);
+      pushToast(
+        'Could not build the ZIP',
+        `${added} beatmap${added === 1 ? ' was' : 's were'} fetched but the bundle could not be saved. Try fewer at once.`,
+      );
     } finally {
       setIsDownloadingZip(false);
+      endBatch(controller);
     }
   };
 

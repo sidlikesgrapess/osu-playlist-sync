@@ -79,9 +79,6 @@ cp .env.example .env.local
 # Required — from osu.ppy.sh -> Account Settings -> OAuth, Client Credentials grant type
 OSU_CLIENT_ID=your_osu_client_id
 OSU_CLIENT_SECRET=your_osu_client_secret
-
-# Optional — beatmap download mirror priority
-DEFAULT_MIRROR=catboy.best
 ```
 
 YouTube, Spotify, and Apple Music extraction need no API keys or credentials at all.

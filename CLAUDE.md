@@ -35,7 +35,8 @@ is restarted. Stop dev first.
 ## Environment
 
 `OSU_CLIENT_ID` / `OSU_CLIENT_SECRET` (osu! OAuth, **Client Credentials** grant) in
-`.env.local`. `DEFAULT_MIRROR` is optional.
+`.env.local`. There is no mirror setting: the download mirror order is set only in
+`src/lib/mirrors.js` (an old `DEFAULT_MIRROR` in `.env.local` is simply ignored).
 
 Without credentials the app degrades rather than crashes: `getOsuAccessToken` returns
 `null` and callers return `{ isDemo: true }` with empty results. When touching osu!
@@ -160,12 +161,31 @@ local regression.
 
 ### Downloads
 
-`/api/download` proxies four mirrors in order with a 6s timeout each. If **all** fail it
-generates a synthetic `.osz` (`generateFallbackOsz`) containing a placeholder map and 8
-bytes of fake mp3. This means a successful download response does not guarantee a real
-beatmap — check the `X-Selected-Mirror` header, which is `fallback-generator` in that case.
+Two tiers, both listed in `src/lib/mirrors.js`, which is the only place mirror order is set.
 
-ZIP bundling is client-side (JSZip in `page.js`), not server-side.
+1. **Browser tier, `BROWSER_MIRRORS`** (catboy.best, then nerinyan.moe). These send
+   `Access-Control-Allow-Origin: *`, so `fetchBeatmapArchive` (`src/lib/beatmapDownload.js`)
+   fetches the archive in the page and the bytes never pass through Vercel.
+2. **Proxy tier, `PROXY_MIRRORS`** (beatconnect, then sayobot), reached only through
+   `/api/download`, and only when the browser tier failed. The route walks the proxy
+   mirrors alone, never the browser ones a second time. Batches share one proxy allowance
+   per page session (`PROXY_FALLBACK_BUDGET`); a single click may always proxy.
+
+The route is bounded by **one overall deadline** derived from `maxDuration`, covering the
+body as well as the headers; each mirror waits for headers at most `min(remaining, 6 s)`.
+It relays at most `MAX_PROXY_ARCHIVE_BYTES`, and when the cap or the deadline cuts it off
+the stream is errored, never closed, so a truncated file never looks complete. The first
+bytes must be `PK\x03\x04`. It validates `beatmapsetId` and rate limits before any mirror
+is contacted.
+
+**Nothing is ever made up.** There is no synthetic `.osz`: when every proxy mirror fails
+the route answers **502** `{ error }`. Both tiers run the same `isValidArchiveBlob`
+(`src/lib/archive.js`: size, ZIP head, and an EOCD record in the tail), so an error page or
+a half-sent archive is never saved as a beatmap.
+
+ZIP bundling is client-side (JSZip, loaded on demand in `page.js`), in parts of at most
+`MAX_ZIP_PART_BYTES` because JSZip holds a part's inputs and output in memory at once.
+Batches are paced (200 ms, doubling after a mirror 429 up to 5 s) and cancellable.
 
 ### API call budget
 
