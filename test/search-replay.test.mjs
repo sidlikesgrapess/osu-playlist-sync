@@ -175,3 +175,33 @@ test('F-14: 50 fallbacks make at most 4 upstream queries, and the bare title is 
   assert.ok(searches.includes('Some Title'));
   assert.deepEqual(searches.slice(0, 3), ['Some Artist Some Title', 'fallback 0', 'fallback 1']);
 });
+
+test('F-33: under none trust a close title is salvaged as titleOnly, never artistOverride', async () => {
+  const set = (id, artist, title) => ({
+    id, artist, artist_unicode: artist, title, title_unicode: title, tags: '', status: 'graveyard', favourite_count: 0,
+  });
+  const log = [];
+  globalThis.fetch = async (url) => {
+    const u = new URL(String(url));
+    if (u.pathname.endsWith('/oauth/token')) return Response.json({ access_token: 'replay', expires_in: 86400 });
+    const q = u.searchParams.get('q') || '';
+    log.push(q);
+    // The probe finds sets, but none by this name: the string is not an artist.
+    if (q.startsWith('artist=')) return Response.json({ beatmapsets: [set(9001, 'Salvage Channel Official Mixes', 'Other')] });
+    return Response.json({ beatmapsets: [set(9002, 'Alan Walker', 'Faded Extended Mix')] });
+  };
+  // Strictness 90: the 0.92 containment title clears the salvage floor but not the cutoff.
+  const r = await osu.searchOsuBeatmaps('Salvage Channel Faded', {
+    title: 'Faded', artist: 'Salvage Channel', queries: [], status: 'any', strictness: 90, source: 'youtube',
+  });
+  assert.equal(r.artistConfidence, 'none');
+  assert.deepEqual(r.rejection, { kind: 'artist-unknown', artist: 'Salvage Channel' });
+  assert.equal(r.beatmapsets.length, 1);
+  const [salvaged] = r.beatmapsets;
+  assert.equal(salvaged.id, 9002);
+  assert.equal(salvaged.titleOnly, true);
+  assert.equal(salvaged.matchScore, null);
+  assert.equal(salvaged.artistOverride, undefined);
+  assert.equal(isAutoSelectable(salvaged), false);
+  assert.ok(log.some(q => q.startsWith('artist=')), 'the probe decided the trust');
+});

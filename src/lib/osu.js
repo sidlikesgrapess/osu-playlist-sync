@@ -826,42 +826,55 @@ export async function searchOsuBeatmaps(query, options = {}) {
     // at 0 it admits the whole gated pile, and the row shows those candidates flagged
     // instead of a bare "no beatmaps by this artist" for maps osu! plainly returned.
     const titleMatches = [...gatedOut, ...allFoundSets]
-      .filter(s => titleSimilarity(s, targetTitle) >= strict.salvageFloor);
-
-    // Only on failure, and only for an artist we did not already probe: one call to tell
-    // "this artist has nothing on osu!" apart from "this song of theirs is not mapped".
-    // Both return no beatmaps; they are very different things to show a user.
-    let absent = false;
-    if (targetArtist && artistConfidence === 'high') {
-      const probe = await probeOsuArtist(targetArtist, token);
-      absent = Boolean(probe && probe.count === 0);
-    }
-
-    if (artistConfidence === 'none' && targetArtist) {
-      rejection = { kind: 'artist-unknown', artist: targetArtist };
-    } else if (titleMatches.length > 0) {
-      const ranked = [...titleMatches].sort((a, b) =>
+      .filter(s => titleSimilarity(s, targetTitle) >= strict.salvageFloor)
+      .sort((a, b) =>
         (titleSimilarity(b, targetTitle) - titleSimilarity(a, targetTitle))
-        || ((b.favourite_count || 0) - (a.favourite_count || 0)));
+        || ((b.favourite_count || 0) - (a.favourite_count || 0)))
+      .slice(0, 8);
 
-      // `artist-absent` and `wrong-artist` differ only in what we can tell the user -- the
-      // artist has nothing on osu! at all, versus this particular song of theirs is not
-      // mapped. Both refused the same candidates for the same reason, so both show them.
-      // Silently returning nothing is what makes a deliberate refusal look like a failure.
-      rejection = { kind: absent ? 'artist-absent' : 'wrong-artist', artist: targetArtist };
-
-      // Returned as ordinary results so the row, the alternative picker and download all
-      // work normally -- but flagged. `artistOverride` is what stops page.js auto-selecting
-      // them, and `matchScore: null` records that they never passed the gate.
-      results = ranked.slice(0, 8).map(bm => ({
+    if (targetArtist && artistConfidence === 'none') {
+      // The string is not an artist (resolveArtistTrust found sets but none by that name), so
+      // it can neither confirm nor refuse. Salvage still runs first (F-33): a close title is
+      // the best answer there is. The results are flagged `titleOnly`, never `artistOverride`,
+      // because "Could not find one by X" would claim X is an artist. Both flags keep them out
+      // of auto-select (isAutoSelectable), and `matchScore: null` records that they never
+      // cleared the cutoff.
+      rejection = { kind: 'artist-unknown', artist: targetArtist };
+      results = titleMatches.map(bm => ({
         ...formatBeatmapset(bm),
         matchScore: null,
-        artistOverride: true,
+        titleOnly: true,
       }));
-    } else if (absent) {
-      rejection = { kind: 'artist-absent', artist: targetArtist };
     } else {
-      rejection = { kind: 'no-match' };
+      // Only on failure, and only for an artist we did not already probe: one call to tell
+      // "this artist has nothing on osu!" apart from "this song of theirs is not mapped".
+      // Both return no beatmaps; they are very different things to show a user.
+      let absent = false;
+      if (targetArtist && artistConfidence === 'high') {
+        const probe = await probeOsuArtist(targetArtist, token);
+        absent = Boolean(probe && probe.count === 0);
+      }
+
+      if (titleMatches.length > 0) {
+        // `artist-absent` and `wrong-artist` differ only in what we can tell the user -- the
+        // artist has nothing on osu! at all, versus this particular song of theirs is not
+        // mapped. Both refused the same candidates for the same reason, so both show them.
+        // Silently returning nothing is what makes a deliberate refusal look like a failure.
+        rejection = { kind: absent ? 'artist-absent' : 'wrong-artist', artist: targetArtist };
+
+        // Returned as ordinary results so the row, the alternative picker and download all
+        // work normally -- but flagged. `artistOverride` is what stops page.js auto-selecting
+        // them, and `matchScore: null` records that they never passed the gate.
+        results = titleMatches.map(bm => ({
+          ...formatBeatmapset(bm),
+          matchScore: null,
+          artistOverride: true,
+        }));
+      } else if (absent) {
+        rejection = { kind: 'artist-absent', artist: targetArtist };
+      } else {
+        rejection = { kind: 'no-match' };
+      }
     }
   }
 

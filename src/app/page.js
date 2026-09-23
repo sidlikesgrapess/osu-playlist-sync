@@ -16,7 +16,7 @@ import { GitHubIcon } from '@/components/Icons';
 import { Star } from 'lucide-react';
 import { osuAudio } from '@/lib/soundEffects';
 import { DEFAULT_STRICTNESS } from '@/lib/matchStrictness';
-import { isRankedStatus } from '@/lib/beatmapFormat';
+import { isRankedStatus, isAutoSelectable } from '@/lib/beatmapFormat';
 import {
   fetchBeatmapArchive,
   createProxyBudget,
@@ -513,9 +513,10 @@ export default function Home() {
           if (s.id === targetSong.id) {
             const hasMatch = result.beatmapsets && result.beatmapsets.length > 0;
             const matched = hasMatch ? result.beatmapsets[0] : null;
-            // A result that failed the artist gate is shown but never pre-selected --
-            // it must not slip into a bulk download just because it was displayed.
-            if (matched && !matched.artistOverride) {
+            // A result that failed the artist gate, or matched on title alone, is shown but
+            // never pre-selected: it must not slip into a bulk download just because it was
+            // displayed.
+            if (isAutoSelectable(matched)) {
               setSelectedIds(curr => new Set(curr).add(s.id));
             }
             return {
@@ -639,13 +640,13 @@ export default function Home() {
     setSongs(narrowed);
 
     // Selections survive the narrowing unless what they pointed at did not. A song
-    // whose new best candidate is artist-flagged is dropped for the same reason one
+    // whose new best candidate is flagged is dropped for the same reason one
     // is never auto-selected: it must not ride along in a bulk download.
     setSelectedIds(prev => {
       const next = new Set(prev);
       for (const song of narrowed) {
         if (!next.has(song.id)) continue;
-        if (!song.matchedBeatmap || song.matchedBeatmap.artistOverride) next.delete(song.id);
+        if (!isAutoSelectable(song.matchedBeatmap)) next.delete(song.id);
       }
       return next;
     });
@@ -727,7 +728,7 @@ export default function Home() {
       setSongs(prev => prev.map(s => {
         if (s.id === songId) {
           const matched = result.beatmapsets && result.beatmapsets.length > 0 ? result.beatmapsets[0] : null;
-          if (matched && !matched.artistOverride) {
+          if (isAutoSelectable(matched)) {
             setSelectedIds(curr => new Set(curr).add(songId));
           }
           return {
