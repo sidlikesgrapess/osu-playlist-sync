@@ -1,10 +1,9 @@
 /**
  * Shared text helpers. Client-safe: no imports.
  *
- * `normalizeForComparison` is the same function as the private one in `src/lib/osu.js`, moved
- * here so the Apple extractor's title join (F-06) compares titles exactly the way the matcher
- * does. `osu.js` still has its own copy until matching-player switches it to this import; the
- * body is kept byte-identical so the two cannot disagree in the meantime.
+ * `normalizeForComparison` is the matcher's own normalizer: `src/lib/osu.js` imports it from
+ * here, so the Apple extractor's title join (F-06) compares titles exactly the way the matcher
+ * does.
  */
 
 /**

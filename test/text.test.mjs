@@ -19,12 +19,8 @@ test('normalizeForComparison keeps non-Latin letters instead of collapsing them 
   assert.equal(normalizeForComparison('夜に駆ける (Yoru ni Kakeru)'), '夜に駆ける yoru ni kakeru');
 });
 
-test('the body is byte-identical to the private copy still in osu.js', () => {
-  const bodyOf = (file) => {
-    const src = readFileSync(path.join(here, '..', 'src', 'lib', file), 'utf8').replace(/\r\n/g, '\n');
-    const m = src.match(/function normalizeForComparison\(str = ''\) \{\n[\s\S]*?\n\}/);
-    assert.ok(m, `normalizeForComparison not found in ${file}`);
-    return m[0];
-  };
-  assert.equal(bodyOf('text.js'), bodyOf('osu.js'));
+test('osu.js uses this normalizer and keeps no private copy of it', () => {
+  const src = readFileSync(path.join(here, '..', 'src', 'lib', 'osu.js'), 'utf8');
+  assert.match(src, /import \{ normalizeForComparison \} from '\.\/text\.js';/);
+  assert.doesNotMatch(src, /function normalizeForComparison\(/);
 });

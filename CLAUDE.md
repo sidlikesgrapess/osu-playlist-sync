@@ -53,19 +53,21 @@ Understanding it explains most of the codebase:
 
 ```
 { id, index, title, channelTitle, thumbnail, duration,   // from the extractor
-  source,                                                // 'spotify' | 'apple' | 'youtube' | 'query'
+  source,                                                // 'spotify' | 'apple' | 'youtube' | 'query' | 'osu-player'
   cleanQuery, extractedTitle, extractedArtist,           // from titleCleaner
   fallbacks, queries,                                    // alternate search queries
   hasSearched, isSearching,                              // UI state, mutated in page.js
   matchedBeatmap, allMatches,                            // filled by /api/osu/search
-  rejection }                                            // why the gate refused, when it did
+  rejection, searchError }                               // why the gate refused / why no answer came ('rate-limited')
   (also artistFromTitle, beside extractedArtist)         // artist was split from the title, so never provider trust
+  (also manualQuery)                                     // a query the user typed; sent as-is from then on
+  (also playerMeta, playerSection)                       // osu! player path only: pp/playcount, which section
 ```
 
 `source` is load-bearing, not decoration: it decides whether the artist is trusted enough to
 *reject* a candidate (see the matching section below), so keep it populated on every path.
-`artistOverride` sits on the *beatmapset*, not the song — a song can hold a mix of gated and
-ungated matches in `allMatches`.
+`artistOverride` and `titleOnly` sit on the *beatmapset*, not the song — a song can hold a
+mix of gated and ungated matches in `allMatches`.
 
 `src/app/page.js` owns the `songs` array and is the only place this shape mutates.
 Components receive songs and call back up; they never fetch.
@@ -79,8 +81,9 @@ Components receive songs and call back up; they never fetch.
 2. **osu! player** — `/api/osu/player` resolves a profile, `/api/osu/player/beatmaps`
    fetches best / most-played / favourites.
 
-Path 2 reuses path 1's machinery via `beatmapToSong` in `page.js`, which adapts a beatmapset
-into the song shape **pre-matched** (`hasSearched: true`, `matchedBeatmap` already set). That
+Path 2 reuses path 1's machinery via `beatmapToSong` in `src/lib/collection.js`, which builds
+the song through `makeSong` (`src/lib/song.js`) with `source: 'osu-player'` and adapts a
+beatmapset into the song shape **pre-matched** (`hasSearched: true`, `matchedBeatmap` already set). That
 adapter is why selection, export and download work identically for both paths — keep it in
 sync when the song shape changes.
 
@@ -95,8 +98,13 @@ either end of the range — it can only filter what the scorer already chose to 
 could not reach past the hard title floor and 100 was reachable by a non-exact match. Change
 the curve there, never in `osu.js`, and remember 50 must keep reproducing floor 0.50 /
 cutoff 70 because that is what every `npm run bench` number was measured against.
-It early-exits at score ≥ 150. The osu! API's own `relevance_desc` order is deliberately
-ignored.
+It early-exits at score ≥ 150, but only once the leader's artist is settled: trust is `high`,
+or the leader's `artistVerdict` is `SAME` (F-29). Under lower trust a well-credited set by
+someone else could otherwise end the loop before the artist's own set is fetched. At most
+four query variants run per search (`MAX_QUERY_VARIANTS`), and the bare title is always one
+of them. An upstream 429 is thrown, never returned as an empty success; the route answers
+429 with Retry-After and the row is marked `searchError: 'rate-limited'` so it can be
+retried. The osu! API's own `relevance_desc` order is deliberately ignored.
 
 **The artist is a gate, not a weight — do not turn it back into a number.** A confident
 `DIFFERENT` verdict returns `-Infinity`, so a wrong artist can never be outscored by a good
@@ -105,7 +113,9 @@ title. This is the whole point: before it, two different songs sharing a title b
 evidence where the first rung wins, deliberately not a blend.
 
 How far the artist is trusted depends on where it came from (`source` on the song object).
-Spotify/Apple hand us a real artist field and are trusted on arrival. Anything else is
+Spotify/Apple hand us a real artist field and are trusted on arrival, and so is an osu!
+player's own beatmapset (`osu-player`), unless the artist was split from the title
+(`artistFromTitle`). Anything else is
 settled by `resolveArtistTrust` against the corpus, and **the test is the alias set, never a
 row count**: aliases are only recorded for sets whose own artist links back to the target,
 so "Kaneko Lumi" (3 sets, all hers) verifies while "Nightcore Gaming" (4 loosely-related
@@ -123,7 +133,13 @@ where a title collision is most likely. Outcomes:
 | probe failed (429) | `low` | doubt only, never refuse |
 
 The pool is checked before the probe, so a correctly extracted artist costs no call at all;
-probes stay at ~0.2 per track.
+probes stay at ~0.2 per track. Probe results are memoized in a bounded LRU
+(`ARTIST_PROBE_CACHE`: 200 entries, 30 minutes, 60 s for a failed probe).
+
+Under `none` trust the title matches are still salvaged, flagged `titleOnly` rather than
+`artistOverride`, since "Could not find one by X" would claim X is an artist.
+`isAutoSelectable` (`src/lib/beatmapFormat.js`) refuses either flag, and every auto-select
+site goes through it.
 
 When nothing passes, the result carries a `rejection` (`wrong-artist`, `artist-absent`,
 `artist-unknown`, `no-match`) so the UI can say *why*. Gated-out candidates are kept in
@@ -196,8 +212,12 @@ The osu! API rate-limits aggressively, and two conventions exist to stay under i
   in a warm serverless instance; it refreshes 60s before expiry.
 - **Fetch one window, paginate locally** — `getUserBeatmapCollection` pulls up to 100 items
   in a single call and the client paginates in memory (`pageSlice` in `page.js`). Do not add
-  per-page fetches. Mode/status filters for collections are applied **after** the fetch, in
-  `matchesCollectionFilters`, because the osu! collection endpoints don't support them.
+  per-page fetches. The route returns the window unfiltered and undeduped (`items`, plus
+  `fetched` and `total`, the distinct beatmapset count). Mode/status filters are applied on
+  the client, in `visibleItemsFor` (`src/lib/collection.js`), which filters first and dedupes
+  by `beatmapsetKey` second, so a tab change costs no call. The one exception is a mode
+  change on `best`, whose upstream endpoint filters by ruleset: it refetches, debounced
+  300 ms. Each section load is keyed by player and type, with its own AbortController.
 
 ## Conventions
 

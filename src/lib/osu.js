@@ -3,7 +3,10 @@
  * Handles OAuth2 Client Credentials grant and querying beatmapsets.
  */
 import { strictnessProfile } from './matchStrictness.js';
-import { isRankedStatus } from './beatmapFormat.js';
+import { isRankedStatus, upstreamStatusFor } from './beatmapFormat.js';
+import { UA_PROFILES } from './http.js';
+import { beatmapsetKey } from './collection.js';
+import { normalizeForComparison } from './text.js';
 
 let cachedToken = null;
 let tokenExpiresAt = 0;
@@ -31,6 +34,7 @@ export async function getOsuAccessToken() {
       headers: {
         'Content-Type': 'application/x-www-form-urlencoded',
         'Accept': 'application/json',
+        'User-Agent': UA_PROFILES.server,
       },
       body: new URLSearchParams({
         client_id: clientId,
@@ -68,6 +72,7 @@ async function osuApiGet(path, token) {
     headers: {
       'Authorization': `Bearer ${token}`,
       'Accept': 'application/json',
+      'User-Agent': UA_PROFILES.server,
     },
   });
 
@@ -184,94 +189,24 @@ function normalizeUserBeatmapEntry(entry, type) {
 }
 
 /**
- * The `best` and `most_played` endpoints return one entry per *difficulty*, so a
- * set the player has several scores or playcounts on comes back several times.
- * Everything downstream — selection, export, download — is keyed by beatmapset,
- * so those rows are indistinguishable duplicates: collapse them into one entry
- * that keeps the strongest score and every difficulty the player touched.
- */
-function dedupeByBeatmapset(entries) {
-  const byId = new Map();
-
-  entries.forEach(entry => {
-    const existing = byId.get(entry.beatmapset.id);
-    byId.set(entry.beatmapset.id, existing ? mergeBeatmapsetEntries(existing, entry) : entry);
-  });
-
-  return [...byId.values()];
-}
-
-function mergeBeatmapsetEntries(a, b) {
-  // The higher-pp score wins the row (rank badge, accuracy, mods); playcounts
-  // are per-difficulty, so they add up to the player's total on the set.
-  const primary = (b.meta?.pp || 0) > (a.meta?.pp || 0) ? b : a;
-  const other = primary === a ? b : a;
-
-  const difficulties = [...(primary.beatmapset.difficulties || [])];
-  const seenDiffs = new Set(difficulties.map(d => d.id));
-  (other.beatmapset.difficulties || []).forEach(d => {
-    if (!seenDiffs.has(d.id)) {
-      seenDiffs.add(d.id);
-      difficulties.push(d);
-    }
-  });
-  difficulties.sort((x, y) => x.difficultyRating - y.difficultyRating);
-
-  const playCount = (a.meta?.playCount || 0) + (b.meta?.playCount || 0);
-
-  return {
-    beatmapset: {
-      ...primary.beatmapset,
-      difficulties,
-      starRange: difficulties.length > 0
-        ? { min: difficulties[0].difficultyRating, max: difficulties[difficulties.length - 1].difficultyRating }
-        : primary.beatmapset.starRange,
-    },
-    meta: {
-      ...primary.meta,
-      ...(playCount > 0 ? { playCount } : {}),
-    },
-  };
-}
-
-const RANKED_STATUSES = ['ranked', 'loved', 'qualified', 'approved'];
-
-/**
- * Applies the UI's mode / status filters to a normalized beatmapset.
- * osu! only supports a mode filter natively on score endpoints, so the
- * collection endpoints are filtered here instead.
- */
-function matchesCollectionFilters(beatmapset, mode, status) {
-  if (status === 'ranked' && !RANKED_STATUSES.includes(beatmapset.status)) {
-    return false;
-  }
-
-  if (mode && mode !== 'all') {
-    const modes = (beatmapset.difficulties || []).map(d => d.mode).filter(Boolean);
-    if (modes.length > 0 && !modes.includes(mode)) return false;
-  }
-
-  return true;
-}
-
-/**
  * Fetch a window of a user's best performances, most played maps, or favourites.
  *
  * Filtering has to happen after the fetch for the collection endpoints, so we
- * pull one larger window per section and let the caller paginate locally —
- * that keeps page counts honest and costs one API call instead of one per page.
+ * pull one larger window per section and let the caller filter and paginate locally.
+ * That keeps page counts honest and costs one API call instead of one per page.
  */
-export async function getUserBeatmapCollection(userId, type, { limit = 100, mode = 'all', status = 'any' } = {}) {
+export async function getUserBeatmapCollection(userId, type, { limit = 100, mode = 'all' } = {}) {
   const token = await getOsuAccessToken();
   if (!token) return { items: [], isDemo: true };
 
   // Only the score endpoints accept a ruleset filter directly.
   const modeParam = type === 'best' && mode && mode !== 'all' ? `&mode=${encodeURIComponent(mode)}` : '';
 
+  const user = encodeURIComponent(userId);
   const pathByType = {
-    best: `/users/${userId}/scores/best?limit=${limit}&offset=0${modeParam}`,
-    most_played: `/users/${userId}/beatmapsets/most_played?limit=${limit}&offset=0`,
-    favourite: `/users/${userId}/beatmapsets/favourite?limit=${limit}&offset=0`,
+    best: `/users/${user}/scores/best?limit=${limit}&offset=0${modeParam}`,
+    most_played: `/users/${user}/beatmapsets/most_played?limit=${limit}&offset=0`,
+    favourite: `/users/${user}/beatmapsets/favourite?limit=${limit}&offset=0`,
   };
 
   const path = pathByType[type];
@@ -280,28 +215,13 @@ export async function getUserBeatmapCollection(userId, type, { limit = 100, mode
   const data = await osuApiGet(path, token);
   const list = Array.isArray(data) ? data : [];
 
-  const normalized = list.map(entry => normalizeUserBeatmapEntry(entry, type)).filter(Boolean);
-  const filtered = normalized.filter(item => matchesCollectionFilters(item.beatmapset, mode, status));
-  // Dedupe after filtering: the mode filter reads per-difficulty modes, which a
-  // merged entry would blur together.
-  const items = dedupeByBeatmapset(filtered);
+  // Undeduped and unfiltered (F-12): `visibleItemsFor` in collection.js filters then
+  // dedupes on the client, so a mode or status change there costs no call. Deduping here
+  // would merge per-difficulty modes before the mode filter could read them.
+  const items = list.map(entry => normalizeUserBeatmapEntry(entry, type)).filter(Boolean);
+  const total = new Set(items.map(item => beatmapsetKey(item.beatmapset))).size;
 
-  return { items, fetched: normalized.length };
-}
-
-/**
- * Normalizes strings for loose comparison (removes punctuation, prefixes like 'the', and extra
- * spaces). Keeps any Unicode letter/number (not just a-z0-9) so CJK and other non-Latin titles
- * survive normalization instead of collapsing to an empty string that spuriously "matches" any
- * other empty string.
- */
-function normalizeForComparison(str = '') {
-  return str
-    .toLowerCase()
-    .replace(/^the\s+/, '')
-    .replace(/[^\p{L}\p{N} ]/gu, ' ')
-    .replace(/\s+/g, ' ')
-    .trim();
+  return { items, fetched: items.length, total };
 }
 
 function tokenize(str) {
@@ -534,9 +454,31 @@ export function scoreBeatmapMatch(beatmap, targetTitle = '', targetArtist = '', 
   return score;
 }
 
-// Artist probes are memoized for the life of a warm serverless instance: a playlist reuses
-// artists heavily, and only low-confidence artists are probed at all.
-const artistProbeCache = new Map();
+// Artist probes are memoized in a warm serverless instance: a playlist reuses artists
+// heavily, and only low-confidence artists are probed at all. The memo is a small LRU (F-39)
+// so a long-lived instance neither grows without bound nor keeps a stale answer forever. A
+// failed probe (null) is kept only briefly: long enough to spare the rest of a batch the same
+// rate limit, short enough that the next playlist asks again.
+export const ARTIST_PROBE_CACHE = { max: 200, ttlMs: 30 * 60_000, failedTtlMs: 60_000 };
+const artistProbeCache = new Map(); // key -> { value, expiresAt }, oldest first
+
+function probeCacheGet(key) {
+  const hit = artistProbeCache.get(key);
+  if (!hit) return undefined;
+  artistProbeCache.delete(key);
+  if (hit.expiresAt <= Date.now()) return undefined;
+  artistProbeCache.set(key, hit); // most recently used moves to the end
+  return hit.value;
+}
+
+function probeCacheSet(key, value) {
+  const ttl = value === null ? ARTIST_PROBE_CACHE.failedTtlMs : ARTIST_PROBE_CACHE.ttlMs;
+  artistProbeCache.delete(key);
+  artistProbeCache.set(key, { value, expiresAt: Date.now() + ttl });
+  while (artistProbeCache.size > ARTIST_PROBE_CACHE.max) {
+    artistProbeCache.delete(artistProbeCache.keys().next().value);
+  }
+}
 
 /**
  * Read the (romanized, native) spellings of one artist out of a set of beatmapsets.
@@ -582,7 +524,8 @@ export function aliasesFromSets(artist, sets) {
 export async function probeOsuArtist(artist, token) {
   const key = normalizeForComparison(artist);
   if (!key) return null;
-  if (artistProbeCache.has(key)) return artistProbeCache.get(key); // may be null: a cached failure
+  const cached = probeCacheGet(key);
+  if (cached !== undefined) return cached; // may be null: a cached failure
 
   let probe;
   try {
@@ -597,11 +540,11 @@ export async function probeOsuArtist(artist, token) {
     // instead: unknown for scoring purposes, but not re-requested for every remaining track
     // in the batch, which would make a rate limit considerably worse.
     console.warn(`[osu! Probe] Failed for "${artist}":`, e.status || e.message);
-    artistProbeCache.set(key, null);
+    probeCacheSet(key, null);
     return null;
   }
 
-  artistProbeCache.set(key, probe);
+  probeCacheSet(key, probe);
   return probe;
 }
 
@@ -665,6 +608,11 @@ async function verifyLowConfidenceArtist(artist, candidates, token) {
   return { ...resolveArtistTrust(artist, candidates, probe), probed: true };
 }
 
+const MAX_QUERY_VARIANTS = 4;
+
+// Sources whose artist is a field the provider handed us, not a guess from a title.
+const STRUCTURED_SOURCES = new Set(['spotify', 'apple', 'osu-player']);
+
 /**
  * Search beatmapsets on osu! API v2 with smart fallbacks, mode filtering, and strict status filtering.
  */
@@ -682,7 +630,13 @@ export async function searchOsuBeatmaps(query, options = {}) {
   // active while we score and can end the query loop early. Anything else is scored
   // provisionally at 'low' -- which never hard-rejects -- and the real verdict is settled
   // after the loop, when the candidates themselves can answer it without an extra call.
-  const structuredArtist = options.source === 'spotify' || options.source === 'apple';
+  //
+  // Trust follows where the artist string came from, not the platform (F-28): an artist the
+  // cleaner split out of the title ("Re:Re:" gives "Re") is a guess even on an Apple track,
+  // so `artistFromTitle` sends it through resolveArtistTrust like any unstructured one.
+  // 'osu-player' is structured too: its artist is the mapped set's own metadata (F-32). An
+  // empty artist is never trusted, whatever the source (`targetArtist ?` below).
+  const structuredArtist = STRUCTURED_SOURCES.has(options.source) && !options.artistFromTitle;
   // One slider, three knobs -- see src/lib/matchStrictness.js for why a bare cutoff could
   // not express either end of the range.
   const strict = strictnessProfile(options.strictness);
@@ -692,7 +646,7 @@ export async function searchOsuBeatmaps(query, options = {}) {
   let aliases = null;
   let scoreOptions = { artistConfidence, aliases, ...floors };
 
-  const queriesToRun = Array.from(
+  const variants = Array.from(
     new Set([
       targetArtist && targetTitle ? `${targetArtist} ${targetTitle}`.trim() : null,
       query,
@@ -700,11 +654,19 @@ export async function searchOsuBeatmaps(query, options = {}) {
       targetTitle,
     ].filter(Boolean))
   );
+  // Every variant is one upstream call, so at most MAX_QUERY_VARIANTS run (F-14): the first
+  // three and the bare title. The title is the best recall query, so it is never the one
+  // cut, and the order is otherwise the one the bench fixtures were captured in.
+  let othersKept = 0;
+  const queriesToRun = variants.length > MAX_QUERY_VARIANTS
+    ? variants.filter(q => q === targetTitle || othersKept++ < MAX_QUERY_VARIANTS - 1)
+    : variants;
 
   const modeMap = { osu: '0', taiko: '1', fruits: '2', mania: '3' };
   const modeParam = options.mode && modeMap[options.mode] ? modeMap[options.mode] : null;
 
-  // Handle status parameter: 'ranked' means ranked/loved/qualified only. 'any' means everything.
+  // 'ranked' is the "Ranked & Loved" filter: RANKED_LOVED_STATUSES (beatmapFormat.js). The
+  // upstream `s=` is only a pool hint; the local isRankedStatus filter below decides.
   const statusFilter = options.status || 'any';
   const isRankedOnly = statusFilter === 'ranked';
 
@@ -714,52 +676,61 @@ export async function searchOsuBeatmaps(query, options = {}) {
   // so they are kept aside rather than discarded.
   let gatedOut = [];
   let bestScore = -100;
+  let leader = null; // the candidate holding bestScore
 
+  // Every variant goes through osuApiGet, so the server User-Agent is sent and a failure
+  // carries `.status` (F-09). A 429 ends the search and is thrown: whatever the earlier
+  // variants pooled is partial, and a partial pool must not come back looking like a
+  // confident answer (or a confident "no beatmap"). The route maps it to a 429 and the
+  // client marks the song retryable. Any other failure skips that variant, unless every
+  // variant failed, in which case there is no answer at all and that is thrown too.
+  let answered = 0;
+  let lastError = null;
   for (const q of queriesToRun) {
-    const searchPath = `/beatmapsets/search?q=${encodeURIComponent(q)}&sort=relevance_desc${modeParam ? `&m=${modeParam}` : ''}&s=${isRankedOnly ? 'ranked' : 'any'}`;
+    const searchPath = `/beatmapsets/search?q=${encodeURIComponent(q)}&sort=relevance_desc${modeParam ? `&m=${modeParam}` : ''}&s=${upstreamStatusFor(statusFilter)}`;
 
+    let data;
     try {
-      const res = await fetch(`${OSU_API_BASE}${searchPath}`, {
-        cache: 'no-store',
-        headers: {
-          'Authorization': `Bearer ${token}`,
-          'Accept': 'application/json',
-        },
-      });
-
-      if (!res.ok) {
-        console.warn(`[osu! Search] ${res.status} for query "${q}"${res.status === 429 ? ' (rate limited)' : ''}`);
-      }
-
-      if (res.ok) {
-        const data = await res.json();
-        let sets = data.beatmapsets || [];
-
-        if (isRankedOnly) {
-          sets = sets.filter(bm => isRankedStatus(bm.status));
-        }
-
-        for (const bm of sets) {
-          const score = scoreBeatmapMatch(bm, targetTitle, targetArtist, scoreOptions);
-          if (score === -Infinity) {
-            if (!gatedOut.some(existing => existing.id === bm.id)) gatedOut.push(bm);
-            continue;
-          }
-          if (!allFoundSets.some(existing => existing.id === bm.id)) {
-            allFoundSets.push({ ...bm, _score: score });
-          }
-          if (score > bestScore) {
-            bestScore = score;
-          }
-        }
-
-        // If we found a definitive exact match (score >= 150), stop searching queries
-        if (bestScore >= 150) break;
-      }
+      data = await osuApiGet(searchPath, token);
     } catch (e) {
-      console.warn(`[osu! Search] Error searching query "${q}":`, e);
+      if (e.status === 429) {
+        console.warn(`[osu! Search] 429 for query "${q}" (rate limited)`);
+        throw e;
+      }
+      console.warn(`[osu! Search] Error searching query "${q}":`, e.status || e.message);
+      lastError = e;
+      continue;
     }
+    answered += 1;
+
+    let sets = data?.beatmapsets || [];
+    if (isRankedOnly) {
+      sets = sets.filter(bm => isRankedStatus(bm.status));
+    }
+
+    for (const bm of sets) {
+      const score = scoreBeatmapMatch(bm, targetTitle, targetArtist, scoreOptions);
+      if (score === -Infinity) {
+        if (!gatedOut.some(existing => beatmapsetKey(existing) === beatmapsetKey(bm))) gatedOut.push(bm);
+        continue;
+      }
+      if (!allFoundSets.some(existing => beatmapsetKey(existing) === beatmapsetKey(bm))) {
+        allFoundSets.push({ ...bm, _score: score });
+      }
+      if (score > bestScore) {
+        bestScore = score;
+        leader = bm;
+      }
+    }
+
+    // A definitive exact match (score >= 150) ends the search, but only when its artist is
+    // settled (F-29): the artist is trusted, or the leader's own artist is the target's. A
+    // low-trust artist is only settled after the loop, and an early exit there would starve
+    // that settling of the very candidates it reasons from.
+    if (bestScore >= 150
+      && (artistConfidence === 'high' || artistVerdict(leader, targetArtist, aliases).verdict === 'SAME')) break;
   }
+  if (answered === 0 && lastError) throw lastError;
 
   // Settle a low-confidence artist now that we have candidates to reason from, then rescore.
   // Rescoring is in-memory; the only possible extra network call is a single probe, and only
@@ -776,7 +747,7 @@ export async function searchOsuBeatmaps(query, options = {}) {
       if (score === -Infinity) continue;
       rescored.push({ ...bm, _score: score });
     }
-    gatedOut = [...allFoundSets, ...gatedOut].filter(bm => !rescored.some(r => r.id === bm.id));
+    gatedOut = [...allFoundSets, ...gatedOut].filter(bm => !rescored.some(r => beatmapsetKey(r) === beatmapsetKey(bm)));
     allFoundSets = rescored;
     bestScore = allFoundSets.reduce((m, s) => Math.max(m, s._score), -100);
   }
@@ -809,42 +780,55 @@ export async function searchOsuBeatmaps(query, options = {}) {
     // at 0 it admits the whole gated pile, and the row shows those candidates flagged
     // instead of a bare "no beatmaps by this artist" for maps osu! plainly returned.
     const titleMatches = [...gatedOut, ...allFoundSets]
-      .filter(s => titleSimilarity(s, targetTitle) >= strict.salvageFloor);
-
-    // Only on failure, and only for an artist we did not already probe: one call to tell
-    // "this artist has nothing on osu!" apart from "this song of theirs is not mapped".
-    // Both return no beatmaps; they are very different things to show a user.
-    let absent = false;
-    if (targetArtist && artistConfidence === 'high') {
-      const probe = await probeOsuArtist(targetArtist, token);
-      absent = Boolean(probe && probe.count === 0);
-    }
-
-    if (artistConfidence === 'none' && targetArtist) {
-      rejection = { kind: 'artist-unknown', artist: targetArtist };
-    } else if (titleMatches.length > 0) {
-      const ranked = [...titleMatches].sort((a, b) =>
+      .filter(s => titleSimilarity(s, targetTitle) >= strict.salvageFloor)
+      .sort((a, b) =>
         (titleSimilarity(b, targetTitle) - titleSimilarity(a, targetTitle))
-        || ((b.favourite_count || 0) - (a.favourite_count || 0)));
+        || ((b.favourite_count || 0) - (a.favourite_count || 0)))
+      .slice(0, 8);
 
-      // `artist-absent` and `wrong-artist` differ only in what we can tell the user -- the
-      // artist has nothing on osu! at all, versus this particular song of theirs is not
-      // mapped. Both refused the same candidates for the same reason, so both show them.
-      // Silently returning nothing is what makes a deliberate refusal look like a failure.
-      rejection = { kind: absent ? 'artist-absent' : 'wrong-artist', artist: targetArtist };
-
-      // Returned as ordinary results so the row, the alternative picker and download all
-      // work normally -- but flagged. `artistOverride` is what stops page.js auto-selecting
-      // them, and `matchScore: null` records that they never passed the gate.
-      results = ranked.slice(0, 8).map(bm => ({
+    if (targetArtist && artistConfidence === 'none') {
+      // The string is not an artist (resolveArtistTrust found sets but none by that name), so
+      // it can neither confirm nor refuse. Salvage still runs first (F-33): a close title is
+      // the best answer there is. The results are flagged `titleOnly`, never `artistOverride`,
+      // because "Could not find one by X" would claim X is an artist. Both flags keep them out
+      // of auto-select (isAutoSelectable), and `matchScore: null` records that they never
+      // cleared the cutoff.
+      rejection = { kind: 'artist-unknown', artist: targetArtist };
+      results = titleMatches.map(bm => ({
         ...formatBeatmapset(bm),
         matchScore: null,
-        artistOverride: true,
+        titleOnly: true,
       }));
-    } else if (absent) {
-      rejection = { kind: 'artist-absent', artist: targetArtist };
     } else {
-      rejection = { kind: 'no-match' };
+      // Only on failure, and only for an artist we did not already probe: one call to tell
+      // "this artist has nothing on osu!" apart from "this song of theirs is not mapped".
+      // Both return no beatmaps; they are very different things to show a user.
+      let absent = false;
+      if (targetArtist && artistConfidence === 'high') {
+        const probe = await probeOsuArtist(targetArtist, token);
+        absent = Boolean(probe && probe.count === 0);
+      }
+
+      if (titleMatches.length > 0) {
+        // `artist-absent` and `wrong-artist` differ only in what we can tell the user -- the
+        // artist has nothing on osu! at all, versus this particular song of theirs is not
+        // mapped. Both refused the same candidates for the same reason, so both show them.
+        // Silently returning nothing is what makes a deliberate refusal look like a failure.
+        rejection = { kind: absent ? 'artist-absent' : 'wrong-artist', artist: targetArtist };
+
+        // Returned as ordinary results so the row, the alternative picker and download all
+        // work normally -- but flagged. `artistOverride` is what stops page.js auto-selecting
+        // them, and `matchScore: null` records that they never passed the gate.
+        results = titleMatches.map(bm => ({
+          ...formatBeatmapset(bm),
+          matchScore: null,
+          artistOverride: true,
+        }));
+      } else if (absent) {
+        rejection = { kind: 'artist-absent', artist: targetArtist };
+      } else {
+        rejection = { kind: 'no-match' };
+      }
     }
   }
 
@@ -902,6 +886,5 @@ function formatBeatmapset(set) {
     starRange: diffs.length > 0
       ? { min: diffs[0].difficultyRating, max: diffs[diffs.length - 1].difficultyRating }
       : { min: 0, max: 0 },
-    downloadUrl: `/api/download?beatmapsetId=${set.id}`,
   };
 }

@@ -25,33 +25,25 @@ export function formatCompactNumber(num) {
 }
 
 /**
- * What the "Ranked & Loved" filter accepts.
+ * What the "Ranked & Loved" filter accepts, on every path: the search pool (osu.js), the
+ * player collections (collection.js) and the local narrowing in page.js. One set, so
+ * narrowing locally keeps exactly what refetching would.
  *
- * Lives here, client-safe, because page.js narrows an already-fetched candidate list
- * with it while osu.js filters the search pool with it. If those two ever disagreed,
- * narrowing the filter locally would keep a different set of beatmaps than refetching
- * with it would, which is the one thing the local path has to get exactly right.
- */
-const RANKED_AND_LOVED = ['ranked', 'loved', 'qualified'];
-
-/** Whether a beatmapset status passes the "Ranked & Loved" filter. */
-export function isRankedStatus(status) {
-  return RANKED_AND_LOVED.includes(String(status).toLowerCase());
-}
-
-/**
- * The rebuild's replacement for `RANKED_AND_LOVED` above (REBUILD_PLAN.md 1.2): the "Ranked
- * & Loved" label is meant to mean exactly this set on every path (search, collections,
- * narrowing), with no `qualified` (see the plan's U-8). It is added here, not yet wired in
- * or used to replace `RANKED_AND_LOVED`/`isRankedStatus` above -- see this workstream's
- * planProblems: the plan's own binding signature reuses the name `isRankedStatus` for a
- * function bound to this constant, which cannot coexist with the export of that name four
- * lines up in the same module, and deleting the existing one is explicitly out of scope for
- * this step.
+ * No `qualified` (REBUILD_PLAN.md U-8): a qualified set has no leaderboard yet and can still
+ * be disqualified, so it is not "ranked" in the sense the label promises.
  */
 export const RANKED_LOVED_STATUSES = ['ranked', 'approved', 'loved'];
 
-/** The upstream osu! API search `s=` parameter for a UI status filter value. */
+/** Whether a beatmapset status passes the "Ranked & Loved" filter. */
+export function isRankedStatus(status) {
+  return RANKED_LOVED_STATUSES.includes(String(status).toLowerCase());
+}
+
+/**
+ * The upstream osu! API search `s=` parameter for a UI status filter value. `leaderboard`
+ * (ranked, approved, qualified, loved) is only a pool hint: `isRankedStatus` is what
+ * decides, so the upstream bucket never has to match the label exactly.
+ */
 export function upstreamStatusFor(filter) {
   return String(filter).toLowerCase() === 'ranked' ? 'leaderboard' : 'any';
 }
