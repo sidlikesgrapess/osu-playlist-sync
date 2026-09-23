@@ -162,3 +162,16 @@ test('check R: the real matcher over every fixture', async () => {
   assert.deepEqual(stray, [], 'uncovered queries not on the allow-list');
   assert.ok(run.calls <= MAX_CALLS, `calls ${run.calls} > ${MAX_CALLS}`);
 });
+
+test('F-14: 50 fallbacks make at most 4 upstream queries, and the bare title is one of them', async () => {
+  const log = [];
+  installStub(() => [], log);
+  const queries = Array.from({ length: 50 }, (_, i) => `fallback ${i}`);
+  await osu.searchOsuBeatmaps('Some Artist Some Title', {
+    title: 'Some Title', artist: 'Some Artist', queries, status: 'any', strictness: 50, source: 'spotify',
+  });
+  const searches = log.filter(e => !e.probe).map(e => e.q);
+  assert.ok(searches.length <= 4, `${searches.length} queries: ${searches.join(' | ')}`);
+  assert.ok(searches.includes('Some Title'));
+  assert.deepEqual(searches.slice(0, 3), ['Some Artist Some Title', 'fallback 0', 'fallback 1']);
+});

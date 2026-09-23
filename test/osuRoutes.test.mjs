@@ -161,3 +161,15 @@ test('toRouteError maps by status alone and demoResponse spreads its extra field
   const demo = demoResponse({ items: [] });
   assert.deepEqual(await demo.json(), { isDemo: true, items: [] });
 });
+
+test('the search route bounds fallbacks, so 50 of them still cost at most 4 search calls (F-14)', async () => {
+  const calls = withOsu(() => Response.json({ beatmapsets: [] }));
+  const fallbacks = JSON.stringify(Array.from({ length: 50 }, (_, i) => `variant ${i} ${'x'.repeat(300)}`));
+  const res = await search.GET(clientFor()(
+    `/api/osu/search?q=a+b&title=b&artist=a&source=spotify&status=any&fallbacks=${encodeURIComponent(fallbacks)}`,
+  ));
+  assert.equal(res.status, 200);
+  const searches = calls.filter(c => c.url.includes('/beatmapsets/search') && !c.url.includes('artist%3D'));
+  assert.ok(searches.length <= 4, String(searches.length));
+  for (const c of searches) assert.ok(decodeURIComponent(new URL(c.url).searchParams.get('q')).length <= 200);
+});

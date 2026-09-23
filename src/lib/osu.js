@@ -667,6 +667,8 @@ async function verifyLowConfidenceArtist(artist, candidates, token) {
   return { ...resolveArtistTrust(artist, candidates, probe), probed: true };
 }
 
+const MAX_QUERY_VARIANTS = 4;
+
 /**
  * Search beatmapsets on osu! API v2 with smart fallbacks, mode filtering, and strict status filtering.
  */
@@ -699,7 +701,7 @@ export async function searchOsuBeatmaps(query, options = {}) {
   let aliases = null;
   let scoreOptions = { artistConfidence, aliases, ...floors };
 
-  const queriesToRun = Array.from(
+  const variants = Array.from(
     new Set([
       targetArtist && targetTitle ? `${targetArtist} ${targetTitle}`.trim() : null,
       query,
@@ -707,6 +709,13 @@ export async function searchOsuBeatmaps(query, options = {}) {
       targetTitle,
     ].filter(Boolean))
   );
+  // Every variant is one upstream call, so at most MAX_QUERY_VARIANTS run (F-14): the first
+  // three and the bare title. The title is the best recall query, so it is never the one
+  // cut, and the order is otherwise the one the bench fixtures were captured in.
+  let othersKept = 0;
+  const queriesToRun = variants.length > MAX_QUERY_VARIANTS
+    ? variants.filter(q => q === targetTitle || othersKept++ < MAX_QUERY_VARIANTS - 1)
+    : variants;
 
   const modeMap = { osu: '0', taiko: '1', fruits: '2', mania: '3' };
   const modeParam = options.mode && modeMap[options.mode] ? modeMap[options.mode] : null;

@@ -1,7 +1,7 @@
 import { NextResponse } from 'next/server';
 import { searchOsuBeatmaps, getOsuAccessToken } from '@/lib/osu';
 import { checkRateLimit, rateLimitResponse } from '@/lib/rateLimit';
-import { ValidationError, boundedString } from '@/lib/validate';
+import { ValidationError, boundedString, boundedStringArray } from '@/lib/validate';
 import { toRouteError, demoResponse } from '@/lib/osuRoute';
 
 export const dynamic = 'force-dynamic';
@@ -34,16 +34,19 @@ export async function GET(request) {
       throw new ValidationError('Query parameter "q" or "title" is required');
     }
 
-    let extraQueries = [];
-    if (fallbackParam) extraQueries.push(fallbackParam);
+    let rawQueries = [];
+    if (fallbackParam) rawQueries.push(fallbackParam);
     if (fallbacksParam) {
       try {
         const parsed = JSON.parse(fallbacksParam);
-        if (Array.isArray(parsed)) extraQueries.push(...parsed);
+        if (Array.isArray(parsed)) rawQueries.push(...parsed);
       } catch (e) {
-        extraQueries.push(fallbacksParam);
+        rawQueries.push(fallbacksParam);
       }
     }
+    // Each variant is one upstream call, so the list is bounded here (F-14); searchOsuBeatmaps
+    // then trims what survives dedupe to its own query budget.
+    const extraQueries = boundedStringArray(rawQueries.filter(Boolean), { name: 'fallbacks', maxItems: 8, maxLen: 200 });
 
     if (!(await getOsuAccessToken())) return demoResponse({ beatmapsets: [] });
 
