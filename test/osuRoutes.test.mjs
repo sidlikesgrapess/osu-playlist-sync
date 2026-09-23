@@ -183,3 +183,16 @@ test('an upstream 429 mid-search is a 429 from the search route, never an empty 
   assert.equal(body.success, undefined);
   assert.equal(body.error, RATE_LIMITED_MESSAGE);
 });
+
+test('a typed query is cleaned on the server, so its artist reaches the gate (F-05)', async () => {
+  const calls = withOsu(() => Response.json({ beatmapsets: [] }));
+  const res = await search.GET(clientFor()('/api/osu/search?q=Camellia+-+Ghost&source=query&status=any'));
+  assert.equal(res.status, 200);
+  const qs = calls
+    .filter(c => c.url.includes('/beatmapsets/search'))
+    .map(c => new URL(c.url).searchParams.get('q'));
+  assert.equal(qs[0], 'Camellia Ghost', 'the derived artist and title lead');
+  assert.ok(qs.includes('Camellia - Ghost'), 'the typed query itself still runs');
+  assert.ok(qs.includes('Ghost'), 'and so does the bare title');
+  assert.ok(qs.includes('artist=Camellia'), 'the derived artist is settled by resolveArtistTrust');
+});

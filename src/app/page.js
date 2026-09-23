@@ -27,6 +27,7 @@ import {
 import { osuFilename, sanitizeStem } from '@/lib/filename';
 import { beatmapsetPage } from '@/lib/mirrors';
 import { mergeSongs as mergeSongLists } from '@/lib/song';
+import { buildSearchRequest } from '@/lib/searchRequest';
 
 const REPO_URL = 'https://github.com/sidlikesgrapess/osu-playlist-sync';
 
@@ -504,24 +505,11 @@ export default function Home() {
     // 429, so the batch can come back for that row once at the end.
     const searchOne = async (targetSong) => {
       try {
-        const queryParams = new URLSearchParams({
-          q: targetSong.cleanQuery || targetSong.title,
-          title: targetSong.extractedTitle || targetSong.title || '',
-          artist: targetSong.extractedArtist || targetSong.channelTitle || '',
+        const queryParams = buildSearchRequest(targetSong, {
           mode: currentMode,
           status: currentStatus,
-          strictness: String(currentStrictness),
-          source: targetSong.source || '',
+          strictness: currentStrictness,
         });
-        if (targetSong.artistFromTitle) queryParams.set('artistFromTitle', '1');
-
-        const extraQueries = [
-          ...(targetSong.fallbacks || []),
-          ...(targetSong.queries || []),
-        ];
-        if (extraQueries.length > 0) {
-          queryParams.set('fallbacks', JSON.stringify(Array.from(new Set(extraQueries))));
-        }
 
         const res = await fetch(`/api/osu/search?${queryParams.toString()}`);
         const result = await res.json().catch(() => ({}));
@@ -770,16 +758,27 @@ export default function Home() {
     !isLoading &&
     matchThreshold !== appliedStrictness;
 
-  // Manual query edit & rematch for a single song
+  // Manual query edit & rematch for a single song.
+  //
+  // A query the user typed is a typed query from then on (`manualQuery`), for this search and
+  // every later re-search of the row. Re-running the row's own query unchanged (Search on an
+  // unsearched row, Retry after a failure) is not a typed query, so it keeps the song's
+  // extracted artist and the gate that comes with it.
   const handleManualSearch = async (songId, customQuery) => {
-    setSongs(prev => prev.map(s => s.id === songId ? { ...s, cleanQuery: customQuery, isSearching: true } : s));
+    const song = songsRef.current.find(s => s.id === songId);
+    if (!song) return;
+    const isTyped = Boolean(song.manualQuery) || customQuery !== (song.cleanQuery || song.title);
+    const manualQuery = isTyped ? customQuery : null;
+    setSongs(prev => prev.map(s => s.id === songId
+      ? { ...s, cleanQuery: customQuery, ...(manualQuery ? { manualQuery } : {}), isSearching: true }
+      : s));
 
     try {
-      const queryParams = new URLSearchParams({
-        q: customQuery,
+      const queryParams = buildSearchRequest(song, {
         mode,
         status: statusFilter,
-        strictness: String(matchThreshold),
+        strictness: matchThreshold,
+        manualQuery,
       });
 
       const res = await fetch(`/api/osu/search?${queryParams.toString()}`);
