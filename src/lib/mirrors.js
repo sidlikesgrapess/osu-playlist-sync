@@ -23,9 +23,18 @@ export const BROWSER_MIRRORS = [
   { name: 'nerinyan.moe', url: (id) => `https://api.nerinyan.moe/d/${id}`, uaProfile: null },
 ];
 
+/**
+ * Settled by one server-profile HEAD each on set 41823 (2026-09-24, `redirect: 'manual'`):
+ *   - beatconnect `/b/{id}`: 301 to `/b/{id}/` on the same host, no ACAO. Proxy-only.
+ *   - sayobot `/beatmaps/download/novideo/{id}` and `/full/{id}` both answer 302 to
+ *     `https://tc1.sayobot.cn:25225/...` with ACAO `*`. The target is https, so following
+ *     it from the server is never an https to http downgrade. `novideo` answers exactly
+ *     like `full` and moves fewer bytes through the function, so it is the one used.
+ * Neither refused the server profile, so both keep it.
+ */
 export const PROXY_MIRRORS = [
   { name: 'beatconnect', url: (id) => `https://beatconnect.io/b/${id}`, uaProfile: 'server' },
-  { name: 'sayobot', url: (id) => `https://dl.sayobot.cn/beatmaps/download/full/${id}`, uaProfile: 'server' },
+  { name: 'sayobot', url: (id) => `https://dl.sayobot.cn/beatmaps/download/novideo/${id}`, uaProfile: 'server' },
 ];
 
 /**
