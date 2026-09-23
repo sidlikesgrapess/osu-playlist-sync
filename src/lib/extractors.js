@@ -316,6 +316,12 @@ async function extractByKind(input) {
           songs: data.songs,
           isSingleTrack: false,
           isDemo: data.isDemo,
+          counts: {
+            loadedCount: data.loadedCount,
+            unavailableCount: data.unavailableCount,
+            truncated: data.truncated,
+            playlistLength: data.playlistLength,
+          },
         };
       }
       const videoId = extractVideoId(input.url);
@@ -386,5 +392,22 @@ export async function extractMusicData(inputUrlOrQuery) {
     isDemo: result.isDemo || false,
     totalSongs: processedSongs.length,
     songs: processedSongs,
+    ...windowCounts(result, processedSongs.length),
+  };
+}
+
+/**
+ * What the page reports about the fetched window. Only a YouTube playlist can hold
+ * unavailable items or be cut short (at 100); every other source returns all it read and
+ * states no separate length.
+ */
+function windowCounts(result, returnedCount) {
+  const counts = result.counts || {};
+  return {
+    returnedCount,
+    loadedCount: counts.loadedCount ?? returnedCount,
+    unavailableCount: counts.unavailableCount ?? 0,
+    truncated: counts.truncated ?? false,
+    playlistLength: counts.playlistLength ?? null,
   };
 }

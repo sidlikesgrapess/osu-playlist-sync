@@ -86,7 +86,20 @@ export function extractVideoId(url) {
 }
 
 /**
- * Fetches all song titles and metadata from a public/unlisted YouTube playlist.
+ * Fetches the songs of a public/unlisted YouTube playlist: its first window only, which the
+ * browse response holds as up to 100 items. Continuations are never fetched; `truncated`
+ * says when there were more.
+ *
+ * Returns the songs plus the counts the page reports:
+ * - `loadedCount`: video items in the fetched window,
+ * - `returnedCount`: songs kept from them,
+ * - `unavailableCount`: items YouTube marks unplayable (private, deleted, blocked),
+ * - `truncated`: the window ends in a continuation, or the `maxVideos` cap cut it short,
+ * - `playlistLength`: the real length when the header states it, else `null`.
+ *
+ * Throws `ExtractionError` when neither Innertube nor the page scrape yields a playlist. It
+ * never substitutes sample songs for a playlist it could not read (F-07).
+ *
  * @param {string} playlistId - Extracted YouTube playlist ID
  * @param {number} [maxVideos=100]
  */
@@ -95,51 +108,32 @@ export async function fetchPlaylistItems(playlistId, maxVideos = 100) {
     throw new ExtractionError('Please provide a valid YouTube playlist URL');
   }
 
-  // Check if sample demo playlist requested
+  // The sample playlist offered by the input box is a preset, asked for by its id.
   if (playlistId === 'PLosu_banger_showcase_01' || playlistId === 'DEMO_PLAYLIST_ID') {
     return getDemoPlaylist();
   }
 
-  try {
-    // 1. Try fetching via YouTube Innertube Browse API
-    const result = await fetchFromInnertube(playlistId, maxVideos);
-    if (result && result.songs && result.songs.length > 0) {
-      return {
-        playlistId,
-        playlistTitle: result.playlistTitle || 'YouTube Playlist',
-        totalSongs: result.songs.length,
-        isDemo: false,
-        songs: result.songs,
-      };
+  const attempts = [
+    ['Innertube', () => fetchFromInnertube(playlistId)],
+    ['HTML scrape', () => fetchFromHtmlScrape(playlistId)],
+  ];
+  for (const [name, load] of attempts) {
+    try {
+      const parsed = parsePlaylistData(await load(), maxVideos);
+      if (parsed.loadedCount > 0) {
+        return { playlistId, totalSongs: parsed.returnedCount, isDemo: false, ...parsed };
+      }
+      console.warn(`[YouTube Extractor] ${name} returned no playlist items`);
+    } catch (err) {
+      console.warn(`[YouTube Extractor] ${name} attempt error:`, err.message);
     }
-  } catch (innertubeErr) {
-    console.warn('[YouTube Extractor] Innertube API attempt error:', innertubeErr.message);
   }
 
-  try {
-    // 2. Fallback: Direct HTML page scraping
-    const resultFromHtml = await fetchFromHtmlScrape(playlistId, maxVideos);
-    if (resultFromHtml && resultFromHtml.songs && resultFromHtml.songs.length > 0) {
-      return {
-        playlistId,
-        playlistTitle: resultFromHtml.playlistTitle || 'YouTube Playlist',
-        totalSongs: resultFromHtml.songs.length,
-        isDemo: false,
-        songs: resultFromHtml.songs,
-      };
-    }
-  } catch (htmlErr) {
-    console.warn('[YouTube Extractor] HTML Scrape attempt error:', htmlErr.message);
-  }
-
-  // 3. If all else fails, return demo banger showcase
-  return getDemoPlaylist();
+  throw new ExtractionError('Could not read that YouTube playlist. Check that it is public or unlisted.');
 }
 
-/**
- * Innertube internal API resolver
- */
-async function fetchFromInnertube(playlistId, maxVideos) {
+/** The browse response for a playlist, from the Innertube API. */
+async function fetchFromInnertube(playlistId) {
   const browseId = playlistId.startsWith('VL') ? playlistId : `VL${playlistId}`;
 
   // The one outbound call that cannot go through http.js: Innertube browse is a POST with a
@@ -171,77 +165,11 @@ async function fetchFromInnertube(playlistId, maxVideos) {
   if (!response.ok) {
     throw new Error(`Innertube request returned HTTP ${response.status}`);
   }
-
-  const data = await response.json();
-  const playlistTitle = data.header?.playlistHeaderRenderer?.title?.simpleText ||
-                        data.header?.pageHeaderRenderer?.pageTitle ||
-                        data.metadata?.playlistMetadataRenderer?.title ||
-                        'YouTube Playlist';
-
-  const tabs = data.contents?.twoColumnBrowseResultsRenderer?.tabs;
-  const sectionList = tabs?.[0]?.tabRenderer?.content?.sectionListRenderer?.contents;
-  const items = sectionList?.[0]?.itemSectionRenderer?.contents || 
-                sectionList?.[0]?.itemSectionRenderer?.contents?.[0]?.playlistVideoListRenderer?.contents ||
-                [];
-
-  const songs = [];
-
-  for (let i = 0; i < items.length; i++) {
-    const item = items[i];
-
-    // Standard video renderer
-    if (item.playlistVideoRenderer) {
-      const vr = item.playlistVideoRenderer;
-      const title = vr.title?.runs?.[0]?.text || vr.title?.simpleText || '';
-      const channelTitle = vr.shortBylineText?.runs?.[0]?.text || vr.shortBylineText?.simpleText || '';
-      const videoId = vr.videoId;
-      const thumbnail = vr.thumbnail?.thumbnails?.[0]?.url || `https://i.ytimg.com/vi/${videoId}/hqdefault.jpg`;
-
-      if (title && title !== 'Private video' && title !== 'Deleted video') {
-        songs.push({
-          id: videoId || `yt_${i}`,
-          title,
-          channelTitle,
-          thumbnail,
-          position: i,
-        });
-      }
-    }
-    // Modern lockup view model format
-    else if (item.lockupViewModel) {
-      const lm = item.lockupViewModel;
-      const videoId = lm.contentId || lm.rendererContext?.commandContext?.onTap?.innertubeCommand?.watchEndpoint?.videoId;
-      
-      const rawTitle = lm.metadata?.lockupMetadataViewModel?.title?.content ||
-                       lm.rendererContext?.accessibilityContext?.label ||
-                       '';
-      
-      const channelTitle = lm.metadata?.lockupMetadataViewModel?.metadata?.contentMetadataViewModel?.metadataRows?.[0]?.metadataParts?.[0]?.text?.content || '';
-
-      const cleanTitle = rawTitle.replace(/\s+\d+\s+(minutes?|seconds?|hours?).*$/i, '').trim();
-      const thumbnail = `https://i.ytimg.com/vi/${videoId}/hqdefault.jpg`;
-
-      if (cleanTitle && cleanTitle !== 'Private video' && cleanTitle !== 'Deleted video') {
-        songs.push({
-          id: videoId || `yt_${i}`,
-          title: cleanTitle,
-          channelTitle,
-          thumbnail,
-          position: i,
-        });
-      }
-    }
-
-    if (songs.length >= maxVideos) break;
-  }
-
-  return { playlistTitle, songs };
+  return response.json();
 }
 
-/**
- * Direct HTML scraping fallback
- */
-async function fetchFromHtmlScrape(playlistId, maxVideos) {
+/** The same browse data, as `ytInitialData` embedded in the playlist page. */
+async function fetchFromHtmlScrape(playlistId) {
   const url = `https://www.youtube.com/playlist?list=${encodeURIComponent(playlistId)}`;
   const html = await fetchText(url, YOUTUBE_PAGE);
   const match = html.match(/var ytInitialData = ({.*?});<\/script>/s) || html.match(/ytInitialData\s*=\s*({.+?});/s);
@@ -249,63 +177,140 @@ async function fetchFromHtmlScrape(playlistId, maxVideos) {
   if (!match) {
     throw new Error('Could not parse ytInitialData from YouTube page');
   }
+  return JSON.parse(match[1]);
+}
 
-  const data = JSON.parse(match[1]);
-  const playlistTitle = data.metadata?.playlistMetadataRenderer?.title ||
-                        data.header?.playlistHeaderRenderer?.title?.simpleText ||
-                        'YouTube Playlist';
+const PLAYLIST_LENGTH = /^([\d,]+) videos?$/;
 
-  const contents = data.contents?.twoColumnBrowseResultsRenderer?.tabs?.[0]?.tabRenderer?.content?.sectionListRenderer?.contents?.[0]?.itemSectionRenderer?.contents || 
-                   data.contents?.twoColumnBrowseResultsRenderer?.tabs?.[0]?.tabRenderer?.content?.sectionListRenderer?.contents?.[0]?.itemSectionRenderer?.contents?.[0]?.playlistVideoListRenderer?.contents || 
-                   [];
-
-  const songs = [];
-  for (let i = 0; i < contents.length; i++) {
-    const item = contents[i];
-    if (item.playlistVideoRenderer) {
-      const vr = item.playlistVideoRenderer;
-      const title = vr.title?.runs?.[0]?.text || vr.title?.simpleText || '';
-      const channelTitle = vr.shortBylineText?.runs?.[0]?.text || '';
-      const videoId = vr.videoId;
-      const thumbnail = vr.thumbnail?.thumbnails?.[0]?.url || `https://i.ytimg.com/vi/${videoId}/hqdefault.jpg`;
-
-      if (title && title !== 'Private video' && title !== 'Deleted video') {
-        songs.push({
-          id: videoId || `yt_${i}`,
-          title,
-          channelTitle,
-          thumbnail,
-          position: i,
-        });
-      }
-    } else if (item.lockupViewModel) {
-      const lm = item.lockupViewModel;
-      const videoId = lm.contentId || lm.rendererContext?.commandContext?.onTap?.innertubeCommand?.watchEndpoint?.videoId;
-      const rawTitle = lm.metadata?.lockupMetadataViewModel?.title?.content ||
-                       lm.rendererContext?.accessibilityContext?.label || '';
-      const channelTitle = lm.metadata?.lockupMetadataViewModel?.metadata?.contentMetadataViewModel?.metadataRows?.[0]?.metadataParts?.[0]?.text?.content || '';
-      const cleanTitle = rawTitle.replace(/\s+\d+\s+(minutes?|seconds?|hours?).*$/i, '').trim();
-      const thumbnail = `https://i.ytimg.com/vi/${videoId}/hqdefault.jpg`;
-
-      if (cleanTitle && cleanTitle !== 'Private video') {
-        songs.push({
-          id: videoId || `yt_${i}`,
-          title: cleanTitle,
-          channelTitle,
-          thumbnail,
-          position: i,
-        });
-      }
+/** Every `metadataParts` entry anywhere under `node`, depth first. */
+function collectMetadataParts(node, out = []) {
+  if (Array.isArray(node)) {
+    for (const child of node) collectMetadataParts(child, out);
+  } else if (node && typeof node === 'object') {
+    for (const [key, value] of Object.entries(node)) {
+      if (key === 'metadataParts' && Array.isArray(value)) out.push(...value);
+      else collectMetadataParts(value, out);
     }
-
-    if (songs.length >= maxVideos) break;
   }
-
-  return { playlistTitle, songs };
+  return out;
 }
 
 /**
- * Demo fallback playlist for testing
+ * The playlist's real length from its header text ("200 videos"), or null. Every
+ * `metadataParts` entry is scanned, because header shapes differ between playlists and the
+ * count is not always in the same row.
+ */
+export function readPlaylistLength(header) {
+  for (const part of collectMetadataParts(header)) {
+    const text = part?.text?.content ?? part?.text?.simpleText ?? (typeof part?.text === 'string' ? part.text : '');
+    const match = typeof text === 'string' ? text.trim().match(PLAYLIST_LENGTH) : null;
+    if (match) return Number(match[1].replace(/,/g, ''));
+  }
+  return null;
+}
+
+/**
+ * The item list of the first window. It is either the item section's own contents or, on
+ * the older shape, the contents of the one `playlistVideoListRenderer` inside it.
+ */
+function playlistWindow(data) {
+  const section = data?.contents?.twoColumnBrowseResultsRenderer?.tabs?.[0]?.tabRenderer?.content
+    ?.sectionListRenderer?.contents?.[0]?.itemSectionRenderer?.contents;
+  if (!Array.isArray(section)) return [];
+  const nested = section.find((x) => x?.playlistVideoListRenderer)?.playlistVideoListRenderer?.contents;
+  return Array.isArray(nested) ? nested : section;
+}
+
+/**
+ * One window item as `{ song }`, `{ unavailable: true }`, or null when it is not a video item
+ * at all. Unavailability is read from the renderer's own fields, never from the title text
+ * (D-14): YouTube marks an unplayable entry `isPlayable: false`, and a `playlistVideoRenderer`
+ * for a private or deleted video carries no `lengthSeconds`.
+ */
+function readWindowItem(item, position) {
+  if (item?.playlistVideoRenderer) {
+    const vr = item.playlistVideoRenderer;
+    const videoId = vr.videoId;
+    const title = vr.title?.runs?.[0]?.text || vr.title?.simpleText || '';
+    if (vr.isPlayable === false || !vr.lengthSeconds || !videoId || !title) return { unavailable: true };
+    return {
+      song: {
+        id: videoId,
+        title,
+        channelTitle: vr.shortBylineText?.runs?.[0]?.text || vr.shortBylineText?.simpleText || '',
+        thumbnail: vr.thumbnail?.thumbnails?.[0]?.url || `https://i.ytimg.com/vi/${videoId}/hqdefault.jpg`,
+        position,
+      },
+    };
+  }
+  if (item?.lockupViewModel) {
+    const lm = item.lockupViewModel;
+    const videoId = lm.contentId || lm.rendererContext?.commandContext?.onTap?.innertubeCommand?.watchEndpoint?.videoId;
+    const rawTitle = lm.metadata?.lockupMetadataViewModel?.title?.content ||
+                     lm.rendererContext?.accessibilityContext?.label || '';
+    // The accessibility label ends in a spoken duration ("... 3 minutes, 2 seconds").
+    const title = rawTitle.replace(/\s+\d+\s+(minutes?|seconds?|hours?).*$/i, '').trim();
+    if (lm.isPlayable === false || !videoId || !title) return { unavailable: true };
+    return {
+      song: {
+        id: videoId,
+        title,
+        channelTitle: lm.metadata?.lockupMetadataViewModel?.metadata?.contentMetadataViewModel?.metadataRows?.[0]?.metadataParts?.[0]?.text?.content || '',
+        // A lockup never carries a usable thumbnail URL, so it is always built from the id.
+        thumbnail: `https://i.ytimg.com/vi/${videoId}/hqdefault.jpg`,
+        position,
+      },
+    };
+  }
+  return null;
+}
+
+/**
+ * A browse response (Innertube or `ytInitialData`, which share a shape) as songs and counts.
+ * `truncated` is structural: a `continuationItemRenderer` in the window, or the `maxVideos`
+ * cap stopping the walk with items left. It never depends on the length text.
+ */
+export function parsePlaylistData(data, maxVideos = 100) {
+  const playlistTitle = data?.header?.playlistHeaderRenderer?.title?.simpleText ||
+                        data?.header?.pageHeaderRenderer?.pageTitle ||
+                        data?.metadata?.playlistMetadataRenderer?.title ||
+                        'YouTube Playlist';
+  const items = playlistWindow(data);
+
+  const songs = [];
+  let loadedCount = 0;
+  let unavailableCount = 0;
+  let truncated = false;
+
+  for (let i = 0; i < items.length; i++) {
+    if (items[i]?.continuationItemRenderer) {
+      truncated = true;
+      continue;
+    }
+    if (songs.length >= maxVideos) {
+      if (readWindowItem(items[i], i)) truncated = true;
+      continue;
+    }
+    const read = readWindowItem(items[i], i);
+    if (!read) continue;
+    loadedCount++;
+    if (read.unavailable) unavailableCount++;
+    else songs.push(read.song);
+  }
+
+  return {
+    playlistTitle,
+    songs,
+    returnedCount: songs.length,
+    loadedCount,
+    unavailableCount,
+    truncated,
+    playlistLength: readPlaylistLength(data?.header),
+  };
+}
+
+/**
+ * The preset sample playlist, returned only when its own id is asked for.
  */
 function getDemoPlaylist() {
   return {
@@ -313,6 +318,11 @@ function getDemoPlaylist() {
     playlistTitle: 'osu! Banger Showcase (Sample Playlist)',
     totalSongs: 6,
     isDemo: true,
+    returnedCount: 6,
+    loadedCount: 6,
+    unavailableCount: 0,
+    truncated: false,
+    playlistLength: 6,
     songs: [
       {
         id: 'dQw4w9WgXcQ',
