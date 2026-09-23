@@ -241,3 +241,44 @@ test('F-09: when every variant fails for another reason the failure is thrown, n
     (e) => e.status === 503,
   );
 });
+
+test('F-08: at status ranked every search sends s=leaderboard and every returned set is Ranked & Loved', async () => {
+  let searches = 0;
+  let returned = 0;
+  for (const snap of loadSnapshots()) {
+    const log = [];
+    installStub(answerFor(snap), log);
+    const r = await osu.searchOsuBeatmaps(...searchArgsFor(songFor(snap.fixture), { status: 'ranked' }));
+    for (const e of log.filter(e => !e.probe)) {
+      searches += 1;
+      assert.equal(e.s, 'leaderboard', `${snap.fixture.id} :: ${e.q}`);
+    }
+    // The captures are s=any, so the stub hands back unranked sets too: the pool must drop them.
+    for (const set of r.beatmapsets || []) {
+      returned += 1;
+      assert.ok(isRankedStatus(set.status), `${snap.fixture.id}: ${set.id} is ${set.status}`);
+    }
+  }
+  assert.ok(searches > 0 && returned > 0, `searches ${searches}, returned ${returned}`);
+});
+
+// Recorded as todo, not passing: this fails today and the fix is not this matcher's. With no
+// artist field the splitter runs (as 2.1 item 7 intends) and pattern C (titleCleaner.js:222)
+// turns "Re:Re:" into artist "Re", title "Re". The probe for "Re" finds sets whose own artist
+// is "RE", so resolveArtistTrust rightly calls it a real artist (trust high) and the gate
+// refuses the ASIAN KUNG-FU GENERATION set as wrong-artist. Routing a title-split artist
+// through resolveArtistTrust cannot help when the guess happens to be a real mapped artist;
+// the split itself is the defect. It stays here so the case is seen until the cleaner is fixed.
+test('F-28: an Apple track with no provider artist is split for recall but never refused on that guess', {
+  todo: 'the colon split of "Re:Re:" yields a real osu! artist, so the gate refuses (cleaner defect)',
+}, async () => {
+  const snap = loadSnapshots().find(s => s.fixture.id === 'colon-title');
+  const fixture = { ...snap.fixture, source: 'apple' };
+  const song = songFor(fixture, { channelTitle: '' });
+  assert.equal(song.artistFromTitle, true, 'the splitter ran, since there was no artist field');
+  const log = [];
+  installStub(answerFor(snap), log);
+  const r = await osu.searchOsuBeatmaps(...searchArgsFor(song));
+  assert.notEqual(r.rejection?.kind, 'wrong-artist');
+  assert.ok(log.some(e => e.probe), 'the guessed artist went through resolveArtistTrust');
+});
