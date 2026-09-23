@@ -379,7 +379,9 @@ export async function extractMusicData(inputUrlOrQuery) {
     });
     return {
       ...song,
-      id: song.id || `track_${index}_${Date.now()}`,
+      // Only a provider id is set here. A row with none gets its id in page.js, the one
+      // place ids are made, and is deduped on title and artist (songKey in song.js).
+      id: song.id || null,
       index: index + 1,
       position: index,
       // Where the metadata came from. Spotify/Apple hand us a real artist field, so the

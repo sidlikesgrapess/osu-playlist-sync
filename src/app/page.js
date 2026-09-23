@@ -18,6 +18,7 @@ import { osuAudio } from '@/lib/soundEffects';
 import { DEFAULT_STRICTNESS } from '@/lib/matchStrictness';
 import { isRankedStatus } from '@/lib/beatmapFormat';
 import { fetchBeatmapArchive, createProxyBudget } from '@/lib/beatmapDownload';
+import { mergeSongs as mergeSongLists } from '@/lib/song';
 import JSZip from 'jszip';
 
 const REPO_URL = 'https://github.com/sidlikesgrapess/osu-playlist-sync';
@@ -360,31 +361,45 @@ export default function Home() {
           platform: data.platform,
           isSingleTrack: data.isSingleTrack,
           isDemo: data.isDemo,
+          returnedCount: data.returnedCount,
+          loadedCount: data.loadedCount,
+          unavailableCount: data.unavailableCount,
+          truncated: data.truncated,
+          playlistLength: data.playlistLength,
         });
       }
 
-      const offset = isAppending ? songs.length : 0;
+      // page.js is the one place a song id is made: a provider id when there is one, else a
+      // per batch placeholder that songKey knows not to trust, so the row is deduped on its
+      // title and artist instead.
       const batchTag = Date.now();
-      const newSongs = (data.songs || []).map((s, index) => ({
+      const fetched = (data.songs || []).map((s, index) => ({
         ...s,
         id: s.id || `track_${batchTag}_${index}`,
-        position: offset + index,
         ...blankMatchState(),
       }));
 
-      const combinedSongs = isAppending ? [...songs, ...newSongs] : newSongs;
+      // Every load goes through the same identity rule (songKey in song.js). An append never
+      // repeats a song already in the queue, and a playlist that lists one video twice keeps
+      // one row, so two rows can never share a React key. Existing rows win, keeping their
+      // matches and selection, and positions are given to the additions only.
+      const { songs: combinedSongs, added, skipped } = mergeSongLists(isAppending ? songs : [], fetched);
       setSongs(combinedSongs);
       setIsLoading(false);
 
       // An append is the one load with nothing to show for itself: the rows land at the
       // bottom of the queue, usually off-screen, and the page does not move. The first
-      // playlist needs no toast because it fills the whole table. Nothing is announced for
-      // an empty result either -- that means the scrape failed, and the error says so.
-      if (isAppending && newSongs.length > 0) {
+      // playlist needs no toast because it fills the whole table. An append where every song
+      // was already queued still says so, since otherwise nothing at all would happen.
+      const unavailable = data.unavailableCount || 0;
+      if (isAppending && (added > 0 || skipped > 0 || unavailable > 0)) {
         const from = data.playlistTitle ? ` from ${data.playlistTitle}` : '';
+        const parts = [`Added ${added} song${added === 1 ? '' : 's'}${from}`];
+        if (skipped > 0) parts.push(`${skipped} ${skipped === 1 ? 'was' : 'were'} already in the queue`);
+        if (unavailable > 0) parts.push(`${unavailable} ${unavailable === 1 ? 'is' : 'are'} unavailable on YouTube`);
         pushToast(
-          'Added to queue bottom',
-          `${newSongs.length} song${newSongs.length === 1 ? '' : 's'}${from} · ${combinedSongs.length} in queue`,
+          added > 0 ? 'Added to queue bottom' : 'Nothing new to add',
+          parts.join(' · '),
           'queue',
         );
       }
