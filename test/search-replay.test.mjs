@@ -17,6 +17,7 @@ const { loadSnapshots, artistKey, slug } = await import('../bench/pool.mjs');
 const { cleanSongTitle } = await import('../src/lib/titleCleaner.js');
 const { isRankedStatus, isAutoSelectable } = await import('../src/lib/beatmapFormat.js');
 const osu = await import('../src/lib/osu.js');
+const { UA_PROFILES } = await import('../src/lib/http.js');
 
 const BENCH = new URL('../bench/', import.meta.url);
 const labels = JSON.parse(readFileSync(new URL('labels.json', BENCH), 'utf8'));
@@ -109,6 +110,7 @@ async function replayAll() {
   const rows = [];
   let calls = 0;
   let probes = 0;
+  const userAgents = new Set();
 
   for (const snap of loadSnapshots()) {
     const f = snap.fixture;
@@ -118,6 +120,7 @@ async function replayAll() {
     const r = await osu.searchOsuBeatmaps(...searchArgsFor(song));
 
     calls += log.length;
+    for (const e of log) userAgents.add(e.ua);
     probes += log.filter(e => e.probe).length;
     for (const e of log.filter(e => e.uncovered)) uncovered.push({ fixture: f.id, query: e.q });
 
@@ -143,7 +146,7 @@ async function replayAll() {
       rows.push(`${f.id}: ${kind} (${accepted[0] ? `${accepted[0].artist} - ${accepted[0].title}` : `rejection=${r.rejection?.kind}`})`);
     }
   }
-  return { tally, uncovered, rows, calls, probes };
+  return { tally, uncovered, rows, calls, probes, userAgents };
 }
 
 test('check R: the real matcher over every fixture', async () => {
@@ -161,6 +164,8 @@ test('check R: the real matcher over every fixture', async () => {
   const stray = run.uncovered.filter(u => !allowed.has(`${u.fixture}\u0000${u.query}`));
   assert.deepEqual(stray, [], 'uncovered queries not on the allow-list');
   assert.ok(run.calls <= MAX_CALLS, `calls ${run.calls} > ${MAX_CALLS}`);
+  // Every search and probe goes through osuApiGet, so every one carries the server UA.
+  assert.deepEqual([...run.userAgents], [UA_PROFILES.server]);
 });
 
 test('F-14: 50 fallbacks make at most 4 upstream queries, and the bare title is one of them', async () => {
@@ -204,4 +209,35 @@ test('F-33: under none trust a close title is salvaged as titleOnly, never artis
   assert.equal(salvaged.artistOverride, undefined);
   assert.equal(isAutoSelectable(salvaged), false);
   assert.ok(log.some(q => q.startsWith('artist=')), 'the probe decided the trust');
+});
+
+test('F-09: a 429 on any variant throws .status 429, so a partial pool is never returned', async () => {
+  const log = [];
+  globalThis.fetch = async (url) => {
+    const u = new URL(String(url));
+    if (u.pathname.endsWith('/oauth/token')) return Response.json({ access_token: 'replay', expires_in: 86400 });
+    log.push(u.searchParams.get('q'));
+    if (log.length === 1) {
+      return Response.json({ beatmapsets: [{ id: 1, artist: 'Other', title: 'Rate Limit Song', status: 'ranked' }] });
+    }
+    return new Response('slow down', { status: 429, headers: { 'retry-after': '30' } });
+  };
+  await assert.rejects(
+    osu.searchOsuBeatmaps('Rate Artist Rate Limit Song', {
+      title: 'Rate Limit Song', artist: 'Rate Artist', queries: [], status: 'any', strictness: 50, source: 'youtube',
+    }),
+    (e) => e.status === 429 && e.retryAfter === '30',
+  );
+  assert.equal(log.length, 2, 'the loop stops at the 429');
+});
+
+test('F-09: when every variant fails for another reason the failure is thrown, not a no-match', async () => {
+  globalThis.fetch = async (url) => {
+    if (String(url).endsWith('/oauth/token')) return Response.json({ access_token: 'replay', expires_in: 86400 });
+    return new Response('boom', { status: 503 });
+  };
+  await assert.rejects(
+    osu.searchOsuBeatmaps('Down Song', { title: 'Down Song', artist: '', queries: [], status: 'any', strictness: 50 }),
+    (e) => e.status === 503,
+  );
 });

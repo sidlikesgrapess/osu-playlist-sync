@@ -173,3 +173,13 @@ test('the search route bounds fallbacks, so 50 of them still cost at most 4 sear
   assert.ok(searches.length <= 4, String(searches.length));
   for (const c of searches) assert.ok(decodeURIComponent(new URL(c.url).searchParams.get('q')).length <= 200);
 });
+
+test('an upstream 429 mid-search is a 429 from the search route, never an empty success (F-09)', async () => {
+  withOsu(() => new Response('slow down', { status: 429, headers: { 'retry-after': '12' } }));
+  const res = await search.GET(clientFor()('/api/osu/search?q=a+b&title=b&artist=a&source=spotify&status=any'));
+  assert.equal(res.status, 429);
+  assert.equal(res.headers.get('Retry-After'), '12');
+  const body = await res.json();
+  assert.equal(body.success, undefined);
+  assert.equal(body.error, RATE_LIMITED_MESSAGE);
+});

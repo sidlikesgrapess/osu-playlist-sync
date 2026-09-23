@@ -61,7 +61,18 @@ const pageSlice = (list, page, pageSize) => {
 };
 
 // Fresh object per call — each song needs its own `allMatches` array.
-const blankMatchState = () => ({ hasSearched: false, isSearching: false, matchedBeatmap: null, allMatches: [], rejection: null });
+const blankMatchState = () => ({ hasSearched: false, isSearching: false, matchedBeatmap: null, allMatches: [], rejection: null, searchError: null });
+
+// A search that never got an answer: osu! said slow down ('rate-limited'), or the request
+// failed outright ('failed'). Neither is "no beatmap exists", so `rejection` stays null and
+// the row offers a retry instead of a verdict.
+const failedSearchState = (searchError) => ({
+  hasSearched: true, isSearching: false, matchedBeatmap: null, allMatches: [], rejection: null, searchError,
+});
+
+// How long the one automatic retry of rate-limited rows waits, at most, for the
+// Retry-After osu! (or our own limiter) asked for. Past this the row keeps its Retry button.
+const RATE_LIMIT_RETRY_WAIT_CAP_S = 15;
 
 const PLATFORM_BADGE = {
   spotify: { color: '#1db954', bg: 'rgba(29, 185, 84, 0.15)', border: 'rgba(29, 185, 84, 0.35)' },
@@ -124,6 +135,11 @@ export default function Home() {
   const [playerQuery, setPlayerQuery] = useState('');
   const [playerProfile, setPlayerProfile] = useState(null);
   const [playerSections, setPlayerSections] = useState(createEmptySections);
+
+  // The latest songs, for async work that outlives the render it started in: the automatic
+  // rate-limit retry must see whether a row was reset or re-searched while it waited.
+  const songsRef = useRef(songs);
+  useEffect(() => { songsRef.current = songs; }, [songs]);
 
   // Check system status on mount
   useEffect(() => {
@@ -481,11 +497,12 @@ export default function Home() {
     let completedCount = 0;
     const concurrency = 3;
     let currentIndex = 0;
+    const rateLimitedIds = [];
+    let retryAfterSec = 0;
 
-    async function searchNext() {
-      if (currentIndex >= targets.length) return;
-      const targetSong = targets[currentIndex++];
-
+    // One search, its outcome written onto the row. Resolves true when the answer was a
+    // 429, so the batch can come back for that row once at the end.
+    const searchOne = async (targetSong) => {
       try {
         const queryParams = new URLSearchParams({
           q: targetSong.cleanQuery || targetSong.title,
@@ -507,7 +524,15 @@ export default function Home() {
         }
 
         const res = await fetch(`/api/osu/search?${queryParams.toString()}`);
-        const result = await res.json();
+        const result = await res.json().catch(() => ({}));
+
+        // Demo mode is an answer (there is simply no key to search with), not a failure.
+        if (!result.isDemo && (!res.ok || !result.success)) {
+          const limited = res.status === 429;
+          if (limited) retryAfterSec = Math.max(retryAfterSec, Number(res.headers.get('Retry-After')) || 0);
+          markSearchFailed(targetSong.id, limited ? 'rate-limited' : 'failed');
+          return limited;
+        }
 
         setSongs(prev => prev.map(s => {
           if (s.id === targetSong.id) {
@@ -526,14 +551,23 @@ export default function Home() {
               matchedBeatmap: matched,
               allMatches: result.beatmapsets || [],
               rejection: result.rejection || null,
+              searchError: null,
             };
           }
           return s;
         }));
       } catch (err) {
         console.warn(`Search failed for ${targetSong.title}:`, err);
-        setSongs(prev => prev.map(s => s.id === targetSong.id ? { ...s, hasSearched: true, isSearching: false, matchedBeatmap: null, allMatches: [] } : s));
+        markSearchFailed(targetSong.id, 'failed');
       }
+      return false;
+    };
+
+    async function searchNext() {
+      if (currentIndex >= targets.length) return;
+      const targetSong = targets[currentIndex++];
+
+      if (await searchOne(targetSong)) rateLimitedIds.push(targetSong.id);
 
       completedCount++;
       setSearchProgress(Math.round((completedCount / targets.length) * 100));
@@ -547,8 +581,34 @@ export default function Home() {
     }
 
     await Promise.all(pool);
+
+    // A 429 means "not now", so those rows get one more go once the batch is done, one at
+    // a time, after the wait osu! asked for. A row that was reset or re-searched in the
+    // meantime no longer carries the error and is left alone.
+    if (rateLimitedIds.length > 0) {
+      const waitSec = Math.min(Math.max(retryAfterSec, 1), RATE_LIMIT_RETRY_WAIT_CAP_S);
+      await new Promise(resolve => setTimeout(resolve, waitSec * 1000));
+      for (const id of rateLimitedIds) {
+        const current = songsRef.current.find(s => s.id === id);
+        if (current?.searchError !== 'rate-limited') continue;
+        setSongs(prev => prev.map(s => s.id === id ? { ...s, isSearching: true } : s));
+        await searchOne(current);
+      }
+    }
+
     setIsSearching(false);
     osuAudio.playSuccess();
+  };
+
+  // A search with no answer leaves the row matchless, and a matchless row is never selected.
+  const markSearchFailed = (songId, searchError) => {
+    setSongs(prev => prev.map(s => s.id === songId ? { ...s, ...failedSearchState(searchError) } : s));
+    setSelectedIds(prev => {
+      if (!prev.has(songId)) return prev;
+      const next = new Set(prev);
+      next.delete(songId);
+      return next;
+    });
   };
 
   // Handle Page navigation: automatically lazily query unsearched songs on the new page
@@ -723,7 +783,12 @@ export default function Home() {
       });
 
       const res = await fetch(`/api/osu/search?${queryParams.toString()}`);
-      const result = await res.json();
+      const result = await res.json().catch(() => ({}));
+
+      if (!result.isDemo && (!res.ok || !result.success)) {
+        markSearchFailed(songId, res.status === 429 ? 'rate-limited' : 'failed');
+        return;
+      }
 
       setSongs(prev => prev.map(s => {
         if (s.id === songId) {
@@ -739,6 +804,7 @@ export default function Home() {
             matchedBeatmap: matched,
             allMatches: result.beatmapsets || [],
             rejection: result.rejection || null,
+            searchError: null,
           };
         }
         return s;
@@ -747,7 +813,7 @@ export default function Home() {
       osuAudio.playSuccess();
     } catch (err) {
       console.error('Manual search failed:', err);
-      setSongs(prev => prev.map(s => s.id === songId ? { ...s, hasSearched: true, isSearching: false } : s));
+      markSearchFailed(songId, 'failed');
     }
   };
 

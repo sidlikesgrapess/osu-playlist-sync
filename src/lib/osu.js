@@ -732,51 +732,54 @@ export async function searchOsuBeatmaps(query, options = {}) {
   let gatedOut = [];
   let bestScore = -100;
 
+  // Every variant goes through osuApiGet, so the server User-Agent is sent and a failure
+  // carries `.status` (F-09). A 429 ends the search and is thrown: whatever the earlier
+  // variants pooled is partial, and a partial pool must not come back looking like a
+  // confident answer (or a confident "no beatmap"). The route maps it to a 429 and the
+  // client marks the song retryable. Any other failure skips that variant, unless every
+  // variant failed, in which case there is no answer at all and that is thrown too.
+  let answered = 0;
+  let lastError = null;
   for (const q of queriesToRun) {
     const searchPath = `/beatmapsets/search?q=${encodeURIComponent(q)}&sort=relevance_desc${modeParam ? `&m=${modeParam}` : ''}&s=${upstreamStatusFor(statusFilter)}`;
 
+    let data;
     try {
-      const res = await fetch(`${OSU_API_BASE}${searchPath}`, {
-        cache: 'no-store',
-        headers: {
-          'Authorization': `Bearer ${token}`,
-          'Accept': 'application/json',
-        },
-      });
-
-      if (!res.ok) {
-        console.warn(`[osu! Search] ${res.status} for query "${q}"${res.status === 429 ? ' (rate limited)' : ''}`);
-      }
-
-      if (res.ok) {
-        const data = await res.json();
-        let sets = data.beatmapsets || [];
-
-        if (isRankedOnly) {
-          sets = sets.filter(bm => isRankedStatus(bm.status));
-        }
-
-        for (const bm of sets) {
-          const score = scoreBeatmapMatch(bm, targetTitle, targetArtist, scoreOptions);
-          if (score === -Infinity) {
-            if (!gatedOut.some(existing => existing.id === bm.id)) gatedOut.push(bm);
-            continue;
-          }
-          if (!allFoundSets.some(existing => existing.id === bm.id)) {
-            allFoundSets.push({ ...bm, _score: score });
-          }
-          if (score > bestScore) {
-            bestScore = score;
-          }
-        }
-
-        // If we found a definitive exact match (score >= 150), stop searching queries
-        if (bestScore >= 150) break;
-      }
+      data = await osuApiGet(searchPath, token);
     } catch (e) {
-      console.warn(`[osu! Search] Error searching query "${q}":`, e);
+      if (e.status === 429) {
+        console.warn(`[osu! Search] 429 for query "${q}" (rate limited)`);
+        throw e;
+      }
+      console.warn(`[osu! Search] Error searching query "${q}":`, e.status || e.message);
+      lastError = e;
+      continue;
     }
+    answered += 1;
+
+    let sets = data?.beatmapsets || [];
+    if (isRankedOnly) {
+      sets = sets.filter(bm => isRankedStatus(bm.status));
+    }
+
+    for (const bm of sets) {
+      const score = scoreBeatmapMatch(bm, targetTitle, targetArtist, scoreOptions);
+      if (score === -Infinity) {
+        if (!gatedOut.some(existing => existing.id === bm.id)) gatedOut.push(bm);
+        continue;
+      }
+      if (!allFoundSets.some(existing => existing.id === bm.id)) {
+        allFoundSets.push({ ...bm, _score: score });
+      }
+      if (score > bestScore) {
+        bestScore = score;
+      }
+    }
+
+    // If we found a definitive exact match (score >= 150), stop searching queries
+    if (bestScore >= 150) break;
   }
+  if (answered === 0 && lastError) throw lastError;
 
   // Settle a low-confidence artist now that we have candidates to reason from, then rescore.
   // Rescoring is in-memory; the only possible extra network call is a single probe, and only

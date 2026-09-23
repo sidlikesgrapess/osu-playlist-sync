@@ -57,14 +57,14 @@ export default function SongCardMobile({
             id={`checkbox-mobile-song-${song.id}`}
             checked={isSelected && hasMatch}
             disabled={!hasMatch}
-            unavailable={song.hasSearched && !hasMatch}
+            unavailable={song.hasSearched && !hasMatch && !song.searchError}
             onChange={() => {
               if (hasMatch) {
                 osuAudio.playClick();
                 onToggleSelect(song.id);
               }
             }}
-            title={hasMatch ? 'Select beatmap' : 'No beatmap found for this song'}
+            title={hasMatch ? 'Select beatmap' : song.searchError ? 'The search did not finish' : 'No beatmap found for this song'}
           />
           {match?.artistOverride && (
             <span
@@ -328,6 +328,27 @@ export default function SongCardMobile({
           </div>
         </div>
         </>
+      ) : song.searchError ? (
+        <div style={{ display: 'flex', alignItems: 'center', gap: '8px', padding: '4px 0' }}>
+          <span style={{ color: '#8b7d95', fontSize: '0.74rem', fontWeight: 600 }}>
+            {song.searchError === 'rate-limited' ? 'osu! is busy. Try again in a minute.' : 'The search failed. Try again.'}
+          </span>
+          <button
+            onClick={() => onManualSearch(song.id, song.cleanQuery || song.title)}
+            className="osu-btn-interactive osu-glass-card"
+            style={{
+              color: '#ff66aa',
+              fontSize: '0.7rem',
+              fontWeight: 700,
+              padding: '2px 8px',
+              borderRadius: '4px',
+              cursor: 'pointer',
+              fontFamily: 'inherit',
+            }}
+          >
+            Retry
+          </button>
+        </div>
       ) : song.hasSearched === false ? (
         <div style={{ display: 'flex', alignItems: 'center', gap: '8px', padding: '4px 0' }}>
           <span style={{ color: '#8b7d95', fontSize: '0.74rem', fontWeight: 600 }}>Not searched yet</span>
