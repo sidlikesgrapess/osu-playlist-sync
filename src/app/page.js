@@ -28,31 +28,24 @@ import { osuFilename, sanitizeStem } from '@/lib/filename';
 import { beatmapsetPage } from '@/lib/mirrors';
 import { mergeSongs as mergeSongLists } from '@/lib/song';
 import { buildSearchRequest } from '@/lib/searchRequest';
+import { visibleItemsFor } from '@/lib/collection';
 
 const REPO_URL = 'https://github.com/sidlikesgrapess/osu-playlist-sync';
 
 
+// `entries` is the section's raw window as the server sent it (normalized, undeduped).
+// `allItems` is what the active mode/status tabs show of it, as songs, from visibleItemsFor
+// (collection.js, which also holds beatmapToSong). `total` is the profile's own count.
+const createEmptySection = () => ({ isOpen: false, entries: [], allItems: [], total: 0, isLoading: false, error: '', loaded: false });
 const createEmptySections = () => ({
-  best: { isOpen: false, allItems: [], total: 0, isLoading: false, error: '', loaded: false },
-  most_played: { isOpen: false, allItems: [], total: 0, isLoading: false, error: '', loaded: false },
-  favourite: { isOpen: false, allItems: [], total: 0, isLoading: false, error: '', loaded: false },
+  best: createEmptySection(),
+  most_played: createEmptySection(),
+  favourite: createEmptySection(),
 });
 
-// osu! collections are already beatmapsets, so they slot straight into the
-// song shape the table/download machinery expects — pre-matched.
-const beatmapToSong = (item, section) => ({
-  id: `osu_${item.beatmapset.id}`,
-  title: `${item.beatmapset.artist} - ${item.beatmapset.title}`,
-  channelTitle: `mapped by ${item.beatmapset.creator}`,
-  cleanQuery: item.beatmapset.title,
-  thumbnail: item.beatmapset.covers?.list,
-  hasSearched: true,
-  isSearching: false,
-  matchedBeatmap: item.beatmapset,
-  allMatches: [item.beatmapset],
-  playerMeta: item.meta,
-  playerSection: section,
-});
+// A mode change on `best` refetches (osu! filters scores by ruleset upstream); it waits this
+// long so clicking through the mode tabs costs one call, not one per tab.
+const BEST_MODE_REFETCH_DEBOUNCE_MS = 300;
 
 // `pageSize` may be the string 'all', so every slice goes through here.
 const pageSlice = (list, page, pageSize) => {
@@ -142,6 +135,29 @@ export default function Home() {
   const songsRef = useRef(songs);
   useEffect(() => { songsRef.current = songs; }, [songs]);
 
+  // Player section loads (F-13). Each `${userId}:${type}` key has its own generation and
+  // AbortController: a new load for a key aborts the old one, loads for different keys never
+  // touch each other, and switching player aborts them all.
+  const sectionLoadsRef = useRef(new Map());
+  const sectionLoadGenRef = useRef(0);
+  // The mode the current player's `best` window was last requested with, or null.
+  const bestModeRef = useRef(null);
+  const bestRefetchTimerRef = useRef(null);
+  // The tabs a load that lands later must be filtered by: the ones active when it lands.
+  const playerFiltersRef = useRef({ mode, status: statusFilter });
+  useEffect(() => { playerFiltersRef.current = { mode, status: statusFilter }; }, [mode, statusFilter]);
+
+  // A hidden row can never ride into a bulk download: in player mode the selection is kept to
+  // the ids the sections show under the active tabs (F-12).
+  useEffect(() => {
+    if (!playerProfile) return;
+    const visible = new Set(Object.values(playerSections).flatMap(section => section.allItems.map(s => s.id)));
+    setSelectedIds(prev => {
+      const next = new Set([...prev].filter(id => visible.has(id)));
+      return next.size === prev.size ? prev : next;
+    });
+  }, [playerSections, playerProfile]);
+
   // Check system status on mount
   useEffect(() => {
     fetch('/api/status')
@@ -157,7 +173,21 @@ export default function Home() {
     return handleFetchPlaylist(value, { forceReplace: Boolean(playerProfile) });
   };
 
+  const abortSectionLoad = (key) => {
+    sectionLoadsRef.current.get(key)?.controller.abort();
+    sectionLoadsRef.current.delete(key);
+  };
+
+  const abortAllSectionLoads = () => {
+    clearTimeout(bestRefetchTimerRef.current);
+    bestRefetchTimerRef.current = null;
+    for (const { controller } of sectionLoadsRef.current.values()) controller.abort();
+    sectionLoadsRef.current.clear();
+    bestModeRef.current = null;
+  };
+
   const clearPlayerState = () => {
+    abortAllSectionLoads();
     setPlayerProfile(null);
     setPlayerResults([]);
     setPlayerResultsTotal(0);
@@ -221,6 +251,7 @@ export default function Home() {
 
   // Switch the app into player mode for a resolved profile.
   const applyPlayerProfile = (profile) => {
+    abortAllSectionLoads();
     setPlayerProfile(profile);
     setPlayerResults([]);
     setPlayerResultsTotal(0);
@@ -275,44 +306,58 @@ export default function Home() {
     });
   };
 
-  // Loads one section's window, filtered by the active mode/status tabs.
-  const loadSection = async (userId, type, currentMode = mode, currentStatus = statusFilter) => {
+  // Loads one section's window. The server sends it unfiltered and undeduped; the active
+  // mode/status tabs are applied here, when it lands, so a later tab change costs no call.
+  // Only `best` sends a mode, because only its upstream endpoint filters by one.
+  const loadSection = async (userId, type, currentMode = playerFiltersRef.current.mode) => {
+    const key = `${userId}:${type}`;
+    abortSectionLoad(key);
+    const controller = new AbortController();
+    const gen = ++sectionLoadGenRef.current;
+    sectionLoadsRef.current.set(key, { gen, controller });
+    const isCurrent = () => sectionLoadsRef.current.get(key)?.gen === gen;
+    if (type === 'best') bestModeRef.current = currentMode;
+
     setPlayerSections(prev => ({
       ...prev,
       [type]: { ...prev[type], isLoading: true, error: '' },
     }));
 
     try {
-      const params = new URLSearchParams({
-        userId: String(userId),
-        type,
-        mode: currentMode,
-        status: currentStatus,
-      });
-      const res = await fetch(`/api/osu/player/beatmaps?${params.toString()}`);
+      const params = new URLSearchParams({ userId: String(userId), type, mode: currentMode });
+      const res = await fetch(`/api/osu/player/beatmaps?${params.toString()}`, { signal: controller.signal });
       const data = await res.json();
+      if (!isCurrent()) return;
 
       if (!res.ok) throw new Error(data.error || 'Could not load beatmaps');
 
-      const entries = (data.items || []).map(item => beatmapToSong(item, type));
-
+      const entries = data.items || [];
+      const { mode: viewMode, status: viewStatus } = playerFiltersRef.current;
       setPlayerSections(prev => ({
         ...prev,
         [type]: {
           ...prev[type],
-          allItems: entries,
-          total: entries.length,
-          isLoading: false,
+          entries,
+          allItems: visibleItemsFor(type, entries, viewMode, viewStatus),
           loaded: true,
         },
       }));
-      mergeSongs(entries);
+      // The shared list holds every loaded set once; the tabs only decide what is shown.
+      mergeSongs(visibleItemsFor(type, entries, 'all', 'any'));
     } catch (err) {
+      if (!isCurrent() || isAbortError(err)) return;
       console.error(err);
       setPlayerSections(prev => ({
         ...prev,
-        [type]: { ...prev[type], isLoading: false, error: err.message || 'Could not load beatmaps' },
+        [type]: { ...prev[type], error: err.message || 'Could not load beatmaps' },
       }));
+    } finally {
+      // Only the newest load for this key may settle it, so a stale or aborted response can
+      // never leave the section stuck loading, nor clear a newer load's spinner.
+      if (isCurrent()) {
+        sectionLoadsRef.current.delete(key);
+        setPlayerSections(prev => ({ ...prev, [type]: { ...prev[type], isLoading: false } }));
+      }
     }
   };
 
@@ -339,29 +384,39 @@ export default function Home() {
     }
   };
 
-  // Mode/status tabs changed while browsing a player: drop loaded maps and refetch.
+  // Mode/status tabs changed while browsing a player (F-12). Every section is re-filtered
+  // from the window it already holds, with no call. The one exception is a mode change on
+  // `best`, whose upstream window depends on the mode: it refetches, debounced, if open, and
+  // is marked stale for its next open if not. The selection is pruned by the effect above.
   const reloadPlayerSections = (nextMode, nextStatus) => {
     if (!playerProfile) return;
+    playerFiltersRef.current = { mode: nextMode, status: nextStatus };
 
-    setSongs([]);
-    setSelectedIds(new Set());
+    const userId = playerProfile.id;
+    const bestIsStale = bestModeRef.current !== null && bestModeRef.current !== nextMode;
+    const bestIsOpen = playerSections.best.isOpen;
+    if (bestIsStale && !bestIsOpen) {
+      abortSectionLoad(`${userId}:best`);
+      bestModeRef.current = null;
+    }
+
     setPlayerSections(prev => {
       const next = { ...prev };
       Object.keys(next).forEach(type => {
-        next[type] = {
-          ...next[type],
-          allItems: [],
-          total: playerProfile.counts?.[type] || 0,
-          loaded: false,
-          error: '',
-        };
+        next[type] = { ...next[type], allItems: visibleItemsFor(type, next[type].entries, nextMode, nextStatus) };
       });
+      if (bestIsStale && !bestIsOpen) next.best = { ...next.best, loaded: false, isLoading: false };
       return next;
     });
 
-    Object.entries(playerSections).forEach(([type, section]) => {
-      if (section.isOpen) loadSection(playerProfile.id, type, nextMode, nextStatus);
-    });
+    clearTimeout(bestRefetchTimerRef.current);
+    bestRefetchTimerRef.current = null;
+    if (bestIsStale && bestIsOpen) {
+      bestRefetchTimerRef.current = setTimeout(() => {
+        bestRefetchTimerRef.current = null;
+        loadSection(userId, 'best', nextMode);
+      }, BEST_MODE_REFETCH_DEBOUNCE_MS);
+    }
   };
 
   const handleClearPlayer = () => {

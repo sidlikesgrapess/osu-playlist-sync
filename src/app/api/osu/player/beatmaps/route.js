@@ -20,14 +20,15 @@ export async function GET(request) {
       throw new ValidationError(`type must be one of ${VALID_TYPES.join(', ')}`);
     }
     const mode = boundedString((searchParams.get('mode') || 'all').trim(), { name: 'mode', max: 20 });
-    const status = boundedString((searchParams.get('status') || 'any').trim(), { name: 'status', max: 20 });
     const limit = Math.min(100, Math.max(1, Math.floor(Number(searchParams.get('limit')) || 100)));
 
     if (!(await getOsuAccessToken())) return demoResponse({ items: [] });
 
-    const { items, fetched } = await getUserBeatmapCollection(userId, type, { limit, mode, status });
+    // Unfiltered and undeduped (F-12): the page filters by mode and status itself, so only
+    // `best`, whose upstream endpoint takes the ruleset, depends on `mode` here.
+    const { items, fetched, total } = await getUserBeatmapCollection(userId, type, { limit, mode });
 
-    return NextResponse.json({ type, items, fetched });
+    return NextResponse.json({ type, items, fetched, total });
   } catch (error) {
     return toRouteError(error, { notFoundMessage: 'No osu! player found with that id.' });
   }

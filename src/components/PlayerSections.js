@@ -338,6 +338,12 @@ export default function PlayerSections({
         const section = sections[type];
         const Icon = meta.icon;
         const allItems = section.allItems || [];
+        // The profile's own count is the real total. When the loaded window, filtered and
+        // deduped, shows fewer, say so ("88 of 469") instead of passing one off as the other.
+        const total = section.total || 0;
+        const countLabel = section.loaded && allItems.length < total
+          ? `${allItems.length.toLocaleString()} of ${total.toLocaleString()}`
+          : total.toLocaleString();
 
         return (
           <div
@@ -385,7 +391,7 @@ export default function PlayerSections({
                 padding: '2px 7px',
                 borderRadius: '4px',
               }}>
-                {(section.total || 0).toLocaleString()}
+                {countLabel}
               </span>
 
               <span style={{ flex: 1 }} />

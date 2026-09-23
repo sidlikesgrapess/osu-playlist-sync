@@ -5,6 +5,7 @@
 import { strictnessProfile } from './matchStrictness.js';
 import { isRankedStatus, upstreamStatusFor } from './beatmapFormat.js';
 import { UA_PROFILES } from './http.js';
+import { beatmapsetKey } from './collection.js';
 
 let cachedToken = null;
 let tokenExpiresAt = 0;
@@ -187,82 +188,13 @@ function normalizeUserBeatmapEntry(entry, type) {
 }
 
 /**
- * The `best` and `most_played` endpoints return one entry per *difficulty*, so a
- * set the player has several scores or playcounts on comes back several times.
- * Everything downstream — selection, export, download — is keyed by beatmapset,
- * so those rows are indistinguishable duplicates: collapse them into one entry
- * that keeps the strongest score and every difficulty the player touched.
- */
-function dedupeByBeatmapset(entries) {
-  const byId = new Map();
-
-  entries.forEach(entry => {
-    const existing = byId.get(entry.beatmapset.id);
-    byId.set(entry.beatmapset.id, existing ? mergeBeatmapsetEntries(existing, entry) : entry);
-  });
-
-  return [...byId.values()];
-}
-
-function mergeBeatmapsetEntries(a, b) {
-  // The higher-pp score wins the row (rank badge, accuracy, mods); playcounts
-  // are per-difficulty, so they add up to the player's total on the set.
-  const primary = (b.meta?.pp || 0) > (a.meta?.pp || 0) ? b : a;
-  const other = primary === a ? b : a;
-
-  const difficulties = [...(primary.beatmapset.difficulties || [])];
-  const seenDiffs = new Set(difficulties.map(d => d.id));
-  (other.beatmapset.difficulties || []).forEach(d => {
-    if (!seenDiffs.has(d.id)) {
-      seenDiffs.add(d.id);
-      difficulties.push(d);
-    }
-  });
-  difficulties.sort((x, y) => x.difficultyRating - y.difficultyRating);
-
-  const playCount = (a.meta?.playCount || 0) + (b.meta?.playCount || 0);
-
-  return {
-    beatmapset: {
-      ...primary.beatmapset,
-      difficulties,
-      starRange: difficulties.length > 0
-        ? { min: difficulties[0].difficultyRating, max: difficulties[difficulties.length - 1].difficultyRating }
-        : primary.beatmapset.starRange,
-    },
-    meta: {
-      ...primary.meta,
-      ...(playCount > 0 ? { playCount } : {}),
-    },
-  };
-}
-
-/**
- * Applies the UI's mode / status filters to a normalized beatmapset.
- * osu! only supports a mode filter natively on score endpoints, so the
- * collection endpoints are filtered here instead.
- */
-function matchesCollectionFilters(beatmapset, mode, status) {
-  if (status === 'ranked' && !isRankedStatus(beatmapset.status)) {
-    return false;
-  }
-
-  if (mode && mode !== 'all') {
-    const modes = (beatmapset.difficulties || []).map(d => d.mode).filter(Boolean);
-    if (modes.length > 0 && !modes.includes(mode)) return false;
-  }
-
-  return true;
-}
-
-/**
  * Fetch a window of a user's best performances, most played maps, or favourites.
  *
  * Filtering has to happen after the fetch for the collection endpoints, so we
- * pull one larger window per section and let the caller paginate locally —
- * that keeps page counts honest and costs one API call instead of one per page.
+ * pull one larger window per section and let the caller filter and paginate locally.
+ * That keeps page counts honest and costs one API call instead of one per page.
  */
-export async function getUserBeatmapCollection(userId, type, { limit = 100, mode = 'all', status = 'any' } = {}) {
+export async function getUserBeatmapCollection(userId, type, { limit = 100, mode = 'all' } = {}) {
   const token = await getOsuAccessToken();
   if (!token) return { items: [], isDemo: true };
 
@@ -282,13 +214,13 @@ export async function getUserBeatmapCollection(userId, type, { limit = 100, mode
   const data = await osuApiGet(path, token);
   const list = Array.isArray(data) ? data : [];
 
-  const normalized = list.map(entry => normalizeUserBeatmapEntry(entry, type)).filter(Boolean);
-  const filtered = normalized.filter(item => matchesCollectionFilters(item.beatmapset, mode, status));
-  // Dedupe after filtering: the mode filter reads per-difficulty modes, which a
-  // merged entry would blur together.
-  const items = dedupeByBeatmapset(filtered);
+  // Undeduped and unfiltered (F-12): `visibleItemsFor` in collection.js filters then
+  // dedupes on the client, so a mode or status change there costs no call. Deduping here
+  // would merge per-difficulty modes before the mode filter could read them.
+  const items = list.map(entry => normalizeUserBeatmapEntry(entry, type)).filter(Boolean);
+  const total = new Set(items.map(item => beatmapsetKey(item.beatmapset))).size;
 
-  return { items, fetched: normalized.length };
+  return { items, fetched: items.length, total };
 }
 
 /**
@@ -669,6 +601,9 @@ async function verifyLowConfidenceArtist(artist, candidates, token) {
 
 const MAX_QUERY_VARIANTS = 4;
 
+// Sources whose artist is a field the provider handed us, not a guess from a title.
+const STRUCTURED_SOURCES = new Set(['spotify', 'apple', 'osu-player']);
+
 /**
  * Search beatmapsets on osu! API v2 with smart fallbacks, mode filtering, and strict status filtering.
  */
@@ -690,8 +625,9 @@ export async function searchOsuBeatmaps(query, options = {}) {
   // Trust follows where the artist string came from, not the platform (F-28): an artist the
   // cleaner split out of the title ("Re:Re:" gives "Re") is a guess even on an Apple track,
   // so `artistFromTitle` sends it through resolveArtistTrust like any unstructured one.
-  const structuredArtist = (options.source === 'spotify' || options.source === 'apple')
-    && !options.artistFromTitle;
+  // 'osu-player' is structured too: its artist is the mapped set's own metadata (F-32). An
+  // empty artist is never trusted, whatever the source (`targetArtist ?` below).
+  const structuredArtist = STRUCTURED_SOURCES.has(options.source) && !options.artistFromTitle;
   // One slider, three knobs -- see src/lib/matchStrictness.js for why a bare cutoff could
   // not express either end of the range.
   const strict = strictnessProfile(options.strictness);
@@ -765,10 +701,10 @@ export async function searchOsuBeatmaps(query, options = {}) {
     for (const bm of sets) {
       const score = scoreBeatmapMatch(bm, targetTitle, targetArtist, scoreOptions);
       if (score === -Infinity) {
-        if (!gatedOut.some(existing => existing.id === bm.id)) gatedOut.push(bm);
+        if (!gatedOut.some(existing => beatmapsetKey(existing) === beatmapsetKey(bm))) gatedOut.push(bm);
         continue;
       }
-      if (!allFoundSets.some(existing => existing.id === bm.id)) {
+      if (!allFoundSets.some(existing => beatmapsetKey(existing) === beatmapsetKey(bm))) {
         allFoundSets.push({ ...bm, _score: score });
       }
       if (score > bestScore) {
@@ -796,7 +732,7 @@ export async function searchOsuBeatmaps(query, options = {}) {
       if (score === -Infinity) continue;
       rescored.push({ ...bm, _score: score });
     }
-    gatedOut = [...allFoundSets, ...gatedOut].filter(bm => !rescored.some(r => r.id === bm.id));
+    gatedOut = [...allFoundSets, ...gatedOut].filter(bm => !rescored.some(r => beatmapsetKey(r) === beatmapsetKey(bm)));
     allFoundSets = rescored;
     bestScore = allFoundSets.reduce((m, s) => Math.max(m, s._score), -100);
   }

@@ -196,3 +196,24 @@ test('a typed query is cleaned on the server, so its artist reaches the gate (F-
   assert.ok(qs.includes('Ghost'), 'and so does the bare title');
   assert.ok(qs.includes('artist=Camellia'), 'the derived artist is settled by resolveArtistTrust');
 });
+
+test('the beatmaps route returns every entry undeduped with total and fetched, and only best sends mode (F-12)', async () => {
+  const score = (setId, beatmapId, mode) => ({
+    pp: 100, rank: 'A', accuracy: 0.9, mods: [],
+    beatmap: { id: beatmapId, mode, difficulty_rating: 4, version: 'x' },
+    beatmapset: { id: setId, artist: 'A', title: 'T', creator: 'm', status: 'graveyard' },
+  });
+  const calls = withOsu(() => Response.json([score(1, 10, 'osu'), score(1, 11, 'taiko'), score(2, 20, 'osu')]));
+  const req = clientFor();
+  const res = await beatmaps.GET(req('/api/osu/player/beatmaps?userId=5&type=best&mode=taiko&status=ranked'));
+  assert.equal(res.status, 200);
+  const body = await res.json();
+  assert.equal(body.items.length, 3, 'undeduped, and status does not filter on the server');
+  assert.equal(body.fetched, 3);
+  assert.equal(body.total, 2, 'distinct beatmapsets');
+  assert.ok(calls.some(c => c.url.includes('/scores/best?') && c.url.includes('mode=taiko')));
+
+  await beatmaps.GET(req('/api/osu/player/beatmaps?userId=5&type=most_played&mode=taiko'));
+  const mostPlayed = calls.find(c => c.url.includes('/most_played'));
+  assert.doesNotMatch(mostPlayed.url, /mode=/);
+});
