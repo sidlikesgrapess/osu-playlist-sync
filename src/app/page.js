@@ -17,6 +17,7 @@ import { Star } from 'lucide-react';
 import { osuAudio } from '@/lib/soundEffects';
 import { DEFAULT_STRICTNESS } from '@/lib/matchStrictness';
 import { isRankedStatus } from '@/lib/beatmapFormat';
+import { fetchBeatmapArchive, createProxyBudget } from '@/lib/beatmapDownload';
 import JSZip from 'jszip';
 
 const REPO_URL = 'https://github.com/sidlikesgrapess/osu-playlist-sync';
@@ -736,21 +737,20 @@ export default function Home() {
     setToasts(prev => prev.filter(t => t.id !== id));
   };
 
-  // Download a single .osz file. Batch callers pass `silent` so only one toast fires.
-  const handleDownloadSingle = async (song, { silent = false } = {}) => {
+  // Download a single .osz file. Batch callers pass `silent` so only one toast
+  // fires, and a shared `budget` so the whole batch cannot fall back to the proxy.
+  const handleDownloadSingle = async (song, { silent = false, budget = null } = {}) => {
     if (!song.matchedBeatmap) return false;
     const beatmapId = song.matchedBeatmap.id;
 
     setDownloadingIds(prev => new Set(prev).add(song.id));
 
     try {
-      const downloadUrl = `/api/download?beatmapsetId=${beatmapId}`;
-      const response = await fetch(downloadUrl);
-      if (!response.ok) throw new Error('Download failed');
+      const result = await fetchBeatmapArchive(beatmapId, { budget });
+      if (!result) throw new Error('Download failed');
 
-      const blob = await response.blob();
       const filename = `${beatmapId} ${song.matchedBeatmap.artist} - ${song.matchedBeatmap.title}.osz`.replace(/[\\/*?:"<>|]/g, '_');
-      downloadBlob(blob, filename);
+      downloadBlob(result.blob, filename);
       osuAudio.playSuccess();
 
       if (!silent) {
@@ -780,14 +780,21 @@ export default function Home() {
 
     if (targetSongs.length === 0) return;
 
+    const budget = createProxyBudget();
     let completed = 0;
     for (const song of targetSongs) {
-      if (await handleDownloadSingle(song, { silent: true })) completed++;
+      if (await handleDownloadSingle(song, { silent: true, budget })) completed++;
       await new Promise(r => setTimeout(r, 600));
     }
 
     if (completed > 0) {
       pushToast('Download completed', `${completed} beatmap${completed === 1 ? '' : 's'}`);
+    }
+    if (completed < targetSongs.length) {
+      pushToast(
+        'Some beatmaps were skipped',
+        `${targetSongs.length - completed} could not be fetched. The mirrors may be busy, so try again shortly.`,
+      );
     }
   };
 
@@ -800,6 +807,8 @@ export default function Home() {
     setIsDownloadingZip(true);
     setZipProgress(0);
     const zip = new JSZip();
+    const budget = createProxyBudget();
+    let added = 0;
 
     try {
       for (let i = 0; i < targetSongs.length; i++) {
@@ -808,17 +817,26 @@ export default function Home() {
         const filename = `${beatmapId} ${song.matchedBeatmap.artist} - ${song.matchedBeatmap.title}.osz`.replace(/[\\/*?:"<>|]/g, '_');
 
         try {
-          const downloadUrl = `/api/download?beatmapsetId=${beatmapId}`;
-          const res = await fetch(downloadUrl);
-          if (res.ok) {
-            const blob = await res.blob();
-            zip.file(filename, blob);
+          const result = await fetchBeatmapArchive(beatmapId, { budget });
+          if (result) {
+            zip.file(filename, result.blob);
+            added++;
           }
         } catch (e) {
           console.warn(`Could not add ${filename} to zip:`, e);
         }
 
         setZipProgress(Math.round(((i + 1) / targetSongs.length) * 100));
+
+        // The bytes come from volunteer-run mirrors now, so this loop paces itself
+        // the way handleDownloadBatch already did. Without it a large selection
+        // hammers them as fast as the connection allows.
+        if (i < targetSongs.length - 1) await new Promise(r => setTimeout(r, 400));
+      }
+
+      if (added === 0) {
+        pushToast('Nothing to bundle', 'No beatmap could be fetched. The mirrors may be busy, so try again shortly.');
+        return;
       }
 
       const zipContent = await zip.generateAsync({ type: 'blob' });
@@ -829,7 +847,7 @@ export default function Home() {
       downloadBlob(zipContent, `${safeTitle}_beatmaps.zip`);
 
       osuAudio.playSuccess();
-      pushToast('Download completed', `ZIP bundle · ${targetSongs.length} beatmap${targetSongs.length === 1 ? '' : 's'}`);
+      pushToast('Download completed', `ZIP bundle · ${added} beatmap${added === 1 ? '' : 's'}`);
     } catch (err) {
       console.error('ZIP generation failed:', err);
     } finally {
