@@ -39,6 +39,49 @@ export function isRankedStatus(status) {
   return RANKED_AND_LOVED.includes(String(status).toLowerCase());
 }
 
+/**
+ * The rebuild's replacement for `RANKED_AND_LOVED` above (REBUILD_PLAN.md 1.2): the "Ranked
+ * & Loved" label is meant to mean exactly this set on every path (search, collections,
+ * narrowing), with no `qualified` (see the plan's U-8). It is added here, not yet wired in
+ * or used to replace `RANKED_AND_LOVED`/`isRankedStatus` above -- see this workstream's
+ * planProblems: the plan's own binding signature reuses the name `isRankedStatus` for a
+ * function bound to this constant, which cannot coexist with the export of that name four
+ * lines up in the same module, and deleting the existing one is explicitly out of scope for
+ * this step.
+ */
+export const RANKED_LOVED_STATUSES = ['ranked', 'approved', 'loved'];
+
+/** The upstream osu! API search `s=` parameter for a UI status filter value. */
+export function upstreamStatusFor(filter) {
+  return String(filter).toLowerCase() === 'ranked' ? 'leaderboard' : 'any';
+}
+
+/** Whether a beatmapset can be auto-selected, rather than requiring the user to tick it. */
+export function isAutoSelectable(beatmapset) {
+  return !!beatmapset && !beatmapset.artistOverride && !beatmapset.titleOnly;
+}
+
+/**
+ * The notice `MatchNotice.js` renders over a flagged beatmapset, or `null` for an ordinary
+ * one. `song` supplies the target artist for the `artist` case -- the artist the search was
+ * for, never the beatmapset's own artist (see `describeRejection` above for why that
+ * distinction matters).
+ */
+export function overrideNoticeFor(beatmapset, song) {
+  if (!beatmapset) return null;
+
+  if (beatmapset.artistOverride) {
+    const artist = String(song?.extractedArtist || '').trim();
+    return artist ? { kind: 'artist', artist } : { kind: 'closest' };
+  }
+
+  if (beatmapset.titleOnly) {
+    return { kind: 'title' };
+  }
+
+  return null;
+}
+
 const STATUS_BADGE_STYLES = {
   ranked: { bg: '#44bbee', color: '#081a24' },
   loved: { bg: '#ff66aa', color: '#ffffff' },

@@ -7,6 +7,7 @@
     "build": "next build",
     "start": "next start",
     "lint": "next lint",
+    "test": "node --test",
     "bench": "node bench/run.mjs",
     "bench:sweep": "node bench/run.mjs --sweep",
     "bench:cost": "node bench/cost.mjs",
