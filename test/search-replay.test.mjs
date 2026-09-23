@@ -282,3 +282,26 @@ test('F-28: an Apple track with no provider artist is split for recall but never
   assert.notEqual(r.rejection?.kind, 'wrong-artist');
   assert.ok(log.some(e => e.probe), 'the guessed artist went through resolveArtistTrust');
 });
+
+test('F-29: a 150 leader whose artist is only credited in tags does not end a low-trust search', async () => {
+  const set = (id, artist, tags) => ({
+    id, artist, artist_unicode: artist, title: 'Exact Song', title_unicode: 'Exact Song', tags, status: 'ranked', favourite_count: 1000,
+  });
+  const log = [];
+  globalThis.fetch = async (url) => {
+    const u = new URL(String(url));
+    if (u.pathname.endsWith('/oauth/token')) return Response.json({ access_token: 'replay', expires_in: 86400 });
+    const q = u.searchParams.get('q') || '';
+    log.push(q);
+    // The first query leads with a set that only credits the artist in its tags (a WEAK
+    // verdict) yet scores over 150; the artist's own set arrives with the next query.
+    if (log.length === 1) return Response.json({ beatmapsets: [set(1, 'Other Person', 'chan name')] });
+    return Response.json({ beatmapsets: [set(2, 'Chan Name', '')] });
+  };
+  const r = await osu.searchOsuBeatmaps('Chan Name Exact Song', {
+    title: 'Exact Song', artist: 'Chan Name', queries: [], status: 'any', strictness: 50, source: 'youtube',
+  });
+  assert.deepEqual(log, ['Chan Name Exact Song', 'Exact Song'], 'the loop went on past the 150 leader');
+  assert.equal(r.beatmapsets[0].id, 2);
+  assert.equal(r.artistConfidence, 'high', 'settled from the pool, with no probe');
+});

@@ -676,6 +676,7 @@ export async function searchOsuBeatmaps(query, options = {}) {
   // so they are kept aside rather than discarded.
   let gatedOut = [];
   let bestScore = -100;
+  let leader = null; // the candidate holding bestScore
 
   // Every variant goes through osuApiGet, so the server User-Agent is sent and a failure
   // carries `.status` (F-09). A 429 ends the search and is thrown: whatever the earlier
@@ -718,11 +719,16 @@ export async function searchOsuBeatmaps(query, options = {}) {
       }
       if (score > bestScore) {
         bestScore = score;
+        leader = bm;
       }
     }
 
-    // If we found a definitive exact match (score >= 150), stop searching queries
-    if (bestScore >= 150) break;
+    // A definitive exact match (score >= 150) ends the search, but only when its artist is
+    // settled (F-29): the artist is trusted, or the leader's own artist is the target's. A
+    // low-trust artist is only settled after the loop, and an early exit there would starve
+    // that settling of the very candidates it reasons from.
+    if (bestScore >= 150
+      && (artistConfidence === 'high' || artistVerdict(leader, targetArtist, aliases).verdict === 'SAME')) break;
   }
   if (answered === 0 && lastError) throw lastError;
 
