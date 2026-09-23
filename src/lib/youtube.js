@@ -4,6 +4,30 @@
  * playlist URL without requiring any Google Account sign-in or API keys.
  */
 
+import { fetchText, UA_PROFILES } from './http.js';
+
+/**
+ * A provider could not be read: the page or payload was unavailable, private, or its shape
+ * changed. The playlist route turns it into a 502 with `extractionFailed: true`. Its message
+ * is written for the user and never carries an upstream URL.
+ */
+export class ExtractionError extends Error {
+  constructor(message, options) {
+    super(message, options);
+    this.name = 'ExtractionError';
+    this.status = 502;
+  }
+}
+
+// Playlist and video ids are the only caller text that reaches a YouTube URL, so each is
+// held to the id alphabet before it is used.
+const PLAYLIST_ID = /^[A-Za-z0-9_-]{2,64}$/;
+const VIDEO_ID = /^[A-Za-z0-9_-]{11}$/;
+
+// The playlist page embeds the whole first window of items as JSON, so it is big.
+const YOUTUBE_PAGE = { profile: 'browserLike', maxBytes: 5_000_000 };
+const INNERTUBE_TIMEOUT_MS = 8000;
+
 /**
  * Extracts a playlist ID from various YouTube and YouTube Music URL formats.
  * @param {string} urlOrId
@@ -38,13 +62,37 @@ export function extractPlaylistId(urlOrId) {
 }
 
 /**
+ * The video id of a single-video YouTube URL (`watch?v=`, `youtu.be/<id>`, `/shorts/<id>`,
+ * `/embed/<id>`, `/live/<id>`), or null when the URL names no video.
+ * @param {string} url
+ * @returns {string|null}
+ */
+export function extractVideoId(url) {
+  let parsed;
+  try {
+    parsed = new URL(url);
+  } catch {
+    return null;
+  }
+  const segments = parsed.pathname.split('/').filter(Boolean);
+  let candidate = parsed.searchParams.get('v');
+  if (!candidate && parsed.hostname.toLowerCase().replace(/\.$/, '') === 'youtu.be') {
+    candidate = segments[0];
+  }
+  if (!candidate && ['shorts', 'embed', 'live'].includes(segments[0])) {
+    candidate = segments[1];
+  }
+  return candidate && VIDEO_ID.test(candidate) ? candidate : null;
+}
+
+/**
  * Fetches all song titles and metadata from a public/unlisted YouTube playlist.
  * @param {string} playlistId - Extracted YouTube playlist ID
  * @param {number} [maxVideos=100]
  */
 export async function fetchPlaylistItems(playlistId, maxVideos = 100) {
-  if (!playlistId) {
-    throw new Error('Please provide a valid YouTube playlist URL');
+  if (!playlistId || !PLAYLIST_ID.test(playlistId)) {
+    throw new ExtractionError('Please provide a valid YouTube playlist URL');
   }
 
   // Check if sample demo playlist requested
@@ -94,11 +142,16 @@ export async function fetchPlaylistItems(playlistId, maxVideos = 100) {
 async function fetchFromInnertube(playlistId, maxVideos) {
   const browseId = playlistId.startsWith('VL') ? playlistId : `VL${playlistId}`;
 
+  // The one outbound call that cannot go through http.js: Innertube browse is a POST with a
+  // JSON body, and http.js only issues GETs. It still takes its UA from UA_PROFILES and
+  // carries the same timeout; it has no byte cap until http.js can send a body.
   const response = await fetch('https://www.youtube.com/youtubei/v1/browse?prettyPrint=false', {
     method: 'POST',
+    cache: 'no-store',
+    signal: AbortSignal.timeout(INNERTUBE_TIMEOUT_MS),
     headers: {
       'Content-Type': 'application/json',
-      'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36',
+      'User-Agent': UA_PROFILES.browserLike,
       'X-YouTube-Client-Name': '1',
       'X-YouTube-Client-Version': '2.20240101.01.00',
     },
@@ -189,18 +242,8 @@ async function fetchFromInnertube(playlistId, maxVideos) {
  * Direct HTML scraping fallback
  */
 async function fetchFromHtmlScrape(playlistId, maxVideos) {
-  const url = `https://www.youtube.com/playlist?list=${playlistId}`;
-  const res = await fetch(url, {
-    headers: {
-      'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36',
-    },
-  });
-
-  if (!res.ok) {
-    throw new Error(`Scrape returned status ${res.status}`);
-  }
-
-  const html = await res.text();
+  const url = `https://www.youtube.com/playlist?list=${encodeURIComponent(playlistId)}`;
+  const html = await fetchText(url, YOUTUBE_PAGE);
   const match = html.match(/var ytInitialData = ({.*?});<\/script>/s) || html.match(/ytInitialData\s*=\s*({.+?});/s);
 
   if (!match) {

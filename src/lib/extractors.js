@@ -1,15 +1,38 @@
-import { cleanSongTitle } from './titleCleaner';
-import { extractPlaylistId, fetchPlaylistItems } from './youtube';
+import { cleanSongTitle } from './titleCleaner.js';
+import { extractPlaylistId, extractVideoId, fetchPlaylistItems, ExtractionError } from './youtube.js';
+import { classifyInput, buildProviderUrl } from './platform.js';
+import { fetchText, fetchJson } from './http.js';
+import { ValidationError } from './validate.js';
+
+export { ExtractionError };
 
 /**
- * Universal Track and Playlist Extractor for YouTube, Spotify, and Apple Music
+ * Universal Track and Playlist Extractor for YouTube, Spotify, and Apple Music.
+ *
+ * The caller's text only ever picks a provider (`classifyInput`, strictly from the URL's own
+ * host) and supplies an id; every URL fetched here is rebuilt from that id with
+ * `buildProviderUrl`, so no caller string reaches `fetch` (F-02). Every fetch goes through
+ * `http.js`, which puts a timeout, a byte cap and a named UA on it (F-26, X-02, X-07).
  */
+
+// Which UA each scraped provider gets, chosen once here in data (http.js UA_PROFILES).
+// The embed and public pages are scraped and answer differently to an obvious bot; the
+// oEmbed endpoints are documented APIs and get the honest server UA.
+const SPOTIFY_PAGE = { profile: 'browserLike', maxBytes: 5_000_000 };
+const APPLE_PAGE = {
+  profile: 'browserLike',
+  maxBytes: 5_000_000,
+  headers: { 'Accept-Language': 'en-US,en;q=0.9' },
+};
+const OEMBED = { profile: 'server' };
+
+const SPOTIFY_PATH = /^\/(playlist|album|track)\/([A-Za-z0-9]+)\/?$/;
+const APPLE_PATH = /^\/([a-z]{2})\/(playlist|album|song)\/(?:([^/]+)\/)?([A-Za-z0-9.]+)\/?$/;
 
 // Helper to fetch Spotify playlist / album / track metadata without API keys
 async function fetchSpotifyEntity(url) {
-  // Extract entity type and ID
-  const match = url.match(/open\.spotify\.com\/(playlist|album|track)\/([a-zA-Z0-9]+)/);
-  if (!match) throw new Error('Invalid Spotify URL');
+  const match = new URL(url).pathname.match(SPOTIFY_PATH);
+  if (!match) throw new ValidationError('That Spotify link is not a playlist, album or track');
 
   const type = match[1];
   const id = match[2];
@@ -17,34 +40,23 @@ async function fetchSpotifyEntity(url) {
   if (type === 'track') {
     // 1. Single Spotify Track via oEmbed / embed page
     try {
-      const oembedRes = await fetch(`https://open.spotify.com/oembed?url=${encodeURIComponent(url)}`);
-      if (oembedRes.ok) {
-        const data = await oembedRes.json();
-        return {
-          title: data.title || 'Spotify Track',
-          songs: [{
-            title: data.title,
-            channelTitle: data.author_name || '',
-            thumbnail: data.thumbnail_url,
-          }],
-        };
-      }
+      const trackUrl = buildProviderUrl('spotify', `track/${id}`);
+      const data = await fetchJson(`https://open.spotify.com/oembed?url=${encodeURIComponent(trackUrl)}`, OEMBED);
+      return {
+        title: data.title || 'Spotify Track',
+        songs: [{
+          title: data.title,
+          channelTitle: data.author_name || '',
+          thumbnail: data.thumbnail_url,
+        }],
+      };
     } catch (e) {
-      console.warn('[Spotify oEmbed Error]:', e);
+      console.warn('[Spotify oEmbed Error]:', e.message);
     }
   }
 
   // 2. Spotify Playlist / Album via Embed page HTML (contains __NEXT_DATA__ JSON with all tracks)
-  const embedUrl = `https://open.spotify.com/embed/${type}/${id}`;
-  const res = await fetch(embedUrl, {
-    headers: {
-      'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36',
-    },
-  });
-
-  if (!res.ok) throw new Error(`Could not access Spotify ${type}`);
-
-  const html = await res.text();
+  const html = await fetchText(buildProviderUrl('spotify', `embed/${type}/${id}`), SPOTIFY_PAGE);
   const nextDataMatch = html.match(/<script id="__NEXT_DATA__" type="application\/json">([\s\S]*?)<\/script>/);
 
   if (nextDataMatch) {
@@ -63,7 +75,7 @@ async function fetchSpotifyEntity(url) {
 
       return { title, songs };
     } catch (e) {
-      console.warn('[Spotify NEXT_DATA Parse Error]:', e);
+      console.warn('[Spotify NEXT_DATA Parse Error]:', e.message);
     }
   }
 
@@ -73,18 +85,24 @@ async function fetchSpotifyEntity(url) {
   return { title: pageTitle, songs: [] };
 }
 
+/**
+ * The canonical Apple Music URL for a pasted one, rebuilt from its parts. Only the
+ * storefront, the entity kind, the slug segment, the id and the `i` (song within an album)
+ * parameter survive; everything else the caller typed is dropped.
+ */
+function appleProviderUrl(url) {
+  const parsed = new URL(url);
+  const match = parsed.pathname.match(APPLE_PATH);
+  if (!match) throw new ValidationError('That Apple Music link is not a playlist, album or song');
+  const [, storefront, kind, slug, id] = match;
+  const songId = parsed.searchParams.get('i');
+  const query = songId && /^\d+$/.test(songId) ? `?i=${songId}` : '';
+  return buildProviderUrl('apple', `${storefront}/${kind}/${slug ? `${slug}/` : ''}${id}${query}`);
+}
+
 // Helper to fetch Apple Music playlist / album / song metadata
 async function fetchAppleMusicEntity(url) {
-  const res = await fetch(url, {
-    headers: {
-      'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36',
-      'Accept-Language': 'en-US,en;q=0.9',
-    },
-  });
-
-  if (!res.ok) throw new Error('Could not access Apple Music page');
-
-  const html = await res.text();
+  const html = await fetchText(appleProviderUrl(url), APPLE_PAGE);
 
   // 1. Try extracting schema.org LD+JSON
   const scriptRegex = /<script type="application\/ld\+json"[^>]*>([\s\S]*?)<\/script>/gi;
@@ -139,16 +157,13 @@ async function fetchAppleMusicEntity(url) {
     };
   }
 
-  throw new Error('Could not extract tracks from this Apple Music link');
+  throw new ExtractionError('Could not extract tracks from this Apple Music link');
 }
 
 // Helper to fetch single YouTube video via oEmbed
-async function fetchYouTubeSingleVideo(url) {
-  const oembedUrl = `https://www.youtube.com/oembed?url=${encodeURIComponent(url)}&format=json`;
-  const res = await fetch(oembedUrl);
-  if (!res.ok) throw new Error('Could not read YouTube video details');
-
-  const data = await res.json();
+async function fetchYouTubeSingleVideo(videoId) {
+  const videoUrl = buildProviderUrl('youtube', videoId);
+  const data = await fetchJson(`https://www.youtube.com/oembed?url=${encodeURIComponent(videoUrl)}&format=json`, OEMBED);
   return {
     title: data.title || 'YouTube Song',
     songs: [{
@@ -159,77 +174,71 @@ async function fetchYouTubeSingleVideo(url) {
   };
 }
 
+/** Routes one classified input to its provider. */
+async function extractByKind(input) {
+  switch (input.kind) {
+    case 'spotify': {
+      const isSingle = SPOTIFY_PATH.exec(new URL(input.url).pathname)?.[1] === 'track';
+      const data = await fetchSpotifyEntity(input.url);
+      return { title: data.title, platform: 'spotify', songs: data.songs, isSingleTrack: isSingle };
+    }
+    case 'apple': {
+      const parsed = new URL(input.url);
+      const isSingle = parsed.pathname.includes('/song/') || parsed.searchParams.has('i');
+      const data = await fetchAppleMusicEntity(input.url);
+      return { title: data.title, platform: 'apple', songs: data.songs, isSingleTrack: isSingle };
+    }
+    case 'youtube': {
+      const playlistId = extractPlaylistId(input.url);
+      if (playlistId) {
+        const data = await fetchPlaylistItems(playlistId);
+        return {
+          title: data.playlistTitle,
+          platform: 'youtube',
+          songs: data.songs,
+          isSingleTrack: false,
+          isDemo: data.isDemo,
+        };
+      }
+      const videoId = extractVideoId(input.url);
+      if (!videoId) throw new ValidationError('That YouTube link is not a playlist or a video');
+      const data = await fetchYouTubeSingleVideo(videoId);
+      return { title: data.title, platform: 'youtube', songs: data.songs, isSingleTrack: true };
+    }
+    case 'query':
+      // Raw Text Query (e.g. "YOASOBI - Idol")
+      return {
+        title: input.query,
+        platform: 'query',
+        isSingleTrack: true,
+        songs: [{ title: input.query, channelTitle: '' }],
+      };
+    case 'player':
+      throw new ValidationError('osu! profile links open in the player view, not as a playlist');
+    default:
+      throw new ValidationError('That link is not from YouTube, Spotify or Apple Music');
+  }
+}
+
 /**
- * Universal extractor function
+ * Universal extractor function.
+ *
+ * Throws `ValidationError` (400) for input that is not a usable link or query, and
+ * `ExtractionError` for a provider that could not be read. An upstream error (timeout,
+ * non-2xx, over the byte cap) is wrapped rather than echoed, since its message carries the
+ * upstream URL.
  */
 export async function extractMusicData(inputUrlOrQuery) {
   const trimmed = (inputUrlOrQuery || '').trim();
-  if (!trimmed) throw new Error('Please provide a music link or search query');
+  if (!trimmed) throw new ValidationError('Please provide a music link or search query');
 
-  let result = {
-    title: 'Music Search',
-    platform: 'query',
-    songs: [],
-    isSingleTrack: false,
-  };
-
-  // 1. Check if Spotify URL
-  if (trimmed.includes('spotify.com')) {
-    const isSingle = trimmed.includes('/track/');
-    const data = await fetchSpotifyEntity(trimmed);
-    result = {
-      title: data.title,
-      platform: 'spotify',
-      songs: data.songs,
-      isSingleTrack: isSingle,
-    };
-  }
-  // 2. Check if Apple Music URL
-  else if (trimmed.includes('music.apple.com')) {
-    const isSingle = trimmed.includes('/song/') || trimmed.includes('?i=');
-    const data = await fetchAppleMusicEntity(trimmed);
-    result = {
-      title: data.title,
-      platform: 'apple',
-      songs: data.songs,
-      isSingleTrack: isSingle,
-    };
-  }
-  // 3. Check if YouTube Playlist or Single Video
-  else if (trimmed.includes('youtube.com') || trimmed.includes('youtu.be')) {
-    const playlistId = extractPlaylistId(trimmed);
-    if (playlistId) {
-      // It's a YouTube Playlist
-      const data = await fetchPlaylistItems(playlistId);
-      result = {
-        title: data.playlistTitle,
-        platform: 'youtube',
-        songs: data.songs,
-        isSingleTrack: false,
-        isDemo: data.isDemo,
-      };
-    } else {
-      // It's a Single YouTube Video
-      const data = await fetchYouTubeSingleVideo(trimmed);
-      result = {
-        title: data.title,
-        platform: 'youtube',
-        songs: data.songs,
-        isSingleTrack: true,
-      };
-    }
-  }
-  // 4. Raw Text Query (e.g. "YOASOBI - Idol")
-  else {
-    result = {
-      title: trimmed,
-      platform: 'query',
-      isSingleTrack: true,
-      songs: [{
-        title: trimmed,
-        channelTitle: '',
-      }],
-    };
+  let result;
+  try {
+    result = await extractByKind(classifyInput(trimmed));
+  } catch (err) {
+    if (err instanceof ValidationError || err instanceof ExtractionError) throw err;
+    console.warn('[Extractor] upstream failure:', err.message);
+    throw new ExtractionError('Could not read that link right now. Check that it is public and try again.', { cause: err });
   }
 
   // Clean and prepare each track for osu! matching
