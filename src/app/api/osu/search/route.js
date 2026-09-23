@@ -19,6 +19,9 @@ export async function GET(request) {
     const status = searchParams.get('status') || 'ranked';
     // Provenance of the artist string: decides whether a wrong-artist verdict may reject.
     const source = searchParams.get('source') || '';
+    // Set when the song's artist was split out of its title rather than handed over by the
+    // provider, so a Spotify/Apple source alone does not earn it a provider's trust (F-28).
+    const artistFromTitle = searchParams.get('artistFromTitle') === '1';
     const fallbackParam = searchParams.get('fallback');
     const fallbacksParam = searchParams.get('fallbacks');
     // 0-100 Match Strictness. Deliberately NOT accepting the old `minScore` name: that was a
@@ -53,6 +56,7 @@ export async function GET(request) {
       status,
       strictness,
       source,
+      artistFromTitle,
     });
 
     return NextResponse.json({

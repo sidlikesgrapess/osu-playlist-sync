@@ -496,6 +496,7 @@ export default function Home() {
           strictness: String(currentStrictness),
           source: targetSong.source || '',
         });
+        if (targetSong.artistFromTitle) queryParams.set('artistFromTitle', '1');
 
         const extraQueries = [
           ...(targetSong.fallbacks || []),

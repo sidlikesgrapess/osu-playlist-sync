@@ -684,7 +684,12 @@ export async function searchOsuBeatmaps(query, options = {}) {
   // active while we score and can end the query loop early. Anything else is scored
   // provisionally at 'low' -- which never hard-rejects -- and the real verdict is settled
   // after the loop, when the candidates themselves can answer it without an extra call.
-  const structuredArtist = options.source === 'spotify' || options.source === 'apple';
+  //
+  // Trust follows where the artist string came from, not the platform (F-28): an artist the
+  // cleaner split out of the title ("Re:Re:" gives "Re") is a guess even on an Apple track,
+  // so `artistFromTitle` sends it through resolveArtistTrust like any unstructured one.
+  const structuredArtist = (options.source === 'spotify' || options.source === 'apple')
+    && !options.artistFromTitle;
   // One slider, three knobs -- see src/lib/matchStrictness.js for why a bare cutoff could
   // not express either end of the range.
   const strict = strictnessProfile(options.strictness);
