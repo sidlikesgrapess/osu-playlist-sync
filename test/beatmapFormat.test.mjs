@@ -13,6 +13,15 @@ import {
   overrideNoticeFor,
 } from '../src/lib/beatmapFormat.js';
 
+test('isRankedStatus accepts exactly RANKED_LOVED_STATUSES, never qualified (U-8)', () => {
+  for (const status of ['ranked', 'approved', 'loved', 'Ranked', 'LOVED']) {
+    assert.equal(isRankedStatus(status), true, status);
+  }
+  for (const status of ['qualified', 'pending', 'wip', 'graveyard', '', undefined, null]) {
+    assert.equal(isRankedStatus(status), false, String(status));
+  }
+});
+
 test('existing exports are untouched (no behaviour change in this workstream)', () => {
   assert.equal(typeof getStarColor, 'function');
   assert.equal(typeof formatCompactNumber, 'function');

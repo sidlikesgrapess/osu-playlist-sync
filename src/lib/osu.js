@@ -3,7 +3,7 @@
  * Handles OAuth2 Client Credentials grant and querying beatmapsets.
  */
 import { strictnessProfile } from './matchStrictness.js';
-import { isRankedStatus } from './beatmapFormat.js';
+import { isRankedStatus, upstreamStatusFor } from './beatmapFormat.js';
 
 let cachedToken = null;
 let tokenExpiresAt = 0;
@@ -234,15 +234,13 @@ function mergeBeatmapsetEntries(a, b) {
   };
 }
 
-const RANKED_STATUSES = ['ranked', 'loved', 'qualified', 'approved'];
-
 /**
  * Applies the UI's mode / status filters to a normalized beatmapset.
  * osu! only supports a mode filter natively on score endpoints, so the
  * collection endpoints are filtered here instead.
  */
 function matchesCollectionFilters(beatmapset, mode, status) {
-  if (status === 'ranked' && !RANKED_STATUSES.includes(beatmapset.status)) {
+  if (status === 'ranked' && !isRankedStatus(beatmapset.status)) {
     return false;
   }
 
@@ -704,7 +702,8 @@ export async function searchOsuBeatmaps(query, options = {}) {
   const modeMap = { osu: '0', taiko: '1', fruits: '2', mania: '3' };
   const modeParam = options.mode && modeMap[options.mode] ? modeMap[options.mode] : null;
 
-  // Handle status parameter: 'ranked' means ranked/loved/qualified only. 'any' means everything.
+  // 'ranked' is the "Ranked & Loved" filter: RANKED_LOVED_STATUSES (beatmapFormat.js). The
+  // upstream `s=` is only a pool hint; the local isRankedStatus filter below decides.
   const statusFilter = options.status || 'any';
   const isRankedOnly = statusFilter === 'ranked';
 
@@ -716,7 +715,7 @@ export async function searchOsuBeatmaps(query, options = {}) {
   let bestScore = -100;
 
   for (const q of queriesToRun) {
-    const searchPath = `/beatmapsets/search?q=${encodeURIComponent(q)}&sort=relevance_desc${modeParam ? `&m=${modeParam}` : ''}&s=${isRankedOnly ? 'ranked' : 'any'}`;
+    const searchPath = `/beatmapsets/search?q=${encodeURIComponent(q)}&sort=relevance_desc${modeParam ? `&m=${modeParam}` : ''}&s=${upstreamStatusFor(statusFilter)}`;
 
     try {
       const res = await fetch(`${OSU_API_BASE}${searchPath}`, {
