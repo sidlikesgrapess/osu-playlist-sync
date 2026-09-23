@@ -60,3 +60,6 @@ Thumbs.db
 *.swp
 *.swo
 
+
+# Local prompts for the rebuild sessions
+REBUILD_PROMPTS.md
