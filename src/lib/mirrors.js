@@ -6,11 +6,9 @@
  * needs that (it runs in the browser bundle), and the server proxy route can share the
  * same data instead of keeping its own separate list.
  *
- * URL shapes and order are taken as-is from what already ships today: `BROWSER_MIRRORS`
- * matches `src/lib/beatmapDownload.js`'s `CORS_MIRRORS` (catboy.best first, then
- * nerinyan.moe); `PROXY_MIRRORS` matches the two still-live entries of
- * `src/app/api/download/route.js`'s proxy list (`direct.sayobot.cn` is confirmed dead
- * there and is not carried forward; sayobot is proxy-only, on `dl.sayobot.cn`).
+ * `BROWSER_MIRRORS` are fetched straight from the page by `beatmapDownload.js` (catboy.best
+ * first, then nerinyan.moe). `PROXY_MIRRORS` are only reached through `/api/download`, the
+ * last resort when both browser mirrors fail. `direct.sayobot.cn` is dead and not listed.
  *
  * `uaProfile` is `null` on a browser mirror because a page fetch cannot set its own
  * User-Agent header at all -- the browser always sends its own. It is only meaningful on

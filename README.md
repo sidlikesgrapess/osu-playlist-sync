@@ -45,7 +45,7 @@ Point it at a **YouTube / Spotify / Apple Music** playlist, a single song, or an
 ### Downloads
 - Only **ticked** beatmaps download — nothing downloads by accident, with a select-all per page.
 - Single `.osz` download, or bundle everything as a **ZIP** (client-side via JSZip).
-- Multi-mirror failover (`catboy.best`, `nerinyan.moe`, `beatconnect.io`, `sayobot`) with a generated fallback if every mirror is down.
+- Multi-mirror failover (`catboy.best`, `nerinyan.moe`, `beatconnect.io`, `sayobot`). The browser downloads straight from the first two; the server proxy is a last resort and reports an error rather than handing back a fake file.
 - Export as web URLs, `osu://dl/` links, or a plain-text list.
 - A draggable, throwable toast confirms each download — grab it, flick it, and it falls with real inertia instead of just fading out.
 
