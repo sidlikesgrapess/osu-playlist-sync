@@ -42,32 +42,72 @@ export const PROXY_FALLBACK_BUDGET = 5;
 export const createProxyBudget = () => ({ spent: 0 });
 
 /**
+ * How long a request may go without progress before it is abandoned. The wait
+ * is measured from the last sign of life, not from the start, so a large map on
+ * a slow connection is never cut off while bytes are still arriving. Only a
+ * silent connection is. The proxy gets a longer first wait because it walks up
+ * to four mirrors server side, 6s each, before it answers at all.
+ */
+const MIRROR_TIMEOUTS = { firstByteMs: 10_000, stallMs: 15_000 };
+const PROXY_TIMEOUTS = { firstByteMs: 30_000, stallMs: 15_000 };
+
+/**
+ * Fetch a URL into a Blob, aborting if the server stops responding. Returns
+ * null on a non-2xx status. Throws on network errors, CORS refusals and stalls.
+ */
+async function fetchBlob(url, { firstByteMs, stallMs }) {
+  const controller = new AbortController();
+  let timer = setTimeout(() => controller.abort(), firstByteMs);
+  const keepAlive = () => {
+    clearTimeout(timer);
+    timer = setTimeout(() => controller.abort(), stallMs);
+  };
+
+  try {
+    const res = await fetch(url, { signal: controller.signal });
+    if (!res.ok) return null;
+    keepAlive();
+
+    if (!res.body) return await res.blob();
+
+    const reader = res.body.getReader();
+    const chunks = [];
+    for (;;) {
+      const { done, value } = await reader.read();
+      if (done) break;
+      chunks.push(value);
+      keepAlive();
+    }
+    return new Blob(chunks, { type: res.headers.get('content-type') || '' });
+  } finally {
+    clearTimeout(timer);
+  }
+}
+
+/**
  * Fetch one .osz, preferring the mirrors the browser can read directly.
  * Returns { blob, mirror, viaProxy }, or null when nothing served it.
  */
 export async function fetchBeatmapArchive(beatmapsetId, { budget = null } = {}) {
   for (const mirror of CORS_MIRRORS) {
     try {
-      const res = await fetch(mirror.url(beatmapsetId));
-      if (!res.ok) continue;
-
-      const blob = await res.blob();
-      if (blob.size < MIN_ARCHIVE_BYTES) continue;
+      const blob = await fetchBlob(mirror.url(beatmapsetId), MIRROR_TIMEOUTS);
+      if (!blob || blob.size < MIN_ARCHIVE_BYTES) continue;
 
       return { blob, mirror: mirror.name, viaProxy: false };
     } catch {
-      // CORS refusal, network error, or the mirror being down. Try the next one.
+      // CORS refusal, network error, a stall, or the mirror being down. Try the next one.
     }
   }
 
   if (budget && budget.spent >= PROXY_FALLBACK_BUDGET) return null;
 
   try {
-    const res = await fetch(proxyUrl(beatmapsetId));
-    if (!res.ok) return null;
-
-    const blob = await res.blob();
+    // Count the attempt, not the success: a proxy call that stalls halfway has
+    // still pushed bytes through the function.
     if (budget) budget.spent += 1;
+    const blob = await fetchBlob(proxyUrl(beatmapsetId), PROXY_TIMEOUTS);
+    if (!blob) return null;
 
     return { blob, mirror: 'proxy', viaProxy: true };
   } catch {

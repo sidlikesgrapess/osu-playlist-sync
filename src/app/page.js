@@ -759,8 +759,10 @@ export default function Home() {
       return true;
     } catch (err) {
       console.error(`Download failed for mapset ${beatmapId}:`, err);
-      // Fallback: direct browser link
-      window.open(`https://catboy.best/d/${beatmapId}`, '_blank');
+      // Fallback: direct browser link. Only for a single click: in a batch every
+      // failure would open its own tab, and an outage fails most of the batch.
+      // The batch reports its skipped maps in one toast instead.
+      if (!silent) window.open(`https://catboy.best/d/${beatmapId}`, '_blank');
       return false;
     } finally {
       setDownloadingIds(prev => {
