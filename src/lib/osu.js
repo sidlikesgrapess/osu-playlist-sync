@@ -6,6 +6,7 @@ import { strictnessProfile } from './matchStrictness.js';
 import { isRankedStatus, upstreamStatusFor } from './beatmapFormat.js';
 import { UA_PROFILES } from './http.js';
 import { beatmapsetKey } from './collection.js';
+import { normalizeForComparison } from './text.js';
 
 let cachedToken = null;
 let tokenExpiresAt = 0;
@@ -221,21 +222,6 @@ export async function getUserBeatmapCollection(userId, type, { limit = 100, mode
   const total = new Set(items.map(item => beatmapsetKey(item.beatmapset))).size;
 
   return { items, fetched: items.length, total };
-}
-
-/**
- * Normalizes strings for loose comparison (removes punctuation, prefixes like 'the', and extra
- * spaces). Keeps any Unicode letter/number (not just a-z0-9) so CJK and other non-Latin titles
- * survive normalization instead of collapsing to an empty string that spuriously "matches" any
- * other empty string.
- */
-function normalizeForComparison(str = '') {
-  return str
-    .toLowerCase()
-    .replace(/^the\s+/, '')
-    .replace(/[^\p{L}\p{N} ]/gu, ' ')
-    .replace(/\s+/g, ' ')
-    .trim();
 }
 
 function tokenize(str) {
@@ -468,9 +454,31 @@ export function scoreBeatmapMatch(beatmap, targetTitle = '', targetArtist = '', 
   return score;
 }
 
-// Artist probes are memoized for the life of a warm serverless instance: a playlist reuses
-// artists heavily, and only low-confidence artists are probed at all.
-const artistProbeCache = new Map();
+// Artist probes are memoized in a warm serverless instance: a playlist reuses artists
+// heavily, and only low-confidence artists are probed at all. The memo is a small LRU (F-39)
+// so a long-lived instance neither grows without bound nor keeps a stale answer forever. A
+// failed probe (null) is kept only briefly: long enough to spare the rest of a batch the same
+// rate limit, short enough that the next playlist asks again.
+export const ARTIST_PROBE_CACHE = { max: 200, ttlMs: 30 * 60_000, failedTtlMs: 60_000 };
+const artistProbeCache = new Map(); // key -> { value, expiresAt }, oldest first
+
+function probeCacheGet(key) {
+  const hit = artistProbeCache.get(key);
+  if (!hit) return undefined;
+  artistProbeCache.delete(key);
+  if (hit.expiresAt <= Date.now()) return undefined;
+  artistProbeCache.set(key, hit); // most recently used moves to the end
+  return hit.value;
+}
+
+function probeCacheSet(key, value) {
+  const ttl = value === null ? ARTIST_PROBE_CACHE.failedTtlMs : ARTIST_PROBE_CACHE.ttlMs;
+  artistProbeCache.delete(key);
+  artistProbeCache.set(key, { value, expiresAt: Date.now() + ttl });
+  while (artistProbeCache.size > ARTIST_PROBE_CACHE.max) {
+    artistProbeCache.delete(artistProbeCache.keys().next().value);
+  }
+}
 
 /**
  * Read the (romanized, native) spellings of one artist out of a set of beatmapsets.
@@ -516,7 +524,8 @@ export function aliasesFromSets(artist, sets) {
 export async function probeOsuArtist(artist, token) {
   const key = normalizeForComparison(artist);
   if (!key) return null;
-  if (artistProbeCache.has(key)) return artistProbeCache.get(key); // may be null: a cached failure
+  const cached = probeCacheGet(key);
+  if (cached !== undefined) return cached; // may be null: a cached failure
 
   let probe;
   try {
@@ -531,11 +540,11 @@ export async function probeOsuArtist(artist, token) {
     // instead: unknown for scoring purposes, but not re-requested for every remaining track
     // in the batch, which would make a rate limit considerably worse.
     console.warn(`[osu! Probe] Failed for "${artist}":`, e.status || e.message);
-    artistProbeCache.set(key, null);
+    probeCacheSet(key, null);
     return null;
   }
 
-  artistProbeCache.set(key, probe);
+  probeCacheSet(key, probe);
   return probe;
 }
 
@@ -871,6 +880,5 @@ function formatBeatmapset(set) {
     starRange: diffs.length > 0
       ? { min: diffs[0].difficultyRating, max: diffs[diffs.length - 1].difficultyRating }
       : { min: 0, max: 0 },
-    downloadUrl: `/api/download?beatmapsetId=${set.id}`,
   };
 }
