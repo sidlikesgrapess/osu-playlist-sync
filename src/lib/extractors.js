@@ -3,6 +3,7 @@ import { extractPlaylistId, extractVideoId, fetchPlaylistItems, ExtractionError 
 import { classifyInput, buildProviderUrl } from './platform.js';
 import { fetchText, fetchJson } from './http.js';
 import { ValidationError } from './validate.js';
+import { normalizeForComparison } from './text.js';
 
 export { ExtractionError };
 
@@ -100,64 +101,181 @@ function appleProviderUrl(url) {
   return buildProviderUrl('apple', `${storefront}/${kind}/${slug ? `${slug}/` : ''}${id}${query}`);
 }
 
-// Helper to fetch Apple Music playlist / album / song metadata
-async function fetchAppleMusicEntity(url) {
-  const html = await fetchText(appleProviderUrl(url), APPLE_PAGE);
+/**
+ * The attributes of one HTML start tag, as a lowercase-keyed map. Values may be double-quoted,
+ * single-quoted or bare (Apple writes `id=schema:music-playlist` unquoted), and their order
+ * does not matter.
+ */
+function parseAttributes(source) {
+  const attrs = {};
+  const re = /([^\s=/>]+)(?:\s*=\s*(?:"([^"]*)"|'([^']*)'|([^\s"'>]+)))?/g;
+  let m;
+  while ((m = re.exec(source)) !== null) {
+    attrs[m[1].toLowerCase()] = decodeEntities(m[2] ?? m[3] ?? m[4] ?? '');
+  }
+  return attrs;
+}
 
-  // 1. Try extracting schema.org LD+JSON
-  const scriptRegex = /<script type="application\/ld\+json"[^>]*>([\s\S]*?)<\/script>/gi;
-  let match;
-  let schemaData = null;
+function decodeEntities(text) {
+  return text
+    .replace(/&#(\d+);/g, (_, n) => String.fromCodePoint(Number(n)))
+    .replace(/&#x([0-9a-f]+);/gi, (_, n) => String.fromCodePoint(parseInt(n, 16)))
+    .replace(/&quot;/g, '"')
+    .replace(/&#39;|&apos;/g, "'")
+    .replace(/&lt;/g, '<')
+    .replace(/&gt;/g, '>')
+    .replace(/&amp;/g, '&');
+}
 
-  while ((match = scriptRegex.exec(html)) !== null) {
+/**
+ * The bodies of every `<script>` whose attributes include all of `required`, matched by
+ * attribute presence in any order (F-06: the old regex demanded `type` first and matched
+ * nothing on Apple's real pages). The attributes are capture group 1, the body group 2.
+ */
+function scriptBodies(html, required) {
+  const bodies = [];
+  const re = /<script\b([^>]*)>([\s\S]*?)<\/script>/gi;
+  let m;
+  while ((m = re.exec(html)) !== null) {
+    const attrs = parseAttributes(m[1]);
+    if (Object.entries(required).every(([k, v]) => attrs[k] === v)) bodies.push(m[2]);
+  }
+  return bodies;
+}
+
+function parseJsonBlocks(bodies) {
+  const out = [];
+  for (const body of bodies) {
     try {
-      const data = JSON.parse(match[1]);
-      if (data['@type'] === 'MusicPlaylist' || data['@type'] === 'MusicAlbum' || data.track) {
-        schemaData = data;
-        break;
+      out.push(JSON.parse(body));
+    } catch {
+      // a block that is not JSON is ignored, like any other markup
+    }
+  }
+  return out;
+}
+
+/** The content of `<meta property="og:title">`, attributes in any order, or ''. */
+function ogTitle(html) {
+  const re = /<meta\b([^>]*)>/gi;
+  let m;
+  while ((m = re.exec(html)) !== null) {
+    const attrs = parseAttributes(m[1]);
+    if (attrs.property === 'og:title') return attrs.content || '';
+  }
+  return '';
+}
+
+const hasType = (node, types) => {
+  const t = node?.['@type'];
+  return (Array.isArray(t) ? t : [t]).some((x) => types.includes(x));
+};
+
+/** A schema.org `byArtist`, which Apple writes as one object or a list, as "A, B". */
+function artistNames(byArtist) {
+  const list = Array.isArray(byArtist) ? byArtist : byArtist ? [byArtist] : [];
+  return list.map((a) => (typeof a?.name === 'string' ? a.name.trim() : '')).filter(Boolean).join(', ');
+}
+
+/**
+ * Every track row in Apple's hydration payload (`serialized-server-data`), from every
+ * `trackLockup` section in page order, as `{ title, artist }`. The payload is an enrichment:
+ * if it is missing, is not JSON or has changed shape, this returns [] and never throws.
+ */
+export function appleTrackLockups(html) {
+  const rows = [];
+  for (const payload of parseJsonBlocks(scriptBodies(html, { id: 'serialized-server-data' }))) {
+    const entries = Array.isArray(payload?.data) ? payload.data : [];
+    for (const entry of entries) {
+      const sections = Array.isArray(entry?.data?.sections) ? entry.data.sections : [];
+      for (const section of sections) {
+        if (section?.itemKind !== 'trackLockup' || !Array.isArray(section.items)) continue;
+        for (const item of section.items) {
+          if (typeof item?.title !== 'string') continue;
+          const links = Array.isArray(item.subtitleLinks) ? item.subtitleLinks : [];
+          const artist = links
+            .map((l) => (typeof l?.title === 'string' ? l.title.trim() : ''))
+            .filter(Boolean)
+            .join(', ');
+          rows.push({ title: item.title, artist });
+        }
       }
-    } catch (e) {
-      // ignore
     }
   }
+  return rows;
+}
 
-  if (schemaData) {
-    const playlistTitle = schemaData.name || 'Apple Music Collection';
-    const rawTracks = schemaData.track || [];
-    const songs = rawTracks.map(t => ({
-      title: t.name,
-      channelTitle: t.byArtist?.name || schemaData.byArtist?.name || '',
-    }));
-
-    if (songs.length > 0) {
-      return { title: playlistTitle, songs };
+/**
+ * Pairs each ld+json track title with a payload row, in order, on `normalizeForComparison`.
+ * A payload row that matches nothing is walked past, so one extra or missing row costs one
+ * artist, never every artist after it. A track with no title match gets '' and is never
+ * guessed. Returns one artist string per track.
+ */
+export function joinAppleArtists(trackTitles, lockups) {
+  let next = 0;
+  return trackTitles.map((title) => {
+    const key = normalizeForComparison(title || '');
+    if (!key) return '';
+    for (let j = next; j < lockups.length; j++) {
+      if (normalizeForComparison(lockups[j].title) === key) {
+        next = j + 1;
+        return lockups[j].artist;
+      }
     }
+    return '';
+  });
+}
+
+const APPLE_SINGLE_TYPES = ['MusicRecording', 'MusicComposition'];
+const APPLE_COLLECTION_TYPES = ['MusicPlaylist', 'MusicAlbum'];
+const OG_SUFFIX = ' on Apple Music';
+
+/**
+ * The songs on one Apple Music page. Throws `ExtractionError` when the page holds no usable
+ * ld+json for what the link names; a collection with no tracks never becomes a single song
+ * standing in for it (D-14).
+ */
+export function parseAppleHtml(html, { isSingle }) {
+  const blocks = parseJsonBlocks(scriptBodies(html, { type: 'application/ld+json' }));
+
+  if (isSingle) {
+    const song = blocks.find((b) => hasType(b, APPLE_SINGLE_TYPES) && typeof b.name === 'string' && b.name.trim());
+    if (!song) throw new ExtractionError('Could not read that Apple Music song. Check that the link is public.');
+    const name = song.name.replace(/\s+/g, ' ').trim();
+    // The artist is read from og:title only in its exact form, anchored on the known title,
+    // so "<name> by <artist> on Apple Music" can never be split in the wrong place. Apple
+    // writes a no-break space in "Apple Music", so whitespace is compared as one space.
+    const og = ogTitle(html).replace(/\s+/g, ' ').trim();
+    const prefix = `${name} by `;
+    const artist = og.startsWith(prefix) && og.endsWith(OG_SUFFIX)
+      ? og.slice(prefix.length, og.length - OG_SUFFIX.length).trim()
+      : '';
+    return { title: artist ? `${name} by ${artist}` : name, songs: [{ title: name, channelTitle: artist }] };
   }
 
-  // 2. Single Song check via OpenGraph
-  const ogTitleMatch = html.match(/<meta property="og:title" content="([^"]+)"/i);
-  if (ogTitleMatch) {
-    let cleanOg = ogTitleMatch[1].replace(/ on Apple\s*Music/i, '');
-    let artist = '';
-    let songTitle = cleanOg;
-
-    // Usually "Song Name by Artist Name"
-    const byMatch = cleanOg.match(/^(.+?)\s+by\s+(.+)$/i);
-    if (byMatch) {
-      songTitle = byMatch[1];
-      artist = byMatch[2];
-    }
-
-    return {
-      title: cleanOg,
-      songs: [{
-        title: songTitle,
-        channelTitle: artist,
-      }],
-    };
+  const collection = blocks.find((b) => hasType(b, APPLE_COLLECTION_TYPES) || Array.isArray(b?.track));
+  const tracks = (Array.isArray(collection?.track) ? collection.track : [])
+    .filter((t) => typeof t?.name === 'string' && t.name.trim());
+  if (tracks.length === 0) {
+    throw new ExtractionError('Could not read the tracks of that Apple Music link. Check that it is public.');
   }
 
-  throw new ExtractionError('Could not extract tracks from this Apple Music link');
+  const titles = tracks.map((t) => t.name.trim());
+  const joined = joinAppleArtists(titles, appleTrackLockups(html));
+  // An album's own artist is a provider field too; it fills any track the payload left bare.
+  const albumArtist = artistNames(collection.byArtist);
+  const songs = titles.map((title, i) => ({
+    title,
+    channelTitle: joined[i] || artistNames(tracks[i].byArtist) || albumArtist,
+  }));
+  const name = typeof collection.name === 'string' ? collection.name.trim() : '';
+  return { title: name || 'Apple Music Collection', songs };
+}
+
+// Helper to fetch Apple Music playlist / album / song metadata
+async function fetchAppleMusicEntity(url, isSingle) {
+  const html = await fetchText(appleProviderUrl(url), APPLE_PAGE);
+  return parseAppleHtml(html, { isSingle });
 }
 
 // Helper to fetch single YouTube video via oEmbed
@@ -185,7 +303,7 @@ async function extractByKind(input) {
     case 'apple': {
       const parsed = new URL(input.url);
       const isSingle = parsed.pathname.includes('/song/') || parsed.searchParams.has('i');
-      const data = await fetchAppleMusicEntity(input.url);
+      const data = await fetchAppleMusicEntity(input.url, isSingle);
       return { title: data.title, platform: 'apple', songs: data.songs, isSingleTrack: isSingle };
     }
     case 'youtube': {
