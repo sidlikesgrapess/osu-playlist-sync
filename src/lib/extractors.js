@@ -27,7 +27,10 @@ const APPLE_PAGE = {
 };
 const OEMBED = { profile: 'server' };
 
-const SPOTIFY_PATH = /^\/(playlist|album|track)\/([A-Za-z0-9]+)\/?$/;
+// Sources whose tracks carry the provider's own artist field.
+const STRUCTURED_PLATFORMS = new Set(['spotify', 'apple']);
+
+const SPOTIFY_PATH =/^\/(playlist|album|track)\/([A-Za-z0-9]+)\/?$/;
 const APPLE_PATH = /^\/([a-z]{2})\/(playlist|album|song)\/(?:([^/]+)\/)?([A-Za-z0-9.]+)\/?$/;
 
 // Helper to fetch Spotify playlist / album / track metadata without API keys
@@ -366,8 +369,14 @@ export async function extractMusicData(inputUrlOrQuery) {
   }
 
   // Clean and prepare each track for osu! matching
+  const structured = STRUCTURED_PLATFORMS.has(result.platform);
   const processedSongs = (result.songs || []).map((song, index) => {
-    const cleaned = cleanSongTitle(song.title, song.channelTitle);
+    // Spotify and Apple hand over a real artist field; the cleaner must not split another
+    // artist out of the title when one is there. YouTube and a typed query have none.
+    const cleaned = cleanSongTitle(song.title, song.channelTitle, {
+      source: result.platform,
+      ...(structured ? { providerArtist: song.channelTitle || '' } : {}),
+    });
     return {
       ...song,
       id: song.id || `track_${index}_${Date.now()}`,
@@ -378,6 +387,9 @@ export async function extractMusicData(inputUrlOrQuery) {
       source: result.platform,
       cleanQuery: cleaned.cleanQuery,
       extractedArtist: cleaned.artist,
+      // True when that artist was split out of the title text rather than handed over by
+      // the provider, so the matcher must not give it a provider's trust.
+      artistFromTitle: cleaned.artistFromTitle,
       extractedTitle: cleaned.title,
       fallbacks: cleaned.fallbacks,
       queries: cleaned.queries,

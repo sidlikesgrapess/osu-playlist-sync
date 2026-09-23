@@ -104,13 +104,12 @@
         "source": "spotify"
       },
       "output": {
-        "title": "Re",
-        "artist": "Re",
-        "cleanQuery": "Re Re",
+        "title": "Re:Re",
+        "artist": "ASIAN KUNG-FU GENERATION",
+        "cleanQuery": "ASIAN KUNG-FU GENERATION Re:Re",
         "queries": [
-          "Re Re",
-          "Re",
-          "ASIAN KUNG-FU GENERATION Re"
+          "ASIAN KUNG-FU GENERATION Re:Re",
+          "Re:Re"
         ]
       }
     },
