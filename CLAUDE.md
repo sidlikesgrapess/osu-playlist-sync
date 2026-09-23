@@ -35,7 +35,8 @@ is restarted. Stop dev first.
 ## Environment
 
 `OSU_CLIENT_ID` / `OSU_CLIENT_SECRET` (osu! OAuth, **Client Credentials** grant) in
-`.env.local`. `DEFAULT_MIRROR` is optional.
+`.env.local`. There is no mirror setting: the download mirror order is set only in
+`src/lib/mirrors.js` (an old `DEFAULT_MIRROR` in `.env.local` is simply ignored).
 
 Without credentials the app degrades rather than crashes: `getOsuAccessToken` returns
 `null` and callers return `{ isDemo: true }` with empty results. When touching osu!
