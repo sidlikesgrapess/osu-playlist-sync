@@ -23,6 +23,15 @@ export function createPreviewStore({ play, stop: stopPlayback } = {}) {
   const registrations = new Map(); // previewKey -> Set(instanceId)
   const listeners = new Set();
 
+  // `useSyncExternalStore` calls `getSnapshot()` on every render (not just after a `notify`)
+  // to check whether the store changed, comparing by reference. A fresh `{ activeKey,
+  // loadingKey }` literal on every call would never compare equal to itself, so React would
+  // conclude the store changes on every render and re-render forever ("Maximum update depth
+  // exceeded"). The snapshot is cached here and only replaced when `activeKey`/`loadingKey`
+  // actually change (below, alongside the `notify()` calls that mean they did).
+  let snapshot = { activeKey, loadingKey };
+  const refreshSnapshot = () => { snapshot = { activeKey, loadingKey }; };
+
   const notify = () => listeners.forEach((listener) => listener());
 
   function stop() {
@@ -30,6 +39,7 @@ export function createPreviewStore({ play, stop: stopPlayback } = {}) {
     activeKey = null;
     loadingKey = null;
     token += 1; // invalidates any in-flight attempt, so its eventual settle is a no-op
+    refreshSnapshot();
     if (wasPlaying) stopPlayback?.();
     notify();
   }
@@ -54,6 +64,7 @@ export function createPreviewStore({ play, stop: stopPlayback } = {}) {
     const myToken = token;
     loadingKey = previewKey;
     activeKey = null;
+    refreshSnapshot();
     notify();
 
     const attempt = typeof play === 'function'
@@ -65,12 +76,14 @@ export function createPreviewStore({ play, stop: stopPlayback } = {}) {
         if (myToken !== token) return; // superseded; this attempt's success no longer matters
         loadingKey = null;
         activeKey = previewKey;
+        refreshSnapshot();
         notify();
       },
       (err) => {
         if (myToken !== token) return; // stale rejection, ignored regardless of its name
         loadingKey = null;
         activeKey = null;
+        refreshSnapshot();
         notify();
         throw err;
       }
@@ -101,7 +114,7 @@ export function createPreviewStore({ play, stop: stopPlayback } = {}) {
   }
 
   function getSnapshot() {
-    return { activeKey, loadingKey };
+    return snapshot;
   }
 
   function registrationCount(previewKey) {
