@@ -10,10 +10,10 @@ const headersFor = async () => {
   return Object.fromEntries(all.headers.map((h) => [h.key, h.value]));
 };
 
-test('the CSP is Report-Only and restricts only the directives it names', async () => {
+test('the CSP is enforcing and restricts only the directives it names', async () => {
   const h = await headersFor();
-  assert.equal(h['Content-Security-Policy'], undefined);
-  const csp = h['Content-Security-Policy-Report-Only'];
+  assert.equal(h['Content-Security-Policy-Report-Only'], undefined);
+  const csp = h['Content-Security-Policy'];
   const directives = Object.fromEntries(csp.split('; ').map((d) => {
     const [name, ...sources] = d.split(' ');
     return [name, sources];

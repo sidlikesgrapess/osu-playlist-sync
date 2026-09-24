@@ -40,12 +40,15 @@ export const PROXY_MIRRORS = [
  * `connect-src` only -- a proxy mirror is fetched from the server, which no CSP governs,
  * so `PROXY_MIRRORS` hosts do not belong here.
  *
- * `api.nerinyan.moe` is known (per the rebuild plan) to redirect to an S3 bucket for the
- * actual file, but no exact bucket hostname is established anywhere in the current code or
- * plan text, and this workstream makes no live request to find out. Guessing it would be
- * worse than leaving it out, so it is omitted; see this workstream's report notes.
+ * `api.nerinyan.moe` redirects twice before the file: measured live during client-ui's CSP
+ * check (set 41823, 2026-09-24, Report-Only) as
+ *   api.nerinyan.moe -> 302 -> dl.nerinyan.moe -> 302 -> s3.us-west-2.idrivee2.com (signed
+ *   GetObject URL, path/query vary per request, host does not).
+ * A browser `fetch` re-checks `connect-src` at each redirect hop, so all three hosts must be
+ * listed or an enforcing CSP breaks the nerinyan fallback outright. catboy.best has no
+ * redirect and needed nothing added.
  */
-export const MIRROR_HOSTS = ['catboy.best', 'api.nerinyan.moe'];
+export const MIRROR_HOSTS = ['catboy.best', 'api.nerinyan.moe', 'dl.nerinyan.moe', 's3.us-west-2.idrivee2.com'];
 
 /** The public osu! beatmapset page for a set, used as the last-resort fallback link. */
 export const beatmapsetPage = (id) => `https://osu.ppy.sh/beatmapsets/${id}`;
