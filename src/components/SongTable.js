@@ -1,12 +1,15 @@
 'use client';
 
-import { useState, useRef, useEffect } from 'react';
+import { useState } from 'react';
 import SongRow from './SongRow';
 import SongCardMobile from './SongCardMobile';
 import OsuCheckbox from './OsuCheckbox';
+import BeatmapCover from './BeatmapCover';
 import { X, Check, Search, ChevronLeft, ChevronRight, Heart, Play } from 'lucide-react';
 import { osuAudio } from '@/lib/soundEffects';
 import { getStarColor, formatCompactNumber, getStatusBadgeStyle } from '@/lib/beatmapFormat';
+import { useAudioPreview } from '@/lib/useAudioPreview';
+import { useStableCallback } from '@/lib/useStableCallback';
 
 export default function SongTable({
   songs,
@@ -26,40 +29,23 @@ export default function SongTable({
   onSelectAlternativeMatch,
   onManualSearch,
 }) {
-  const [activeAudio, setActiveAudio] = useState(null);
+  // Single play-state owner (F-21/F-36, item 2): `toggle` is stable across renders (it comes
+  // from a useCallback inside useAudioPreview), which is what lets SongRow/SongCardMobile stay
+  // memoized while still reacting to play state through the isPlaying/isPreviewLoading props.
+  const { isPlaying, isLoading: isPreviewLoading, toggle } = useAudioPreview();
   const [altPickerSong, setAltPickerSong] = useState(null);
   const [filterText, setFilterText] = useState('');
-  const audioRef = useRef(null);
 
-  // Handle audio play/pause
-  const handleToggleAudio = (songId, previewUrl) => {
-    if (activeAudio === songId) {
-      if (audioRef.current) {
-        audioRef.current.pause();
-      }
-      setActiveAudio(null);
-    } else {
-      if (audioRef.current) {
-        audioRef.current.pause();
-      }
-      audioRef.current = new Audio(previewUrl);
-      audioRef.current.volume = 0.5;
-      audioRef.current.play().catch(e => {
-        console.warn('Audio play prevented or unavailable:', e);
-        setActiveAudio(null);
-      });
-      audioRef.current.onended = () => setActiveAudio(null);
-      setActiveAudio(songId);
-    }
-  };
-
-  useEffect(() => {
-    return () => {
-      if (audioRef.current) {
-        audioRef.current.pause();
-      }
-    };
-  }, []);
+  // These identities matter because SongRow/SongCardMobile are React.memo'd (F-19): without
+  // useStableCallback here, a fresh function every SongTable render would defeat that memo on
+  // every row. `onSelectAlternativeMatch`/`handleClearList` and the other props used only by
+  // this component's own (unmemoized) JSX -- the toolbar, pagination bar and the alt-picker
+  // modal below -- don't need this: SongTable itself re-renders freely, so a new closure there
+  // costs nothing.
+  const stableToggleSelect = useStableCallback(onToggleSelect);
+  const stableDownloadSingle = useStableCallback(onDownloadSingle);
+  const stableManualSearch = useStableCallback(onManualSearch);
+  const stableOpenAltPicker = useStableCallback((s) => setAltPickerSong(s));
 
   const matchedSongs = songs.filter(s => s.matchedBeatmap);
   const allSelected = matchedSongs.length > 0 && matchedSongs.every(s => selectedIds.has(s.id));
@@ -221,13 +207,14 @@ export default function SongTable({
                   key={song.id || song.index || song.position}
                   song={song}
                   isSelected={selectedIds.has(song.id)}
-                  onToggleSelect={onToggleSelect}
-                  activeAudio={activeAudio}
-                  onToggleAudio={handleToggleAudio}
-                  onDownloadSingle={onDownloadSingle}
+                  onToggleSelect={stableToggleSelect}
+                  isPlaying={isPlaying(song.matchedBeatmap?.previewUrl)}
+                  isPreviewLoading={isPreviewLoading(song.matchedBeatmap?.previewUrl)}
+                  onTogglePreview={toggle}
+                  onDownloadSingle={stableDownloadSingle}
                   isDownloading={downloadingIds.has(song.id)}
-                  onOpenAltPicker={(s) => setAltPickerSong(s)}
-                  onManualSearch={onManualSearch}
+                  onOpenAltPicker={stableOpenAltPicker}
+                  onManualSearch={stableManualSearch}
                 />
               ))}
             </tbody>
@@ -242,13 +229,14 @@ export default function SongTable({
             key={`mobile-${song.id || song.index || song.position}`}
             song={song}
             isSelected={selectedIds.has(song.id)}
-            onToggleSelect={onToggleSelect}
-            activeAudio={activeAudio}
-            onToggleAudio={handleToggleAudio}
-            onDownloadSingle={onDownloadSingle}
+            onToggleSelect={stableToggleSelect}
+            isPlaying={isPlaying(song.matchedBeatmap?.previewUrl)}
+            isPreviewLoading={isPreviewLoading(song.matchedBeatmap?.previewUrl)}
+            onTogglePreview={toggle}
+            onDownloadSingle={stableDownloadSingle}
             isDownloading={downloadingIds.has(song.id)}
-            onOpenAltPicker={(s) => setAltPickerSong(s)}
-            onManualSearch={onManualSearch}
+            onOpenAltPicker={stableOpenAltPicker}
+            onManualSearch={stableManualSearch}
           />
         ))}
       </div>
@@ -490,7 +478,8 @@ export default function SongTable({
                 const playCount = match.playCount ?? match.play_count ?? 0;
                 const favouriteCount = match.favouriteCount ?? match.favourite_count ?? 0;
                 const statusStyle = getStatusBadgeStyle(match.status || '');
-                const isPreviewPlaying = activeAudio === `alt-${match.id}`;
+                const isPreviewPlaying = isPlaying(match.previewUrl);
+                const isPreviewBusy = isPreviewLoading(match.previewUrl);
 
                 return (
                   <div
@@ -514,54 +503,32 @@ export default function SongTable({
                       containIntrinsicSize: '0 62px',
                     }}
                   >
-                    {/* Beatmap Cover with Play Preview Overlay */}
-                    <div style={{
-                      position: 'relative',
-                      width: '64px',
-                      height: '42px',
-                      borderRadius: '5px',
-                      flexShrink: 0,
-                      overflow: 'hidden',
-                      background: '#343040',
-                    }}>
-                      <img
-                        src={match.covers?.list || match.covers?.cover || `https://assets.ppy.sh/beatmaps/${match.id}/covers/list.jpg`}
-                        alt={match.title}
-                        style={{ width: '100%', height: '100%', objectFit: 'cover' }}
-                      />
-                      {match.previewUrl && (
-                        <button
-                          type="button"
-                          onClick={(e) => {
-                            e.stopPropagation();
-                            osuAudio.playClick();
-                            handleToggleAudio(`alt-${match.id}`, match.previewUrl);
-                          }}
-                          title={isPreviewPlaying ? 'Pause audio preview' : 'Play audio preview'}
-                          style={{
-                            position: 'absolute',
-                            inset: 0,
-                            background: isPreviewPlaying ? 'rgba(16, 14, 22, 0.75)' : 'rgba(0, 0, 0, 0.35)',
-                            border: 'none',
-                            display: 'flex',
-                            alignItems: 'center',
-                            justifyContent: 'center',
-                            cursor: 'pointer',
-                            transition: 'background 0.2s ease',
-                          }}
-                        >
-                          {isPreviewPlaying ? (
-                            <div style={{ display: 'flex', alignItems: 'center', gap: '2px' }}>
-                              <div className="osu-wave-bar" style={{ width: '2.5px' }} />
-                              <div className="osu-wave-bar" style={{ width: '2.5px' }} />
-                              <div className="osu-wave-bar" style={{ width: '2.5px' }} />
-                            </div>
-                          ) : (
-                            <Play size={13} color="#ffffff" style={{ fill: '#ffffff' }} />
-                          )}
-                        </button>
-                      )}
-                    </div>
+                    {/* Beatmap Cover with Play Preview Overlay. Routed through BeatmapCover (not
+                        the raw img+button the row components used to inline) so this modal's
+                        instance registers with the mount registry too -- otherwise closing the
+                        picker on a still-playing alternative (one that is not the row's own
+                        selected match, so no other cover holds a registration for its
+                        previewUrl) would never trigger the stop rule (item 1: "picker close"). */}
+                    <BeatmapCover
+                      key={match.covers?.list || match.id}
+                      coverUrl={match.covers?.list || match.covers?.cover}
+                      fallbackId={match.id}
+                      alt={match.title}
+                      width={64}
+                      height={42}
+                      fallbackIconSize={16}
+                      playIconSize={13}
+                      playIconFill
+                      waveBarCount={3}
+                      waveBarWidth={2.5}
+                      previewUrl={match.previewUrl}
+                      isPlaying={isPreviewPlaying}
+                      isPreviewLoading={isPreviewBusy}
+                      onTogglePreview={() => {
+                        osuAudio.playClick();
+                        return toggle(match.previewUrl);
+                      }}
+                    />
 
                     {/* Beatmap Details */}
                     <div style={{ flex: 1, minWidth: 0, display: 'flex', flexDirection: 'column', gap: '3px' }}>
