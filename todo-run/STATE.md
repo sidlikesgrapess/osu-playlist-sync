@@ -8,7 +8,7 @@ Status values: pending | needs-decision | scoping | implementing | verifying | f
 | id | item | status | round | commit | notes | decision |
 |---|---|---|---|---|---|---|
 | 01 | Breakcore playlist 11 to 7 | done | 1 | ea53948 | items/01-breakcore.md | |
-| 02 | Select exact matches button | pending | 0 | | items/02-select-exact.md | |
+| 02 | Select exact matches button | done | 1 | e1b13ba | items/02-select-exact.md | |
 | 03 | Song preview loading/error | pending | 0 | | items/03-preview-states.md | |
 | 04 | Memory leak check | pending | 0 | | items/04-memory.md | |
 | 05 | Hover bounce, toggleable | pending | 0 | | items/05-bounce.md | |
