@@ -1,0 +1,309 @@
+
+> osu-playlist-sync@1.0.0 test
+> node --test
+
+(node:11104) [MODULE_TYPELESS_PACKAGE_JSON] Warning: Module type of file:///C:/Users/Siddartha/Desktop/study(fr)/Antigravity/osuplaylist-ws/next15/src/lib/extractors.js is not specified and it doesn't parse as CommonJS.
+Reparsing as ES module because module syntax was detected. This incurs a performance overhead.
+To eliminate this warning, add "type": "module" to \\?\C:\Users\Siddartha\Desktop\study(fr)\Antigravity\osuplaylist-ws\next15\package.json.
+(Use `node --trace-warnings ...` to show where the warning was created)
+✔ F-45: the extractor makes no id of its own for a row without a provider id (9.2747ms)
+✔ F-27: appending the same extraction twice adds nothing and reports every row as skipped (14.7897ms)
+✔ a batch that lists one provider id twice keeps one row, so React keys stay unique (5.0947ms)
+(node:24284) [MODULE_TYPELESS_PACKAGE_JSON] Warning: Module type of file:///C:/Users/Siddartha/Desktop/study(fr)/Antigravity/osuplaylist-ws/next15/src/lib/extractors.js is not specified and it doesn't parse as CommonJS.
+Reparsing as ES module because module syntax was detected. This incurs a performance overhead.
+To eliminate this warning, add "type": "module" to \\?\C:\Users\Siddartha\Desktop\study(fr)\Antigravity\osuplaylist-ws\next15\package.json.
+(Use `node --trace-warnings ...` to show where the warning was created)
+✔ a real playlist page: ld+json is the track list, the payload supplies the artists (8.6989ms)
+✔ the join pairs in order on the normalized title and skips rows that match nothing (0.5602ms)
+✔ payload rows come from every trackLockup section, in page order (0.639ms)
+✔ a missing or reshaped payload leaves every artist empty and never fails the playlist (1.1567ms)
+✔ script tags are found by attribute presence, in any order and quoting (0.8656ms)
+✔ an album with no payload row for a track falls back to the album byArtist (1.1728ms)
+✔ a collection with no tracks throws; it never becomes a single song standing in for it (1.3677ms)
+✔ a single song: ld+json name is the title, og:title gives the artist in its exact form (1.003ms)
+✔ a single whose og:title does not read "<name> by <artist> on Apple Music" gets no artist (4.2833ms)
+✔ a title containing " by " is anchored on the ld+json name, never split on the first " by " (0.5846ms)
+✔ a single with no song ld+json throws (0.3189ms)
+(node:18924) [MODULE_TYPELESS_PACKAGE_JSON] Warning: Module type of file:///C:/Users/Siddartha/Desktop/study(fr)/Antigravity/osuplaylist-ws/next15/src/lib/archive.js is not specified and it doesn't parse as CommonJS.
+Reparsing as ES module because module syntax was detected. This incurs a performance overhead.
+To eliminate this warning, add "type": "module" to \\?\C:\Users\Siddartha\Desktop\study(fr)\Antigravity\osuplaylist-ws\next15\package.json.
+(Use `node --trace-warnings ...` to show where the warning was created)
+✔ a complete archive passes (33.1591ms)
+✔ an archive with a comment near the maximum length still passes (7.9254ms)
+✔ a 50% truncated archive fails the EOCD check (7.9263ms)
+✔ a head-only check is insufficient: the truncated body still has a ZIP head (14.6502ms)
+✔ a blob under MIN_ARCHIVE_BYTES fails even when it is a real ZIP (1.5962ms)
+✔ an HTML error page padded past the minimum fails the head check (0.4847ms)
+✔ missing or non-blob input is not an archive (0.2338ms)
+✔ hasZipHead and hasEocd reject short input (0.4253ms)
+(node:23120) [MODULE_TYPELESS_PACKAGE_JSON] Warning: Module type of file:///C:/Users/Siddartha/Desktop/study(fr)/Antigravity/osuplaylist-ws/next15/src/lib/beatmapDownload.js is not specified and it doesn't parse as CommonJS.
+Reparsing as ES module because module syntax was detected. This incurs a performance overhead.
+To eliminate this warning, add "type": "module" to \\?\C:\Users\Siddartha\Desktop\study(fr)\Antigravity\osuplaylist-ws\next15\package.json.
+(Use `node --trace-warnings ...` to show where the warning was created)
+✔ the pacer starts at 200 ms, doubles on each mirror 429 and caps at 5 s (7.0557ms)
+✔ pacer.wait resolves at once when the batch is cancelled (5.8357ms)
+✔ a ZIP part closes only when the next archive would overflow a non-empty part (1.1999ms)
+✔ a mirror 429 slows the pacer and the next mirror serves the map (90.8922ms)
+✔ a truncated archive from every mirror falls to the proxy, whose 429 is never retried (22.7977ms)
+✔ a spent session budget refuses the proxy (7.0599ms)
+✔ cancelling mid-fetch throws AbortError and never reaches the proxy (3.0188ms)
+✔ an already cancelled batch makes no request at all (0.4398ms)
+(node:8820) [MODULE_TYPELESS_PACKAGE_JSON] Warning: Module type of file:///C:/Users/Siddartha/Desktop/study(fr)/Antigravity/osuplaylist-ws/next15/src/lib/beatmapFormat.js is not specified and it doesn't parse as CommonJS.
+Reparsing as ES module because module syntax was detected. This incurs a performance overhead.
+To eliminate this warning, add "type": "module" to \\?\C:\Users\Siddartha\Desktop\study(fr)\Antigravity\osuplaylist-ws\next15\package.json.
+(Use `node --trace-warnings ...` to show where the warning was created)
+✔ isRankedStatus accepts exactly RANKED_LOVED_STATUSES, never qualified (U-8) (4.6284ms)
+✔ existing exports are untouched (no behaviour change in this workstream) (0.2905ms)
+✔ RANKED_LOVED_STATUSES has no qualified (U-8) (1.1964ms)
+✔ upstreamStatusFor maps ranked to the leaderboard param, everything else to any (0.278ms)
+✔ isAutoSelectable: an ordinary beatmapset is selectable (0.2666ms)
+✔ isAutoSelectable: artistOverride is never auto-selectable (0.1987ms)
+✔ isAutoSelectable: titleOnly is never auto-selectable (0.2185ms)
+✔ isAutoSelectable: a missing beatmapset is never auto-selectable (0.2071ms)
+✔ overrideNoticeFor: an ordinary beatmapset gets no notice (0.483ms)
+✔ overrideNoticeFor: artistOverride with a known target artist names it (0.4374ms)
+✔ overrideNoticeFor: artistOverride with no target artist falls back to closest (0.2756ms)
+✔ overrideNoticeFor: titleOnly is its own kind, regardless of artist (0.201ms)
+✔ overrideNoticeFor: no beatmapset at all is null (0.2183ms)
+(node:3424) [MODULE_TYPELESS_PACKAGE_JSON] Warning: Module type of file:///C:/Users/Siddartha/Desktop/study(fr)/Antigravity/osuplaylist-ws/next15/src/lib/titleCleaner.js is not specified and it doesn't parse as CommonJS.
+Reparsing as ES module because module syntax was detected. This incurs a performance overhead.
+To eliminate this warning, add "type": "module" to \\?\C:\Users\Siddartha\Desktop\study(fr)\Antigravity\osuplaylist-ws\next15\package.json.
+(Use `node --trace-warnings ...` to show where the warning was created)
+✔ cleanSongTitle output over every bench fixture matches the committed snapshot (118.1038ms)
+✔ every bench fixture is covered by the snapshot (77.9568ms)
+(node:2908) [MODULE_TYPELESS_PACKAGE_JSON] Warning: Module type of file:///C:/Users/Siddartha/Desktop/study(fr)/Antigravity/osuplaylist-ws/next15/src/lib/collection.js is not specified and it doesn't parse as CommonJS.
+Reparsing as ES module because module syntax was detected. This incurs a performance overhead.
+To eliminate this warning, add "type": "module" to \\?\C:\Users\Siddartha\Desktop\study(fr)\Antigravity\osuplaylist-ws\next15\package.json.
+(Use `node --trace-warnings ...` to show where the warning was created)
+✔ beatmapsetKey is the set id, the key both dedupes share (F-41) (2.3027ms)
+✔ matchesCollectionFilters: ranked means Ranked & Loved, and mode reads the difficulties (0.6764ms)
+✔ dedupeByBeatmapset keeps the higher pp row, merges difficulties and sums playcounts (3.4612ms)
+✔ visibleItemsFor filters before it dedupes, so a merged row never smuggles in another mode (4.887ms)
+✔ beatmapToSong builds a pre-matched osu-player song through makeSong (F-32) (1.1589ms)
+(node:12972) [MODULE_TYPELESS_PACKAGE_JSON] Warning: Module type of file:///C:/Users/Siddartha/Desktop/study(fr)/Antigravity/osuplaylist-ws/next15/src/lib/extractors.js is not specified and it doesn't parse as CommonJS.
+Reparsing as ES module because module syntax was detected. This incurs a performance overhead.
+To eliminate this warning, add "type": "module" to \\?\C:\Users\Siddartha\Desktop\study(fr)\Antigravity\osuplaylist-ws\next15\package.json.
+(Use `node --trace-warnings ...` to show where the warning was created)
+[Extractor] upstream failure: Upstream responded 503 for https://open.spotify.com/embed/playlist/37i9dQZF1DXcBWIGoYBM5M
+✔ a URL-shaped input on no provider host is a 400 and fetches nothing (11.6317ms)
+✔ a lookalike host is plain text, never a link (8.4518ms)
+✔ a provider URL is rebuilt from its id, never fetched as typed (52.4952ms)
+✔ a single YouTube video goes to oEmbed by its video id, with the server UA (8.9102ms)
+✔ a YouTube link that names no video or playlist is a 400 (1.3232ms)
+✔ an upstream failure becomes an ExtractionError whose message carries no URL (4.4209ms)
+✔ an osu! profile link is refused here; it belongs to the player view (0.7144ms)
+(node:23868) [MODULE_TYPELESS_PACKAGE_JSON] Warning: Module type of file:///C:/Users/Siddartha/Desktop/study(fr)/Antigravity/osuplaylist-ws/next15/src/lib/filename.js is not specified and it doesn't parse as CommonJS.
+Reparsing as ES module because module syntax was detected. This incurs a performance overhead.
+To eliminate this warning, add "type": "module" to \\?\C:\Users\Siddartha\Desktop\study(fr)\Antigravity\osuplaylist-ws\next15\package.json.
+(Use `node --trace-warnings ...` to show where the warning was created)
+✔ sanitizeStem replaces reserved characters and C0 controls (2.5909ms)
+✔ sanitizeStem truncates the stem by code point, so the extension stays appendable (1.8455ms)
+✔ truncation never splits a surrogate pair (2.404ms)
+✔ a lone surrogate in the input is replaced, never passed on (0.55ms)
+✔ contentDisposition writes an ASCII fallback plus RFC 5987 with '()* encoded (0.592ms)
+✔ contentDisposition keeps non-ASCII in filename* and replaces it in the fallback (1.5265ms)
+✔ contentDisposition sanitizes its own input and keeps the extension on a long name (1.8635ms)
+(node:23040) [MODULE_TYPELESS_PACKAGE_JSON] Warning: Module type of file:///C:/Users/Siddartha/Desktop/study(fr)/Antigravity/osuplaylist-ws/next15/src/lib/http.js is not specified and it doesn't parse as CommonJS.
+Reparsing as ES module because module syntax was detected. This incurs a performance overhead.
+To eliminate this warning, add "type": "module" to \\?\C:\Users\Siddartha\Desktop\study(fr)\Antigravity\osuplaylist-ws\next15\package.json.
+(Use `node --trace-warnings ...` to show where the warning was created)
+✔ UA_PROFILES has a server and a browser-like profile (2.0281ms)
+✔ a non-2xx response throws an Error tagged with the upstream status (105.0016ms)
+✔ a request that never responds is aborted and thrown as a 504 (119.3113ms)
+✔ a body over the byte cap throws a 502, counted as bytes actually streamed in (22.4456ms)
+✔ fetchText returns the body as a string when everything is within bounds (12.5038ms)
+✔ fetchJson parses the body as JSON (13.9829ms)
+✔ fetchUpstream hands back the raw Response without buffering the body itself (9.9804ms)
+✔ the request carries a User-Agent from UA_PROFILES (7.7165ms)
+(node:21632) [MODULE_TYPELESS_PACKAGE_JSON] Warning: Module type of file:///C:/Users/Siddartha/Desktop/study(fr)/Antigravity/osuplaylist-ws/next15/src/lib/mirrors.js is not specified and it doesn't parse as CommonJS.
+Reparsing as ES module because module syntax was detected. This incurs a performance overhead.
+To eliminate this warning, add "type": "module" to \\?\C:\Users\Siddartha\Desktop\study(fr)\Antigravity\osuplaylist-ws\next15\package.json.
+(Use `node --trace-warnings ...` to show where the warning was created)
+✔ the CSP is enforcing and restricts only the directives it names (6.8351ms)
+✔ the other hardening headers are set and the image optimizer is off (1.8844ms)
+[osu! route] 404 osu! API responded 404 for /users/999999999
+[osu! route] 429 osu! API responded 429 for /users/5/beatmapsets/favourite?limit=100&offset=0
+[osu! route] 500 osu! API responded 500 for /users/5/beatmapsets/favourite?limit=100&offset=0
+[osu! route]  osu! API responded 503 for /users/1/scores/best
+[osu! route] 429 x
+[osu! Search] 429 for query "a b" (rate limited)
+[osu! route] 429 osu! API responded 429 for /beatmapsets/search?q=a%20b&sort=relevance_desc&s=any
+✔ demo mode: with no credentials all three osu! routes answer isDemo, with no outbound call (14.1242ms)
+✔ a malformed userId is a 400 before any upstream call (F-22) (5.8611ms)
+✔ an unknown player is a 404 with a plain message that never names the upstream path (F-31) (2.0003ms)
+✔ an upstream 429 is a 429 with a plain message; any other failure is a 502 that hides the path (1.8727ms)
+✔ every osu! call, the token request included, sends the server User-Agent (0.7335ms)
+✔ player routes allow 20 a minute and the search route 60; the next is a 429 with Retry-After (13.672ms)
+✔ toRouteError maps by status alone and demoResponse spreads its extra fields (1.441ms)
+✔ the search route bounds fallbacks, so 50 of them still cost at most 4 search calls (F-14) (6.1885ms)
+✔ an upstream 429 mid-search is a 429 from the search route, never an empty success (F-09) (2.4755ms)
+✔ a typed query is cleaned on the server, so its artist reaches the gate (F-05) (4.1472ms)
+✔ the beatmaps route returns every entry undeduped with total and fetched, and only best sends mode (F-12) (2.3817ms)
+(node:23212) [MODULE_TYPELESS_PACKAGE_JSON] Warning: Module type of file:///C:/Users/Siddartha/Desktop/study(fr)/Antigravity/osuplaylist-ws/next15/src/app/api/osu/player/route.js is not specified and it doesn't parse as CommonJS.
+Reparsing as ES module because module syntax was detected. This incurs a performance overhead.
+To eliminate this warning, add "type": "module" to \\?\C:\Users\Siddartha\Desktop\study(fr)\Antigravity\osuplaylist-ws\next15\package.json.
+(Use `node --trace-warnings ...` to show where the warning was created)
+(node:17308) [MODULE_TYPELESS_PACKAGE_JSON] Warning: Module type of file:///C:/Users/Siddartha/Desktop/study(fr)/Antigravity/osuplaylist-ws/next15/src/lib/platform.js is not specified and it doesn't parse as CommonJS.
+Reparsing as ES module because module syntax was detected. This incurs a performance overhead.
+To eliminate this warning, add "type": "module" to \\?\C:\Users\Siddartha\Desktop\study(fr)\Antigravity\osuplaylist-ws\next15\package.json.
+(Use `node --trace-warnings ...` to show where the warning was created)
+✔ a title containing a colon stays a query, never a link (9.6718ms)
+✔ a title containing a colon and a real host name stays a query (0.686ms)
+✔ a host embedded in a query string of an unrelated URL is not the SSRF hole (F-02) (0.6442ms)
+✔ a host that merely starts with a known host is not that host (F-02) (0.4047ms)
+✔ a trailing dot on an otherwise valid host is still recognised (2.1469ms)
+✔ a bare host + path with no scheme is recognised, and the player kind needs /users/ or /u/ (2.5863ms)
+✔ a known host without the required player path is invalid, not silently a query (0.8622ms)
+✔ an http (not https) link on a known host is invalid (1.2582ms)
+✔ host classification is case- and scheme-insensitive on casing (0.7031ms)
+✔ plain text with no host at all is a query (0.7255ms)
+✔ empty or whitespace-only input is invalid (0.6219ms)
+✔ PLATFORM_HOSTS lists every host classifyInput actually recognises (1.304ms)
+✔ buildProviderUrl builds the canonical link for each known kind (1.4456ms)
+✔ buildProviderUrl rejects an unknown kind rather than guessing a shape (0.6108ms)
+[osu! Probe] Failed for "Busy Artist": 429
+(node:17836) [MODULE_TYPELESS_PACKAGE_JSON] Warning: Module type of file:///C:/Users/Siddartha/Desktop/study(fr)/Antigravity/osuplaylist-ws/next15/src/lib/osu.js is not specified and it doesn't parse as CommonJS.
+Reparsing as ES module because module syntax was detected. This incurs a performance overhead.
+To eliminate this warning, add "type": "module" to \\?\C:\Users\Siddartha\Desktop\study(fr)\Antigravity\osuplaylist-ws\next15\package.json.
+(Use `node --trace-warnings ...` to show where the warning was created)
+✔ the limits are the plan's: 200 entries, 30 minutes, 60 s for a failure (10.8136ms)
+✔ a repeat probe is free until the TTL runs out (70.7093ms)
+✔ a failed probe is remembered for 60 s only (3.5374ms)
+✔ past 200 entries the least recently used is evicted (59.0193ms)
+(node:24408) [MODULE_TYPELESS_PACKAGE_JSON] Warning: Module type of file:///C:/Users/Siddartha/Desktop/study(fr)/Antigravity/osuplaylist-ws/next15/src/lib/rateLimit.js is not specified and it doesn't parse as CommonJS.
+Reparsing as ES module because module syntax was detected. This incurs a performance overhead.
+To eliminate this warning, add "type": "module" to \\?\C:\Users\Siddartha\Desktop\study(fr)\Antigravity\osuplaylist-ws\next15\package.json.
+(Use `node --trace-warnings ...` to show where the warning was created)
+✔ exactly `limit` requests pass, and the next one within the window is refused (6.639ms)
+✔ a different bucket for the same IP has its own independent budget (0.5654ms)
+✔ a different IP in the same bucket has its own independent budget (1.4858ms)
+✔ a request with no identifying header shares one "unknown" bucket, and never fails open (0.3927ms)
+✔ x-forwarded-for is read as its first hop, and only x-real-ip is a fallback (0.3145ms)
+✔ rateLimitResponse is a 429 carrying Retry-After and a JSON error body (66.6624ms)
+[YouTube Extractor] Innertube returned no playlist items
+[YouTube Extractor] HTML scrape attempt error: Could not parse ytInitialData from YouTube page
+[playlist] extraction failed: Could not read that YouTube playlist. Check that it is public or unlisted.
+[GitHub commits] fetch failed: 403
+✔ /api/playlist: a disguised non provider link is a 400 with no outbound fetch (48.2311ms)
+✔ /api/playlist: 10 requests a minute, the 11th is a 429 with Retry-After, even for bad input (7.7188ms)
+✔ /api/playlist: an unreadable playlist is a 502 with extractionFailed, never demo songs (4.6677ms)
+✔ /api/playlist: a success carries the songs and the window counts (3.3728ms)
+✔ /api/github/commits: fetched through http.js with the server UA, cached at the CDN only on a good list (5.3656ms)
+✔ /api/github/commits: 20 requests a minute, then a 429 with Retry-After and no Cache-Control (2.1561ms)
+(node:11940) [MODULE_TYPELESS_PACKAGE_JSON] Warning: Module type of file:///C:/Users/Siddartha/Desktop/study(fr)/Antigravity/osuplaylist-ws/next15/src/app/api/playlist/route.js is not specified and it doesn't parse as CommonJS.
+Reparsing as ES module because module syntax was detected. This incurs a performance overhead.
+To eliminate this warning, add "type": "module" to \\?\C:\Users\Siddartha\Desktop\study(fr)\Antigravity\osuplaylist-ws\next15\package.json.
+(Use `node --trace-warnings ...` to show where the warning was created)
+check R tally {"hit":31,"wrongArtist":0,"correctAbstain":6,"miss":0,"unreachable":0,"unlabelled":0}
+check R calls 55 (probes 7)
+check R uncovered 0
+[osu! Search] 429 for query "Rate Limit Song" (rate limited)
+[osu! Search] Error searching query "Down Song": 503
+(node:17744) [MODULE_TYPELESS_PACKAGE_JSON] Warning: Module type of file:///C:/Users/Siddartha/Desktop/study(fr)/Antigravity/osuplaylist-ws/next15/src/lib/titleCleaner.js is not specified and it doesn't parse as CommonJS.
+Reparsing as ES module because module syntax was detected. This incurs a performance overhead.
+To eliminate this warning, add "type": "module" to \\?\C:\Users\Siddartha\Desktop\study(fr)\Antigravity\osuplaylist-ws\next15\package.json.
+(Use `node --trace-warnings ...` to show where the warning was created)
+✔ check R: the real matcher over every fixture (428.8614ms)
+✔ F-14: 50 fallbacks make at most 4 upstream queries, and the bare title is one of them (1.6116ms)
+✔ F-33: under none trust a close title is salvaged as titleOnly, never artistOverride (1.6921ms)
+✔ F-09: a 429 on any variant throws .status 429, so a partial pool is never returned (1.227ms)
+✔ F-09: when every variant fails for another reason the failure is thrown, not a no-match (0.4473ms)
+✔ F-08: at status ranked every search sends s=leaderboard and every returned set is Ranked & Loved (202.5028ms)
+⚠ F-28: an Apple track with no provider artist is split for recall but never refused on that guess (88.4442ms) # the colon split of "Re:Re:" yields a real osu! artist, so the gate refuses (cleaner defect)
+✔ F-29: a 150 leader whose artist is only credited in tags does not end a low-trust search (1.1869ms)
+(node:21584) [MODULE_TYPELESS_PACKAGE_JSON] Warning: Module type of file:///C:/Users/Siddartha/Desktop/study(fr)/Antigravity/osuplaylist-ws/next15/src/lib/searchRequest.js is not specified and it doesn't parse as CommonJS.
+Reparsing as ES module because module syntax was detected. This incurs a performance overhead.
+To eliminate this warning, add "type": "module" to \\?\C:\Users\Siddartha\Desktop\study(fr)\Antigravity\osuplaylist-ws\next15\package.json.
+(Use `node --trace-warnings ...` to show where the warning was created)
+✔ a song search sends the extracted fields, its provenance and its fallbacks once each (3.084ms)
+✔ a typed query is sent bare: q and source query, no artist, no title, no fallbacks (F-05) (0.4708ms)
+✔ a song that remembers a typed query keeps sending it on every later re-search (0.2935ms)
+(node:22916) [MODULE_TYPELESS_PACKAGE_JSON] Warning: Module type of file:///C:/Users/Siddartha/Desktop/study(fr)/Antigravity/osuplaylist-ws/next15/src/lib/song.js is not specified and it doesn't parse as CommonJS.
+Reparsing as ES module because module syntax was detected. This incurs a performance overhead.
+To eliminate this warning, add "type": "module" to \\?\C:\Users\Siddartha\Desktop\study(fr)\Antigravity\osuplaylist-ws\next15\package.json.
+(Use `node --trace-warnings ...` to show where the warning was created)
+✔ makeSong requires a valid source and rejects anything else (10.0795ms)
+✔ makeSong fills the song contract defaults (1.2048ms)
+✔ makeSong passes every unknown field through untouched, and a caller field wins over a default (0.8589ms)
+✔ songKey trusts a real provider id (0.7506ms)
+✔ songKey never trusts the extractor placeholder id shape, and falls back to title+artist (0.4605ms)
+✔ mergeSongs: existing rows win on a collision (0.6024ms)
+✔ mergeSongs assigns position only to the rows actually added, continuing from existing.length (0.3524ms)
+✔ mergeSongs also dedupes duplicates within the incoming batch itself (0.2826ms)
+✔ mergeSongs never mutates the existing array it was given (0.4675ms)
+(node:17276) [MODULE_TYPELESS_PACKAGE_JSON] Warning: Module type of file:///C:/Users/Siddartha/Desktop/study(fr)/Antigravity/osuplaylist-ws/next15/src/lib/text.js is not specified and it doesn't parse as CommonJS.
+Reparsing as ES module because module syntax was detected. This incurs a performance overhead.
+To eliminate this warning, add "type": "module" to \\?\C:\Users\Siddartha\Desktop\study(fr)\Antigravity\osuplaylist-ws\next15\package.json.
+(Use `node --trace-warnings ...` to show where the warning was created)
+✔ normalizeForComparison lowercases, drops a leading "the", punctuation and extra spaces (3.2734ms)
+✔ normalizeForComparison keeps non-Latin letters instead of collapsing them to empty (2.2979ms)
+✔ osu.js uses this normalizer and keeps no private copy of it (1.2459ms)
+(node:8840) [MODULE_TYPELESS_PACKAGE_JSON] Warning: Module type of file:///C:/Users/Siddartha/Desktop/study(fr)/Antigravity/osuplaylist-ws/next15/src/lib/titleCleaner.js is not specified and it doesn't parse as CommonJS.
+Reparsing as ES module because module syntax was detected. This incurs a performance overhead.
+To eliminate this warning, add "type": "module" to \\?\C:\Users\Siddartha\Desktop\study(fr)\Antigravity\osuplaylist-ws\next15\package.json.
+(Use `node --trace-warnings ...` to show where the warning was created)
+✔ F-28 repro: a provider artist stops the dash split, and a noise dash segment is dropped (6.0973ms)
+✔ a dash segment that is not noise stays part of the title (0.9281ms)
+✔ every split branch is skipped when the provider supplied the artist (4.9528ms)
+✔ the provider artist is whitespace normalized only, never put through the channel strips (0.4269ms)
+✔ an empty provider artist leaves the splitter on, and flags a split artist as from the title (1.7792ms)
+✔ artistFromTitle is false for a channel artist and true for each split shape (0.5114ms)
+✔ extractMusicData sets artistFromTitle beside extractedArtist (1.6936ms)
+(node:12588) [MODULE_TYPELESS_PACKAGE_JSON] Warning: Module type of file:///C:/Users/Siddartha/Desktop/study(fr)/Antigravity/osuplaylist-ws/next15/src/lib/useAudioPreview.js is not specified and it doesn't parse as CommonJS.
+Reparsing as ES module because module syntax was detected. This incurs a performance overhead.
+To eliminate this warning, add "type": "module" to \\?\C:\Users\Siddartha\Desktop\study(fr)\Antigravity\osuplaylist-ws\next15\package.json.
+(Use `node --trace-warnings ...` to show where the warning was created)
+✔ toggle on a fresh key starts loading, then playing once play() resolves (2.1567ms)
+✔ toggle on the already-active key stops it (0.3858ms)
+✔ toggling a new key while another is loading supersedes the first, whose stale settle is ignored (0.2534ms)
+✔ a stale rejection (AbortError-shaped or otherwise) never surfaces once superseded (0.6569ms)
+✔ a live (non-superseded) rejection clears state and rejects its own caller (1.4787ms)
+✔ mount registry: playback stops only when the last registration for the playing key is removed (1.824ms)
+✔ unregistering a key that is not currently playing or loading is a no-op (0.2223ms)
+✔ stop() is idempotent and only calls the player stop() when something was actually playing/loading (0.4745ms)
+✔ subscribe/notify: listeners fire on every state transition and unsubscribe stops delivery (1.8587ms)
+✔ toggle with no previewKey is a safe no-op (0.6281ms)
+(node:17212) [MODULE_TYPELESS_PACKAGE_JSON] Warning: Module type of file:///C:/Users/Siddartha/Desktop/study(fr)/Antigravity/osuplaylist-ws/next15/src/lib/youtube.js is not specified and it doesn't parse as CommonJS.
+Reparsing as ES module because module syntax was detected. This incurs a performance overhead.
+To eliminate this warning, add "type": "module" to \\?\C:\Users\Siddartha\Desktop\study(fr)\Antigravity\osuplaylist-ws\next15\package.json.
+(Use `node --trace-warnings ...` to show where the warning was created)
+[YouTube Extractor] Innertube returned no playlist items
+[YouTube Extractor] HTML scrape attempt error: Could not parse ytInitialData from YouTube page
+[YouTube Extractor] Innertube attempt error: Innertube request returned HTTP 404
+[YouTube Extractor] HTML scrape attempt error: Upstream responded 404 for https://www.youtube.com/playlist?list=PLdoesnotexist000
+[YouTube Extractor] Innertube returned no playlist items
+✔ unavailable items are read from renderer fields, never from the title (4.8239ms)
+✔ a playlistVideoRenderer with no lengthSeconds, or isPlayable false, is unavailable (0.626ms)
+✔ every lockup gets a thumbnail built from its id (1.867ms)
+✔ truncated is structural: a continuation in the window, or the maxVideos cap cutting it short (0.9248ms)
+✔ playlistLength is read from any header metadataParts entry, and is null otherwise (0.4816ms)
+✔ a playlist neither path can read throws ExtractionError, never the sample songs (46.8668ms)
+✔ the page scrape is tried when Innertube yields no items, and gets the same counts (2.0683ms)
+✔ the preset sample id still returns the sample playlist, without a fetch (0.5239ms)
+✔ extractMusicData carries the window counts for YouTube, and plain counts for other sources (5.3055ms)
+ℹ tests 164
+ℹ suites 0
+ℹ pass 163
+ℹ fail 0
+ℹ cancelled 0
+ℹ skipped 0
+ℹ todo 1
+ℹ duration_ms 1492.2626
+
+✖ failing tests:
+
+test at test\search-replay.test.mjs:272:1
+⚠ F-28: an Apple track with no provider artist is split for recall but never refused on that guess (88.4442ms) # the colon split of "Re:Re:" yields a real osu! artist, so the gate refuses (cleaner defect)
+  AssertionError [ERR_ASSERTION]: Expected "actual" to be strictly unequal to:
+  
+  'wrong-artist'
+      at TestContext.<anonymous> (file:///C:/Users/Siddartha/Desktop/study(fr)/Antigravity/osuplaylist-ws/next15/test/search-replay.test.mjs:282:10)
+      at async Test.run (node:internal/test_runner/test:1389:7)
+      at async Test.processPendingSubtests (node:internal/test_runner/test:960:7) {
+    generatedMessage: true,
+    code: 'ERR_ASSERTION',
+    actual: 'wrong-artist',
+    expected: 'wrong-artist',
+    operator: 'notStrictEqual',
+    diff: 'simple'
+  }
