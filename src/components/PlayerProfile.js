@@ -1,10 +1,12 @@
 'use client';
 
 import { useState } from 'react';
-import { ExternalLink, X } from 'lucide-react';
+import { ExternalLink, ChevronLeft } from 'lucide-react';
 import { osuAudio } from '@/lib/soundEffects';
 
-export default function PlayerProfile({ player, onClear }) {
+// Change Player goes back to the player results and deletes nothing (todo item 10); the
+// StatsBar trash is the one way to clear the player.
+export default function PlayerProfile({ player, onChangePlayer, backTitle = 'Back to player results' }) {
   const [avatarError, setAvatarError] = useState(false);
 
   if (!player) return null;
@@ -129,7 +131,7 @@ export default function PlayerProfile({ player, onClear }) {
             className="osu-btn-interactive"
             onClick={() => {
               osuAudio.playClick();
-              onClear();
+              onChangePlayer();
             }}
             onMouseEnter={() => osuAudio.playHover()}
             style={{
@@ -148,9 +150,9 @@ export default function PlayerProfile({ player, onClear }) {
               minHeight: '34px',
               flexShrink: 0,
             }}
-            title="Clear this player"
+            title={backTitle}
           >
-            <X size={13} />
+            <ChevronLeft size={13} />
             <span>Change Player</span>
           </button>
         </div>

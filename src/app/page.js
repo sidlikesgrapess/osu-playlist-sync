@@ -9,7 +9,7 @@ import SongTable from '@/components/SongTable';
 import ExportModal from '@/components/ExportModal';
 import SetupGuideModal from '@/components/SetupGuideModal';
 import PlayerProfile from '@/components/PlayerProfile';
-import PlayerResults from '@/components/PlayerResults';
+import PlayerResults, { PlayerBackChip } from '@/components/PlayerResults';
 import PlayerSections from '@/components/PlayerSections';
 import DownloadToast from '@/components/DownloadToast';
 import TruncationDialog from '@/components/TruncationDialog';
@@ -33,6 +33,7 @@ import { visibleItemsFor } from '@/lib/collection';
 import { truncationMessage } from '@/lib/truncationNotice';
 import { createSearchPacer, pacedRequest } from '@/lib/searchPacer';
 import { selectedBeatmapEntries, matchedBeatmapUnion, soleOwnerSides, zipBaseTitle } from '@/lib/selection';
+import { playerViewScreen, isRetainedPlayer } from '@/lib/playerView';
 
 const REPO_URL = 'https://github.com/sidlikesgrapess/osu-playlist-sync';
 
@@ -160,6 +161,9 @@ export default function Home() {
   const [playerResultsPage, setPlayerResultsPage] = useState(1);
   const [playerQuery, setPlayerQuery] = useState('');
   const [playerProfile, setPlayerProfile] = useState(null);
+  // True after Change Player: the profile and its ticks stay loaded but hidden while the
+  // results list is shown again (todo item 10). Only dropPlayer throws the player away.
+  const [isBrowsingPlayerResults, setIsBrowsingPlayerResults] = useState(false);
   const [playerSections, setPlayerSections] = useState(createEmptySections);
   // Every beatmapset the current player's sections have loaded, once each, as songs. The
   // player side of the download union; `songs` above is the playlist side only.
@@ -241,6 +245,7 @@ export default function Home() {
   const clearPlayerState = () => {
     abortAllSectionLoads();
     setPlayerProfile(null);
+    setIsBrowsingPlayerResults(false);
     setPlayerResults([]);
     setPlayerResultsTotal(0);
     setPlayerResultsPage(1);
@@ -248,12 +253,13 @@ export default function Home() {
     setPlayerSections(createEmptySections());
   };
 
-  // Search osu! players by name, or resolve a pasted profile link directly.
-  const handlePlayerSearch = async (query, page = 1) => {
+  // Search osu! players by name, or resolve a pasted profile link directly. A page change
+  // only turns the results list, so a player kept behind Change Player survives it.
+  const handlePlayerSearch = async (query, page = 1, { isPageChange = false } = {}) => {
     setIsLoading(true);
     setErrorMessage('');
     // A new search replaces the old player, never the playlist.
-    if (page === 1) dropPlayer();
+    if (!isPageChange) dropPlayer();
     setPlayerQuery(query);
 
     try {
@@ -291,15 +297,16 @@ export default function Home() {
   };
 
   const handlePlayerResultsPageChange = (page) => {
-    handlePlayerSearch(playerQuery, page);
+    handlePlayerSearch(playerQuery, page, { isPageChange: true });
   };
 
-  // Show a resolved profile. The playlist side is left exactly as it is.
+  // Show a resolved profile. It replaces any player kept behind Change Player, but the
+  // results list stays so Change Player can go back to it. The playlist is left as it is.
   const applyPlayerProfile = (profile) => {
     abortAllSectionLoads();
+    cancelBatchHolding('player');
     setPlayerProfile(profile);
-    setPlayerResults([]);
-    setPlayerResultsTotal(0);
+    setIsBrowsingPlayerResults(false);
     setPlayerSongs([]);
     setPlayerSelectedIds(new Set());
     setErrorMessage('');
@@ -315,8 +322,14 @@ export default function Home() {
     loadSection(profile.id, 'best');
   };
 
-  // Fetch a full profile for a user picked from the search results.
+  // Fetch a full profile for a user picked from the search results. Picking the player kept
+  // behind Change Player just shows it again: its sections and ticks are still loaded.
   const handleSelectPlayer = async (user) => {
+    if (isRetainedPlayer(playerProfile, user)) {
+      setIsBrowsingPlayerResults(false);
+      setErrorMessage('');
+      return;
+    }
     setIsLoading(true);
     setErrorMessage('');
 
@@ -463,11 +476,18 @@ export default function Home() {
     }
   };
 
-  // Clears the player side only; the playlist and its ticks stay.
+  // Clears the player side only; the playlist and its ticks stay. The trash plays its own
+  // click, so this does not.
   const handleClearPlayer = () => {
     dropPlayer();
     setErrorMessage('');
-    osuAudio.playClick();
+  };
+
+  // Change Player is a back step: the profile and its ticks stay, hidden, and the results
+  // list (or the empty player view, after a pasted link) is shown again.
+  const handleChangePlayer = () => {
+    setIsBrowsingPlayerResults(true);
+    setErrorMessage('');
   };
 
   // Handle fetching a YouTube playlist. When songs already exist, new results are
@@ -1222,11 +1242,11 @@ export default function Home() {
     }));
   };
 
-  // Clears the playlist side only; the player and its ticks stay.
+  // Clears the playlist side only; the player and its ticks stay. The trash plays its own
+  // click, so this does not.
   const handleClearList = () => {
     dropPlaylist();
     setErrorMessage('');
-    osuAudio.playClick();
   };
 
   const platformBadge = PLATFORM_BADGE[playlistMeta?.platform] || PLATFORM_BADGE.query;
@@ -1240,6 +1260,11 @@ export default function Home() {
   // One download bar for both views (todo item 09). Its metrics describe the side on screen;
   // its count, Download, ZIP and Export cover every ticked or matched beatmapset on either.
   const isPlayerView = searchMode === 'player';
+  const playerScreen = playerViewScreen({
+    profile: playerProfile,
+    resultsCount: playerResults.length,
+    browsing: isBrowsingPlayerResults,
+  });
   const viewSide = isPlayerView ? 'player' : 'playlist';
   const downloadableSongs = matchedBeatmapUnion([songs, playerSongs]);
   const fromOtherSide = selectedEntries.filter(entry => !entry.sides.has(viewSide)).length;
@@ -1334,7 +1359,11 @@ export default function Home() {
             ticks wait in state, and its previews stop as their covers unmount. */}
         {isPlayerView && (
           <>
-            {!playerProfile && playerResults.length > 0 && (
+            {playerScreen.backTo && (
+              <PlayerBackChip player={playerScreen.backTo} onBack={() => setIsBrowsingPlayerResults(false)} />
+            )}
+
+            {playerScreen.screen === 'results' && (
               <PlayerResults
                 users={playerResults}
                 total={playerResultsTotal}
@@ -1345,11 +1374,17 @@ export default function Home() {
               />
             )}
 
-            {playerProfile && <PlayerProfile player={playerProfile} onClear={handleClearPlayer} />}
+            {playerScreen.screen === 'profile' && (
+              <PlayerProfile
+                player={playerProfile}
+                onChangePlayer={handleChangePlayer}
+                backTitle={playerResults.length > 0 ? 'Back to player results' : 'Back to player search'}
+              />
+            )}
 
             {statsBar}
 
-            {playerProfile && (
+            {playerScreen.screen === 'profile' && (
               <PlayerSections
                 sections={playerSections}
                 mode={mode}

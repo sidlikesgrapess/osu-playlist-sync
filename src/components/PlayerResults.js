@@ -149,3 +149,50 @@ export default function PlayerResults({ users, total, page = 1, onPageChange, on
     </div>
   );
 }
+
+// The way back to a player kept behind Change Player (todo item 10). Nothing was deleted,
+// so going back refetches nothing.
+export function PlayerBackChip({ player, onBack }) {
+  if (!player) return null;
+  return (
+    <div style={{ maxWidth: '1240px', margin: '0 auto 10px' }}>
+      <button
+        className="osu-btn-interactive"
+        onClick={() => {
+          osuAudio.playClick();
+          onBack();
+        }}
+        onMouseEnter={() => osuAudio.playHover()}
+        title={`Back to ${player.username}`}
+        style={{
+          background: '#252130',
+          border: '1px solid rgba(255, 102, 170, 0.35)',
+          color: '#ffffff',
+          borderRadius: '6px',
+          padding: '6px 10px',
+          fontSize: '0.78rem',
+          fontWeight: 800,
+          cursor: 'pointer',
+          display: 'inline-flex',
+          alignItems: 'center',
+          gap: '6px',
+          fontFamily: 'inherit',
+          minHeight: '34px',
+          maxWidth: '100%',
+        }}
+      >
+        <ChevronLeft size={14} style={{ flexShrink: 0 }} />
+        {player.avatarUrl && (
+          <img
+            src={player.avatarUrl}
+            alt=""
+            style={{ width: '20px', height: '20px', borderRadius: '4px', objectFit: 'cover', flexShrink: 0 }}
+          />
+        )}
+        <span style={{ whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>
+          Back to {player.username}
+        </span>
+      </button>
+    </div>
+  );
+}

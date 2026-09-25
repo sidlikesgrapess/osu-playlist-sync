@@ -1,0 +1,176 @@
+[
+  {
+    "name": "desktop",
+    "checks": {
+      "back_same_header": {
+        "pass": true,
+        "detail": [
+          "45 PLAYERS FOUND, SHOWING 21 TO 23",
+          "45 PLAYERS FOUND, SHOWING 21 TO 23"
+        ]
+      },
+      "back_same_page": {
+        "pass": true,
+        "detail": [
+          "Page 2 of 3",
+          "Page 2 of 3"
+        ]
+      },
+      "back_sections_hidden": {
+        "pass": true
+      },
+      "back_count_kept": {
+        "pass": true,
+        "detail": [
+          2,
+          2
+        ]
+      },
+      "repick_no_requests": {
+        "pass": true,
+        "detail": [
+          {
+            "q": 2,
+            "userId": 1,
+            "beatmaps": 2
+          },
+          {
+            "q": 2,
+            "userId": 1,
+            "beatmaps": 2
+          }
+        ]
+      },
+      "repick_open_state_same": {
+        "pass": true,
+        "detail": [
+          [
+            "transparent",
+            "rgb(35, 32, 48)",
+            "transparent"
+          ],
+          [
+            "transparent",
+            "rgb(35, 32, 48)",
+            "transparent"
+          ]
+        ]
+      },
+      "repick_ticks_same": {
+        "pass": true,
+        "detail": [
+          2,
+          2,
+          [
+            "checkbox-most_played-0-osu_102210",
+            "checkbox-most_played-1-osu_102211"
+          ],
+          [
+            "checkbox-most_played-0-osu_102210",
+            "checkbox-most_played-1-osu_102211"
+          ]
+        ]
+      },
+      "trash_from_list_clears_all": {
+        "pass": true,
+        "detail": null
+      },
+      "no_console_errors": {
+        "pass": true,
+        "detail": []
+      }
+    },
+    "calls": {
+      "q": 2,
+      "userId": 1,
+      "beatmaps": 2
+    }
+  },
+  {
+    "name": "phone",
+    "checks": {
+      "back_same_header": {
+        "pass": true,
+        "detail": [
+          "45 PLAYERS FOUND, SHOWING 21 TO 23",
+          "45 PLAYERS FOUND, SHOWING 21 TO 23"
+        ]
+      },
+      "back_same_page": {
+        "pass": true,
+        "detail": [
+          "Page 2 of 3",
+          "Page 2 of 3"
+        ]
+      },
+      "back_sections_hidden": {
+        "pass": true
+      },
+      "back_count_kept": {
+        "pass": true,
+        "detail": [
+          2,
+          2
+        ]
+      },
+      "repick_no_requests": {
+        "pass": true,
+        "detail": [
+          {
+            "q": 2,
+            "userId": 1,
+            "beatmaps": 2
+          },
+          {
+            "q": 2,
+            "userId": 1,
+            "beatmaps": 2
+          }
+        ]
+      },
+      "repick_open_state_same": {
+        "pass": true,
+        "detail": [
+          [
+            "transparent",
+            "rgb(35, 32, 48)",
+            "transparent"
+          ],
+          [
+            "transparent",
+            "rgb(35, 32, 48)",
+            "transparent"
+          ]
+        ]
+      },
+      "repick_ticks_same": {
+        "pass": true,
+        "detail": [
+          2,
+          2,
+          [
+            "checkbox-most_played-0-osu_102210",
+            "checkbox-most_played-1-osu_102211"
+          ],
+          [
+            "checkbox-most_played-0-osu_102210",
+            "checkbox-most_played-1-osu_102211"
+          ]
+        ]
+      },
+      "trash_from_list_clears_all": {
+        "pass": true,
+        "detail": null
+      },
+      "no_console_errors": {
+        "pass": true,
+        "detail": []
+      }
+    },
+    "calls": {
+      "q": 2,
+      "userId": 1,
+      "beatmaps": 2
+    }
+  }
+]

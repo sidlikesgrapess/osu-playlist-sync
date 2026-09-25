@@ -1,0 +1,52 @@
+// Verifier live check for item 10 (real osu! API, one flow): search, pick, Change Player, re-pick.
+const { chromium } = require('playwright');
+const fs = require('fs'); const path = require('path');
+const OUT = __dirname; const BASE = 'http://localhost:3000';
+(async () => {
+  const hard = setTimeout(() => { console.log('hard timeout'); process.exit(2); }, 150000);
+  const b = await chromium.launch({ args: ['--no-sandbox', '--disable-gpu', '--disable-dev-shm-usage'] });
+  const res = { checks: {}, calls: { q: 0, userId: 0, beatmaps: 0 }, errors: [] };
+  const ok = (k, v, d) => { res.checks[k] = { pass: !!v, detail: d }; };
+  const ctx = await b.newContext({ viewport: { width: 1280, height: 800 } }); const page = await ctx.newPage();
+  page.on('console', (m) => { if (m.type() === 'error') res.errors.push(m.text()); });
+  page.on('pageerror', (e) => res.errors.push(e.message));
+  page.on('request', (r) => { const u = r.url(); if (!u.includes('/api/osu/player')) return;
+    if (u.includes('/beatmaps')) res.calls.beatmaps++; else if (u.includes('userId=')) res.calls.userId++; else if (u.includes('q=')) res.calls.q++; });
+  const text = () => page.evaluate(() => document.body.innerText);
+  const clickText = (re) => page.evaluate((src) => { const r = new RegExp(src); const b = [...document.querySelectorAll('button')].find((e) => e.offsetParent !== null && r.test(e.innerText.trim())); if (!b) throw new Error('no button ' + src); b.click(); }, re);
+  try {
+    await page.goto(BASE, { waitUntil: 'domcontentloaded' }); await page.waitForSelector('#playlist-url-input', { timeout: 30000 }); await page.waitForTimeout(800);
+    await page.click('#search-mode-player-btn'); await page.waitForTimeout(400);
+    await page.fill('#playlist-url-input', 'mrek'); await page.press('#playlist-url-input', 'Enter');
+    await page.waitForFunction(() => /players? found/i.test(document.body.innerText), null, { timeout: 30000 }); await page.waitForTimeout(800);
+    const header = (await text()).match(/\d+ players? found[^\n]*/i)?.[0];
+    const first = await page.evaluate(() => { const g = [...document.querySelectorAll('button.osu-glass-card')][0]; return g.querySelector('div div').innerText.trim(); });
+    await page.evaluate(() => [...document.querySelectorAll('button.osu-glass-card')][0].click());
+    await page.waitForFunction(() => /Change Player/.test(document.body.innerText) && /Best Performances/.test(document.body.innerText), null, { timeout: 30000 });
+    await page.waitForFunction(() => document.querySelectorAll('[id^="checkbox-best"]').length > 0, null, { timeout: 30000 }).catch(() => {});
+    await page.waitForTimeout(1200);
+    await page.evaluate(() => [...document.querySelectorAll('[id^="checkbox-best"]')].slice(0, 3).forEach((e) => e.click()));
+    await page.waitForTimeout(400);
+    const n = (await text()).match(/Download(?: All)? \((\d+)\)/)?.[1];
+    await page.screenshot({ path: path.join(OUT, 'vlive_1_profile.png') });
+    const before = { ...res.calls };
+    await clickText('^Change Player$'); await page.waitForTimeout(800);
+    const t = await text();
+    ok('back_list_same_header', t.match(/\d+ players? found[^\n]*/i)?.[0] === header && t.includes(first), header);
+    ok('back_profile_hidden', !/Change Player|Best Performances/.test(t));
+    ok('back_count_kept', t.match(/Download(?: All)? \((\d+)\)/)?.[1] === n && n === '3', n);
+    ok('back_chip', t.includes(`Back to ${first}`), first);
+    await page.screenshot({ path: path.join(OUT, 'vlive_2_back.png') });
+    await page.evaluate((name) => [...document.querySelectorAll('button.osu-glass-card')].find((g) => g.innerText.includes(name)).click(), first);
+    await page.waitForTimeout(1000);
+    const t2 = await text();
+    ok('repick_restored', /Change Player/.test(t2) && t2.match(/Download(?: All)? \((\d+)\)/)?.[1] === n, n);
+    ok('no_refetch', JSON.stringify(before) === JSON.stringify(res.calls), [before, res.calls]);
+    ok('totals_1_1_1', res.calls.q === 1 && res.calls.userId === 1 && res.calls.beatmaps === 1, res.calls);
+    await page.screenshot({ path: path.join(OUT, 'vlive_3_repick.png') });
+    ok('no_console_errors', res.errors.length === 0, res.errors);
+  } catch (e) { res.error = String(e.stack || e); }
+  await b.close(); clearTimeout(hard);
+  fs.writeFileSync(path.join(OUT, 'verifier-live-results.json'), JSON.stringify(res, null, 2));
+  console.log(JSON.stringify(res, null, 2));
+})();

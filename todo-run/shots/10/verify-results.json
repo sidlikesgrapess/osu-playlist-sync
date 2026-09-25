@@ -1,0 +1,346 @@
+[
+  {
+    "name": "desktop",
+    "checks": {
+      "a_playlist_ticks_10": {
+        "pass": true,
+        "detail": 10
+      },
+      "b_union_16": {
+        "pass": true,
+        "detail": 16
+      },
+      "b_change_player_title": {
+        "pass": true,
+        "detail": "Back to player results"
+      },
+      "c_list_back": {
+        "pass": true
+      },
+      "c_profile_hidden": {
+        "pass": true
+      },
+      "c_no_requests": {
+        "pass": true,
+        "detail": {
+          "q": 6,
+          "userId": 3,
+          "beatmaps": 4
+        }
+      },
+      "c_count_kept_16": {
+        "pass": true,
+        "detail": 16
+      },
+      "c_one_click": {
+        "pass": true,
+        "detail": 1
+      },
+      "c_back_chip": {
+        "pass": true
+      },
+      "i_paging_keeps_profile": {
+        "pass": true,
+        "detail": 16
+      },
+      "i_paging_back_to_1_keeps_profile": {
+        "pass": true,
+        "detail": 16
+      },
+      "d_same_player_no_requests": {
+        "pass": true,
+        "detail": {
+          "q": 6,
+          "userId": 3,
+          "beatmaps": 4
+        }
+      },
+      "d_sets_back": {
+        "pass": true
+      },
+      "d_ticks_back_16": {
+        "pass": true,
+        "detail": 16
+      },
+      "d_one_click": {
+        "pass": true,
+        "detail": 1
+      },
+      "e_new_player_fetched": {
+        "pass": true,
+        "detail": {
+          "q": 6,
+          "userId": 3,
+          "beatmaps": 4
+        }
+      },
+      "e_player_ticks_reset": {
+        "pass": true,
+        "detail": 10
+      },
+      "e_no_chip": {
+        "pass": true
+      },
+      "f_player_trash_label": {
+        "pass": true,
+        "detail": {
+          "title": "Clear player results",
+          "aria": "Clear player results"
+        }
+      },
+      "f_one_click": {
+        "pass": true,
+        "detail": 1
+      },
+      "f_player_empty": {
+        "pass": true
+      },
+      "f_playlist_ticks_kept": {
+        "pass": true,
+        "detail": 10
+      },
+      "g_playlist_trash_label": {
+        "pass": true,
+        "detail": {
+          "title": "Clear playlist results",
+          "aria": "Clear playlist results"
+        }
+      },
+      "g_one_click": {
+        "pass": true,
+        "detail": 1
+      },
+      "g_player_ticks_kept": {
+        "pass": true,
+        "detail": 6
+      },
+      "g_player_untouched": {
+        "pass": true
+      },
+      "h_title_no_results": {
+        "pass": true,
+        "detail": "Back to player search"
+      },
+      "h_empty_with_chip": {
+        "pass": true
+      },
+      "h_count_kept": {
+        "pass": true,
+        "detail": 6
+      },
+      "h_chip_restores": {
+        "pass": true,
+        "detail": {
+          "q": 6,
+          "userId": 3,
+          "beatmaps": 4
+        }
+      },
+      "h_clicks_2": {
+        "pass": true,
+        "detail": 2
+      },
+      "i_new_search_drops_profile": {
+        "pass": true,
+        "detail": null
+      },
+      "j_no_dashes": {
+        "pass": true,
+        "detail": [
+          "Back to player results",
+          "Back to player search",
+          "Back to userC",
+          "Clear player results",
+          "Clear playlist results",
+          "Back to player results",
+          "Back to player search"
+        ]
+      },
+      "z_no_console_errors": {
+        "pass": true,
+        "detail": []
+      },
+      "z_no_leaks": {
+        "pass": true,
+        "detail": []
+      }
+    },
+    "calls": {
+      "q": 6,
+      "userId": 3,
+      "beatmaps": 4
+    }
+  },
+  {
+    "name": "phone",
+    "checks": {
+      "a_playlist_ticks_10": {
+        "pass": true,
+        "detail": 10
+      },
+      "b_union_16": {
+        "pass": true,
+        "detail": 16
+      },
+      "b_change_player_title": {
+        "pass": true,
+        "detail": "Back to player results"
+      },
+      "c_list_back": {
+        "pass": true
+      },
+      "c_profile_hidden": {
+        "pass": true
+      },
+      "c_no_requests": {
+        "pass": true,
+        "detail": {
+          "q": 6,
+          "userId": 3,
+          "beatmaps": 4
+        }
+      },
+      "c_count_kept_16": {
+        "pass": true,
+        "detail": 16
+      },
+      "c_one_click": {
+        "pass": true,
+        "detail": 1
+      },
+      "c_back_chip": {
+        "pass": true
+      },
+      "i_paging_keeps_profile": {
+        "pass": true,
+        "detail": 16
+      },
+      "i_paging_back_to_1_keeps_profile": {
+        "pass": true,
+        "detail": 16
+      },
+      "d_same_player_no_requests": {
+        "pass": true,
+        "detail": {
+          "q": 6,
+          "userId": 3,
+          "beatmaps": 4
+        }
+      },
+      "d_sets_back": {
+        "pass": true
+      },
+      "d_ticks_back_16": {
+        "pass": true,
+        "detail": 16
+      },
+      "d_one_click": {
+        "pass": true,
+        "detail": 1
+      },
+      "e_new_player_fetched": {
+        "pass": true,
+        "detail": {
+          "q": 6,
+          "userId": 3,
+          "beatmaps": 4
+        }
+      },
+      "e_player_ticks_reset": {
+        "pass": true,
+        "detail": 10
+      },
+      "e_no_chip": {
+        "pass": true
+      },
+      "f_player_trash_label": {
+        "pass": true,
+        "detail": {
+          "title": "Clear player results",
+          "aria": "Clear player results"
+        }
+      },
+      "f_one_click": {
+        "pass": true,
+        "detail": 1
+      },
+      "f_player_empty": {
+        "pass": true
+      },
+      "f_playlist_ticks_kept": {
+        "pass": true,
+        "detail": 10
+      },
+      "g_playlist_trash_label": {
+        "pass": true,
+        "detail": {
+          "title": "Clear playlist results",
+          "aria": "Clear playlist results"
+        }
+      },
+      "g_one_click": {
+        "pass": true,
+        "detail": 1
+      },
+      "g_player_ticks_kept": {
+        "pass": true,
+        "detail": 6
+      },
+      "g_player_untouched": {
+        "pass": true
+      },
+      "h_title_no_results": {
+        "pass": true,
+        "detail": "Back to player search"
+      },
+      "h_empty_with_chip": {
+        "pass": true
+      },
+      "h_count_kept": {
+        "pass": true,
+        "detail": 6
+      },
+      "h_chip_restores": {
+        "pass": true,
+        "detail": {
+          "q": 6,
+          "userId": 3,
+          "beatmaps": 4
+        }
+      },
+      "h_clicks_2": {
+        "pass": true,
+        "detail": 2
+      },
+      "i_new_search_drops_profile": {
+        "pass": true,
+        "detail": null
+      },
+      "j_no_dashes": {
+        "pass": true,
+        "detail": [
+          "Back to player results",
+          "Back to player search",
+          "Back to userC",
+          "Clear player results",
+          "Clear playlist results",
+          "Back to player results",
+          "Back to player search"
+        ]
+      },
+      "z_no_console_errors": {
+        "pass": true,
+        "detail": []
+      },
+      "z_no_leaks": {
+        "pass": true,
+        "detail": []
+      }
+    },
+    "calls": {
+      "q": 6,
+      "userId": 3,
+      "beatmaps": 4
+    }
+  }
+]
