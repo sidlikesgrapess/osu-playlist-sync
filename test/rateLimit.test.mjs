@@ -1,7 +1,7 @@
 import { test } from 'node:test';
 import assert from 'node:assert/strict';
 
-import { checkRateLimit, rateLimitResponse } from '../src/lib/rateLimit.js';
+import { checkRateLimit, rateLimitResponse, bucketCount } from '../src/lib/rateLimit.js';
 
 function requestFrom(ip) {
   return { headers: { get: (name) => (name === 'x-forwarded-for' ? ip : null) } };
@@ -65,4 +65,19 @@ test('rateLimitResponse is a 429 carrying Retry-After and a JSON error body', as
   assert.equal(res.headers.get('Retry-After'), '17');
   const body = await res.json();
   assert.ok(body.error);
+});
+
+test('expired windows are swept once the store is large, so it does not grow without bound', () => {
+  const opts = { bucket: 'test-sweep', limit: 1, windowMs: 1 };
+  const realNow = Date.now;
+  let now = 1_000_000;
+  Date.now = () => now;
+  try {
+    for (let i = 0; i < 6000; i++) checkRateLimit(requestFrom(`198.51.100.${i}`), opts);
+    now += 10;
+    checkRateLimit(requestFrom('198.51.100.fresh'), opts);
+    assert.ok(bucketCount() < 5000, `store still holds ${bucketCount()} keys`);
+  } finally {
+    Date.now = realNow;
+  }
 });

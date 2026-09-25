@@ -11,6 +11,16 @@
 
 const buckets = new Map();
 
+// Past this many live keys, expired windows are swept out before a new one is added, so a
+// warm instance seeing many distinct clients does not keep every one of them forever.
+const SWEEP_AT = 5000;
+
+function sweepExpired(now) {
+  for (const [key, entry] of buckets) {
+    if (now - entry.windowStart >= entry.windowMs) buckets.delete(key);
+  }
+}
+
 /** The first x-forwarded-for hop, then x-real-ip. Never trusts anything else. */
 function clientIp(request) {
   const headerValue = (name) => {
@@ -38,6 +48,11 @@ function clientIp(request) {
  * `bucket` names the route (or other budget) being limited; `limit` requests are allowed
  * per `windowMs`, a fixed window per client per bucket. Returns `{ ok, retryAfterSec }`.
  */
+/** Live keys in the store. Exported for tests only. */
+export function bucketCount() {
+  return buckets.size;
+}
+
 export function checkRateLimit(request, { bucket, limit, windowMs }) {
   const ip = clientIp(request);
   const key = `${bucket}:${ip}`;
@@ -45,7 +60,8 @@ export function checkRateLimit(request, { bucket, limit, windowMs }) {
 
   let entry = buckets.get(key);
   if (!entry || now - entry.windowStart >= windowMs) {
-    entry = { windowStart: now, count: 0 };
+    if (!entry && buckets.size >= SWEEP_AT) sweepExpired(now);
+    entry = { windowStart: now, windowMs, count: 0 };
     buckets.set(key, entry);
   }
 
