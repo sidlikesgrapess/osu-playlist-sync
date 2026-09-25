@@ -324,6 +324,7 @@ async function extractByKind(input) {
             unavailableCount: data.unavailableCount,
             truncated: data.truncated,
             playlistLength: data.playlistLength,
+            loadCap: data.loadCap,
           },
         };
       }
@@ -411,9 +412,9 @@ export async function extractMusicData(inputUrlOrQuery) {
 }
 
 /**
- * What the page reports about the fetched window. Only a YouTube playlist can hold
- * unavailable items or be cut short (at 100); every other source returns all it read and
- * states no separate length.
+ * What the page reports about the fetched playlist. Only a YouTube playlist can hold
+ * unavailable items or be cut short (at its `loadCap`, youtube.js PLAYLIST_LOAD_CAP); every
+ * other source returns all it read and states no separate length or cap.
  */
 function windowCounts(result, returnedCount) {
   const counts = result.counts || {};
@@ -423,5 +424,6 @@ function windowCounts(result, returnedCount) {
     unavailableCount: counts.unavailableCount ?? 0,
     truncated: counts.truncated ?? false,
     playlistLength: counts.playlistLength ?? null,
+    loadCap: counts.loadCap ?? null,
   };
 }

@@ -4,7 +4,7 @@
  * playlist URL without requiring any Google Account sign-in or API keys.
  */
 
-import { fetchText, UA_PROFILES } from './http.js';
+import { fetchText, postJson } from './http.js';
 
 /**
  * A provider could not be read: the page or payload was unavailable, private, or its shape
@@ -86,25 +86,56 @@ export function extractVideoId(url) {
 }
 
 /**
- * Fetches the songs of a public/unlisted YouTube playlist: its first window only, which the
- * browse response holds as up to 100 items. Continuations are never fetched; `truncated`
- * says when there were more.
+ * How many playlist items are loaded at most. YouTube sends them 100 to a response, so this
+ * is the first window plus up to four continuation pages. It goes to the client as
+ * `loadCap`, which is where the truncation popup takes its number from.
+ */
+export const PLAYLIST_LOAD_CAP = 500;
+
+// Continuation pages are fetched one at a time, this far apart, and the whole walk stops at
+// the deadline so a slow YouTube cannot run /api/playlist into its function timeout. A walk
+// that stops early keeps what it loaded and reports `truncated`.
+const CONTINUATION_GAP_MS = 750;
+const PLAYLIST_WALK_DEADLINE_MS = 20_000;
+
+const INNERTUBE_BROWSE = 'https://www.youtube.com/youtubei/v1/browse?prettyPrint=false';
+const INNERTUBE_CLIENT_VERSION = '2.20240101.01.00';
+const INNERTUBE_REQUEST = {
+  profile: 'browserLike',
+  timeoutMs: INNERTUBE_TIMEOUT_MS,
+  maxBytes: YOUTUBE_PAGE.maxBytes,
+  headers: { 'X-YouTube-Client-Name': '1', 'X-YouTube-Client-Version': INNERTUBE_CLIENT_VERSION },
+};
+const INNERTUBE_CONTEXT = {
+  client: { clientName: 'WEB', clientVersion: INNERTUBE_CLIENT_VERSION, hl: 'en', gl: 'US' },
+};
+
+const realSleep = (ms) => new Promise((resolve) => setTimeout(resolve, ms));
+
+/**
+ * Fetches the songs of a public/unlisted YouTube playlist: the first window, then each
+ * continuation page in turn, one paced request per extra 100 items, until there is no
+ * continuation token or `maxVideos` items are loaded.
  *
  * Returns the songs plus the counts the page reports:
- * - `loadedCount`: video items in the fetched window, plus any YouTube hid from it,
+ * - `loadedCount`: video items across every loaded page, plus any YouTube hid from them,
  * - `returnedCount`: songs kept from them,
  * - `unavailableCount`: items YouTube marks unplayable (private, deleted, blocked), plus
- *   items it leaves out of the window entirely (see `parsePlaylistData`),
- * - `truncated`: the window ends in a continuation, or the `maxVideos` cap cut it short,
- * - `playlistLength`: the real length when the header states it, else `null`.
+ *   items it leaves out of the playlist entirely (see `finishWalk`),
+ * - `truncated`: items exist beyond what was loaded (a continuation not followed, or the
+ *   `maxVideos` cap cutting a page short),
+ * - `playlistLength`: the real length when the header states it, else `null`,
+ * - `loadCap`: the `maxVideos` the walk ran under.
  *
  * Throws `ExtractionError` when neither Innertube nor the page scrape yields a playlist. It
- * never substitutes sample songs for a playlist it could not read (F-07).
+ * never substitutes sample songs for a playlist it could not read (F-07). A continuation
+ * page that fails is not an error: the songs already loaded come back, `truncated`.
  *
  * @param {string} playlistId - Extracted YouTube playlist ID
- * @param {number} [maxVideos=100]
+ * @param {number} [maxVideos=PLAYLIST_LOAD_CAP]
+ * @param {{ sleep?: (ms: number) => Promise<void>, now?: () => number }} [clock] - for tests
  */
-export async function fetchPlaylistItems(playlistId, maxVideos = 100) {
+export async function fetchPlaylistItems(playlistId, maxVideos = PLAYLIST_LOAD_CAP, { sleep = realSleep, now = Date.now } = {}) {
   if (!playlistId || !PLAYLIST_ID.test(playlistId)) {
     throw new ExtractionError('Please provide a valid YouTube playlist URL');
   }
@@ -114,17 +145,25 @@ export async function fetchPlaylistItems(playlistId, maxVideos = 100) {
     return getDemoPlaylist();
   }
 
+  const deadline = now() + PLAYLIST_WALK_DEADLINE_MS;
   const attempts = [
     ['Innertube', () => fetchFromInnertube(playlistId)],
     ['HTML scrape', () => fetchFromHtmlScrape(playlistId)],
   ];
   for (const [name, load] of attempts) {
     try {
-      const parsed = parsePlaylistData(await load(), maxVideos);
-      if (parsed.loadedCount > 0) {
-        return { playlistId, totalSongs: parsed.returnedCount, isDemo: false, ...parsed };
+      const first = await load();
+      const walk = startWalk(first, maxVideos);
+      addPage(walk, playlistWindow(first));
+      if (walk.loadedCount === 0) {
+        console.warn(`[YouTube Extractor] ${name} returned no playlist items`);
+        continue;
       }
-      console.warn(`[YouTube Extractor] ${name} returned no playlist items`);
+      // Both paths carry the same continuation token, so the page scrape pages on through
+      // Innertube exactly as the Innertube path does.
+      await followContinuations(walk, { sleep, now, deadline });
+      const parsed = finishWalk(walk);
+      return { playlistId, totalSongs: parsed.returnedCount, isDemo: false, ...parsed };
     } catch (err) {
       console.warn(`[YouTube Extractor] ${name} attempt error:`, err.message);
     }
@@ -133,40 +172,46 @@ export async function fetchPlaylistItems(playlistId, maxVideos = 100) {
   throw new ExtractionError('Could not read that YouTube playlist. Check that it is public or unlisted.');
 }
 
-/** The browse response for a playlist, from the Innertube API. */
-async function fetchFromInnertube(playlistId) {
-  const browseId = playlistId.startsWith('VL') ? playlistId : `VL${playlistId}`;
-
-  // The one outbound call that cannot go through http.js: Innertube browse is a POST with a
-  // JSON body, and http.js only issues GETs. It still takes its UA from UA_PROFILES and
-  // carries the same timeout; it has no byte cap until http.js can send a body.
-  const response = await fetch('https://www.youtube.com/youtubei/v1/browse?prettyPrint=false', {
-    method: 'POST',
-    cache: 'no-store',
-    signal: AbortSignal.timeout(INNERTUBE_TIMEOUT_MS),
-    headers: {
-      'Content-Type': 'application/json',
-      'User-Agent': UA_PROFILES.browserLike,
-      'X-YouTube-Client-Name': '1',
-      'X-YouTube-Client-Version': '2.20240101.01.00',
-    },
-    body: JSON.stringify({
-      context: {
-        client: {
-          clientName: 'WEB',
-          clientVersion: '2.20240101.01.00',
-          hl: 'en',
-          gl: 'US',
-        },
-      },
-      browseId,
-    }),
-  });
-
-  if (!response.ok) {
-    throw new Error(`Innertube request returned HTTP ${response.status}`);
+/**
+ * Fetch continuation pages into `walk` while it holds a token and has room. Every early stop
+ * (the deadline, a failed or unreadable page) leaves the walk open ended, which is what
+ * makes the result `truncated`; so does stopping at the cap with a token still in hand.
+ */
+async function followContinuations(walk, { sleep, now, deadline }) {
+  while (walk.token && !walkIsFull(walk)) {
+    if (now() + CONTINUATION_GAP_MS >= deadline) {
+      console.warn('[YouTube Extractor] playlist walk deadline reached');
+      return;
+    }
+    await sleep(CONTINUATION_GAP_MS);
+    if (now() >= deadline) {
+      console.warn('[YouTube Extractor] playlist walk deadline reached');
+      return;
+    }
+    let items;
+    try {
+      const timeoutMs = Math.max(1, Math.min(INNERTUBE_TIMEOUT_MS, deadline - now()));
+      items = continuationWindow(await postJson(
+        INNERTUBE_BROWSE,
+        { context: INNERTUBE_CONTEXT, continuation: walk.token },
+        { ...INNERTUBE_REQUEST, timeoutMs },
+      ));
+    } catch (err) {
+      console.warn('[YouTube Extractor] continuation page error:', err.message);
+      return;
+    }
+    if (!items) {
+      console.warn('[YouTube Extractor] continuation page held no items');
+      return;
+    }
+    addPage(walk, items);
   }
-  return response.json();
+}
+
+/** The browse response for a playlist, from the Innertube API. */
+function fetchFromInnertube(playlistId) {
+  const browseId = playlistId.startsWith('VL') ? playlistId : `VL${playlistId}`;
+  return postJson(INNERTUBE_BROWSE, { context: INNERTUBE_CONTEXT, browseId }, INNERTUBE_REQUEST);
 }
 
 /** The same browse data, as `ytInitialData` embedded in the playlist page. */
@@ -223,6 +268,36 @@ function playlistWindow(data) {
 }
 
 /**
+ * The item list of a continuation response, from every `appendContinuationItemsAction` it
+ * carries, or null when it carries none (a shape we cannot read, never "no more items").
+ */
+function continuationWindow(data) {
+  const actions = Array.isArray(data?.onResponseReceivedActions) ? data.onResponseReceivedActions : [];
+  const lists = actions
+    .map((a) => a?.appendContinuationItemsAction?.continuationItems)
+    .filter(Array.isArray);
+  return lists.length > 0 ? lists.flat() : null;
+}
+
+/** The first `continuationCommand.token` anywhere under `node`, depth first, or null. */
+function findContinuationToken(node) {
+  if (Array.isArray(node)) {
+    for (const child of node) {
+      const token = findContinuationToken(child);
+      if (token) return token;
+    }
+  } else if (node && typeof node === 'object') {
+    const token = node.continuationCommand?.token;
+    if (typeof token === 'string' && token) return token;
+    for (const value of Object.values(node)) {
+      const found = findContinuationToken(value);
+      if (found) return found;
+    }
+  }
+  return null;
+}
+
+/**
  * One window item as `{ song }`, `{ unavailable: true }`, or null when it is not a video item
  * at all. Unavailability is read from the renderer's own fields, never from the title text
  * (D-14): YouTube marks an unplayable entry `isPlayable: false`, and a `playlistVideoRenderer`
@@ -267,58 +342,98 @@ function readWindowItem(item, position) {
 }
 
 /**
- * A browse response (Innertube or `ytInitialData`, which share a shape) as songs and counts.
- * `truncated` is structural: a `continuationItemRenderer` in the window, or the `maxVideos`
- * cap stopping the walk with items left. It never depends on the length text.
+ * A playlist being read page by page. `openEnded` says the last page read ended in a
+ * continuation, and `token` is that continuation's token when it carried a usable one.
  */
-export function parsePlaylistData(data, maxVideos = 100) {
-  const playlistTitle = data?.header?.playlistHeaderRenderer?.title?.simpleText ||
-                        data?.header?.pageHeaderRenderer?.pageTitle ||
-                        data?.metadata?.playlistMetadataRenderer?.title ||
-                        'YouTube Playlist';
-  const items = playlistWindow(data);
+function startWalk(first, maxVideos) {
+  return {
+    maxVideos,
+    playlistTitle: first?.header?.playlistHeaderRenderer?.title?.simpleText ||
+                   first?.header?.pageHeaderRenderer?.pageTitle ||
+                   first?.metadata?.playlistMetadataRenderer?.title ||
+                   'YouTube Playlist',
+    playlistLength: readPlaylistLength(first?.header),
+    songs: [],
+    loadedCount: 0,
+    unavailableCount: 0,
+    cut: false,
+    openEnded: false,
+    token: null,
+  };
+}
 
-  const songs = [];
-  let loadedCount = 0;
-  let unavailableCount = 0;
-  let truncated = false;
+const walkIsFull = (walk) => walk.loadedCount >= walk.maxVideos;
 
-  for (let i = 0; i < items.length; i++) {
-    if (items[i]?.continuationItemRenderer) {
-      truncated = true;
+/** Read one page of items into the walk. Positions run on across pages, never from 0. */
+function addPage(walk, items) {
+  walk.openEnded = false;
+  walk.token = null;
+  for (const item of items) {
+    if (item?.continuationItemRenderer) {
+      walk.openEnded = true;
+      walk.token = findContinuationToken(item.continuationItemRenderer);
       continue;
     }
-    if (songs.length >= maxVideos) {
-      if (readWindowItem(items[i], i)) truncated = true;
-      continue;
-    }
-    const read = readWindowItem(items[i], i);
+    const read = readWindowItem(item, walk.loadedCount);
     if (!read) continue;
-    loadedCount++;
-    if (read.unavailable) unavailableCount++;
-    else songs.push(read.song);
+    if (walkIsFull(walk)) {
+      walk.cut = true;
+      continue;
+    }
+    walk.loadedCount++;
+    if (read.unavailable) walk.unavailableCount++;
+    else walk.songs.push(read.song);
   }
+}
 
-  // YouTube can drop unavailable videos from the window altogether, leaving only an alert
+/**
+ * The walk as songs and counts. `truncated` is structural: the last page read ended in a
+ * continuation that was not followed (the cap, the deadline or a failed page stopped the
+ * walk there), or the cap cut a page short with items left. It never depends on the
+ * length text.
+ */
+function finishWalk(walk) {
+  const truncated = walk.cut || walk.openEnded;
+  const { playlistLength } = walk;
+  let { loadedCount, unavailableCount } = walk;
+
+  // YouTube can drop unavailable videos from the playlist altogether, leaving only an alert
   // ("4 unavailable videos are hidden") that is locale dependent and never parsed. The
-  // header length still counts them, so in a complete window the shortfall is exactly the
-  // hidden items. A truncated window cannot tell hidden items from ones not yet loaded, and
-  // an empty one may be a shape we failed to read, so neither infers anything.
-  const playlistLength = readPlaylistLength(data?.header);
+  // header length still counts them, so once every page is loaded the shortfall is exactly
+  // the hidden items. A truncated walk cannot tell hidden items from ones not yet loaded,
+  // and an empty one may be a shape we failed to read, so neither infers anything.
   if (!truncated && loadedCount > 0 && playlistLength > loadedCount) {
     unavailableCount += playlistLength - loadedCount;
     loadedCount = playlistLength;
   }
 
   return {
-    playlistTitle,
-    songs,
-    returnedCount: songs.length,
+    playlistTitle: walk.playlistTitle,
+    songs: walk.songs,
+    returnedCount: walk.songs.length,
     loadedCount,
     unavailableCount,
     truncated,
     playlistLength,
+    loadCap: walk.maxVideos,
   };
+}
+
+/**
+ * A browse response (Innertube or `ytInitialData`, which share a shape) as songs and counts,
+ * with the continuation responses already fetched for it read on after it, in order. This
+ * is the network free half of `fetchPlaylistItems`: the same walk, the same counts.
+ */
+export function parsePlaylistData(data, maxVideos = PLAYLIST_LOAD_CAP, continuationPages = []) {
+  const walk = startWalk(data, maxVideos);
+  addPage(walk, playlistWindow(data));
+  for (const page of continuationPages) {
+    if (!walk.token || walkIsFull(walk)) break;
+    const items = continuationWindow(page);
+    if (!items) break;
+    addPage(walk, items);
+  }
+  return finishWalk(walk);
 }
 
 /**
@@ -335,6 +450,7 @@ function getDemoPlaylist() {
     unavailableCount: 0,
     truncated: false,
     playlistLength: 6,
+    loadCap: PLAYLIST_LOAD_CAP,
     songs: [
       {
         id: 'dQw4w9WgXcQ',

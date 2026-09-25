@@ -47,13 +47,15 @@ function linkExternalSignal(external, controller) {
  * headers). Non-2xx and timeout are both turned into `.status`-tagged errors here, so
  * every caller of `fetchText`/`fetchJson`/`fetchUpstream` sees the same two shapes.
  */
-async function openRequest(url, { profile = 'server', timeoutMs = 8000, headers, signal } = {}) {
+async function openRequest(url, { profile = 'server', timeoutMs = 8000, headers, signal, method = 'GET', body } = {}) {
   const controller = new AbortController();
   linkExternalSignal(signal, controller);
   const timer = setTimeout(() => controller.abort(), timeoutMs);
 
   try {
     const res = await fetch(url, {
+      method,
+      ...(body === undefined ? {} : { body }),
       headers: { 'User-Agent': UA_PROFILES[profile] || UA_PROFILES.server, ...headers },
       redirect: 'follow',
       cache: 'no-store',
@@ -130,5 +132,20 @@ export async function fetchText(url, opts = {}) {
 /** `fetchText` plus `JSON.parse`. A malformed body throws `JSON.parse`'s own SyntaxError. */
 export async function fetchJson(url, opts) {
   const text = await fetchText(url, opts);
+  return JSON.parse(text);
+}
+
+/**
+ * POST `payload` as JSON and parse the JSON answer, under the same UA profile, deadline and
+ * byte cap as `fetchJson`. The Innertube browse API (youtube.js) is the caller: it only
+ * answers a POST, and it was the one outbound call that used to skip this module for it.
+ */
+export async function postJson(url, payload, opts = {}) {
+  const text = await fetchText(url, {
+    ...opts,
+    method: 'POST',
+    body: JSON.stringify(payload),
+    headers: { 'Content-Type': 'application/json', ...opts.headers },
+  });
   return JSON.parse(text);
 }

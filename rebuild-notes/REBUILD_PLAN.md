@@ -341,20 +341,22 @@ Findings: F-02, F-06, F-07, F-18, X-01, F-25, F-26, F-27, F-28, X-02, X-03, X-07
        - `playlistLength`: the real length, or `null` when it could not be read.
      - The header shows "Showing 93 of 100 songs. 7 are unavailable on YouTube." The append toast carries the same numbers.
      - `setPlaylistMeta` still runs only when `!isAppending` (`page.js:356-364`). The counts on an append go into the toast, not the header.
-   - **Cap: kept at 100, and the user is told (user decision, 2026-09-24).**
+   - **Cap: raised to 500, continuations followed (user decision, 2026-09-25, todo item 08).** This overrides the 2026-09-24 decision ("kept at 100", "do not fetch continuations"). The evidence and the structural rules below carried over; the numbers and the no continuation rule did not.
      - Evidence, from one live Innertube browse of a 200-video playlist (`PLMC9KNkIncKtPzgY-5rmhvj7fax8fdxoj`):
        - The first response holds exactly 100 items, then a `continuationItemRenderer` at index 100.
        - The length appears only as text, "200 videos", in `header.pageHeaderRenderer.content.pageHeaderViewModel.metadata.contentMetadataViewModel.metadataRows[*].metadataParts[*]`.
-     - **`truncated` is structural.** It is true when the item list contains a `continuationItemRenderer`, or when the `maxVideos` break fired. It never depends on the length text.
-     - **`playlistLength` is best effort.** Scan every header `metadataParts` entry for `^([\d,]+) videos?$`; the request keeps `hl: 'en'`, already set at `youtube.js:110`. Leave it `null` if nothing matches. Do not index `metadataRows[1]`, because header shapes differ between playlists.
-     - **The HTML scrape fallback** applies the same two rules to `ytInitialData`.
-     - **Client.** When `truncated` is true, show a popup: a small dialog with an OK button, not an auto-dismissing toast.
+     - **The walk.** `PLAYLIST_LOAD_CAP = 500` (`youtube.js`) is the default `maxVideos`, and `extractors.js` inherits it. Each further 100 is one POST to `youtubei/v1/browse` with body `{ context, continuation: token }` through `http.js postJson`, so youtube.js no longer calls global fetch. The token is read depth first from the `continuationItemRenderer`. Pages are spaced 750 ms apart and the whole walk has a 20 s deadline. Requests made: exactly `ceil(min(N, 500) / 100)`. Continuation items come from `onResponseReceivedActions[*].appendContinuationItemsAction.continuationItems`, and positions stay contiguous across pages.
+     - **`truncated` is structural.** It is true when the walk stopped with a continuation still pending (past the cap, a failed page, the deadline), or when the cap cut items off. It never depends on the length text. A fully walked 250 item playlist is `false`; a 700 item playlist is `true` with 500 loaded; a failed continuation is `true`, keeps what was loaded and never throws.
+     - **Hidden unavailable videos** are inferred across pages (`playlistLength - loadedCount`) only when the walk is not truncated. A truncated walk infers nothing.
+     - **`playlistLength` is best effort.** Scan every header `metadataParts` entry for `^([\d,]+) videos?$`; the request keeps `hl: 'en'`. Leave it `null` if nothing matches. Do not index `metadataRows[1]`, because header shapes differ between playlists.
+     - **The HTML scrape fallback** applies the same rules to `ytInitialData` and follows the same continuation token.
+     - **Client.** When `truncated` is true (so only past 500, or on a cut walk), show a popup: a small dialog with an OK button, not an auto-dismissing toast.
        - It appears once per fetch, on both a first load and an append.
-       - With a length, used only when `playlistLength > loadedCount`: "This playlist has 200 songs. osu!Sync loads the first 100."
-       - Otherwise: "This playlist has more than 100 songs. osu!Sync loads the first 100."
-       - No dash in either string.
-       - The dialog is client-ui's component. Server-hardening supplies the fields.
-     - Do not fetch continuations. Each extra song costs about 1.49 osu! calls.
+       - With a length, used only when `playlistLength > loadedCount`: "This playlist has 800 songs. osu!Sync loads the first 500."
+       - Otherwise: "This playlist has more than 500 songs. osu!Sync loads the first 500."
+       - A walk cut before the cap says "osu!Sync could only load the first N this time." instead of claiming the cap.
+       - The number comes from the response's `loadCap` field, built in `truncationNotice.js`; it is never written into the copy. No dash in any string.
+     - **Search All is paced.** About 1.49 osu! calls per song still holds (bench:cost), but the client side cost was the 60/min per IP limit on `/api/osu/search`: a 500 song Search All used to end in "osu! is busy" rows. Every search request (Search All, paging, Refetch, a single row's search) now waits in one shared sliding window pacer, 55 per 60 s (`searchPacer.js`). A 429 still answered is fed back through `penalize(Retry-After)` and retried up to 3 times before the row keeps `searchError: 'rate-limited'`. Requests for a list that was dropped are skipped without spending the budget.
 6. **F-27, F-45, and N1.**
    - `handleFetchPlaylist` uses `mergeSongs`.
    - The existing append toast (`page.js:383-390`) reports `added` and `skipped`, for example "Added 12 songs from Chill Mix · 3 were already in the queue". It adds no second toast.

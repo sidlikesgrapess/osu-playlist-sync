@@ -30,6 +30,8 @@ import { beatmapsetPage } from '@/lib/mirrors';
 import { mergeSongs as mergeSongLists } from '@/lib/song';
 import { buildSearchRequest } from '@/lib/searchRequest';
 import { visibleItemsFor } from '@/lib/collection';
+import { truncationMessage } from '@/lib/truncationNotice';
+import { createSearchPacer, pacedRequest } from '@/lib/searchPacer';
 
 const REPO_URL = 'https://github.com/sidlikesgrapess/osu-playlist-sync';
 
@@ -70,9 +72,25 @@ const failedSearchState = (searchError) => ({
 // rows; paging only fills in rows that were never tried, so it cannot hammer a busy osu!.
 const awaitsAnswer = (s) => !s.isSearching && (!s.hasSearched || Boolean(s.searchError));
 
-// How long the one automatic retry of rate-limited rows waits, at most, for the
-// Retry-After osu! (or our own limiter) asked for. Past this the row keeps its Retry button.
-const RATE_LIMIT_RETRY_WAIT_CAP_S = 15;
+// Every request to /api/osu/search waits its turn here, Search All, paging, Refetch and a
+// single row's search alike, so batches running at once share the route's one budget
+// (searchPacer.js). Module scope, so a remount cannot start a second, unaware budget.
+const searchPacer = createSearchPacer();
+
+// One /api/osu/search request, paced, and retried after a 429 while the wait is one pacing
+// can absorb. `shouldSkip` drops a request whose row is gone before it is sent.
+async function pacedSearch(queryParams, { shouldSkip } = {}) {
+  return pacedRequest(searchPacer, async () => {
+    const res = await fetch(`/api/osu/search?${queryParams.toString()}`);
+    const result = await res.json().catch(() => ({}));
+    return {
+      res,
+      result,
+      rateLimited: res.status === 429,
+      retryAfterSec: Number(res.headers.get('Retry-After')) || 0,
+    };
+  }, { shouldSkip });
+}
 
 const PLATFORM_BADGE = {
   spotify: { color: '#1db954', bg: 'rgba(29, 185, 84, 0.15)', border: 'rgba(29, 185, 84, 0.35)' },
@@ -84,16 +102,6 @@ const PLATFORM_BADGE = {
 // How long an object URL outlives its click. Revoking it synchronously can cancel
 // the save before the browser has started reading the blob (Safari and Firefox do).
 const REVOKE_DELAY_MS = 10_000;
-
-// REBUILD_PLAN.md 2.1 item 5: `truncated` is structural (a continuation, or the maxVideos
-// cap), so the message only distinguishes whether the real length was readable at all.
-// No dash in either string.
-function truncationMessage({ playlistLength, loadedCount }) {
-  if (playlistLength && playlistLength > loadedCount) {
-    return `This playlist has ${playlistLength} songs. osu!Sync loads the first 100.`;
-  }
-  return 'This playlist has more than 100 songs. osu!Sync loads the first 100.';
-}
 
 function downloadBlob(blob, filename) {
   if (typeof window === 'undefined') return;
@@ -150,9 +158,11 @@ export default function Home() {
   const [playerProfile, setPlayerProfile] = useState(null);
   const [playerSections, setPlayerSections] = useState(createEmptySections);
 
-  // The latest songs, for async work that outlives the render it started in: the automatic
-  // rate-limit retry must see whether a row was reset or re-searched while it waited.
+  // The latest songs, for async work that outlives the render it started in (a manual
+  // search reads the row as it is now, not as it was when the handler was created).
   const songsRef = useRef(songs);
+  // Bumped whenever the song list is dropped, so a search batch can tell its rows are gone.
+  const songListGenerationRef = useRef(0);
   useEffect(() => { songsRef.current = songs; }, [songs]);
 
   // Player section loads (F-13). Each `${userId}:${type}` key has its own generation and
@@ -472,9 +482,14 @@ export default function Home() {
       }
 
       // Once per fetch, first load or append alike -- an append still hits the same
-      // 100-item cap, and the user needs to know the same way.
+      // load cap (`loadCap`, 500), and the user needs to know the same way. `truncated` is
+      // structural, so a playlist the walk loaded in full never raises it.
       if (data.truncated) {
-        setTruncationNotice(truncationMessage({ playlistLength: data.playlistLength, loadedCount: data.loadedCount }));
+        setTruncationNotice(truncationMessage({
+          playlistLength: data.playlistLength,
+          loadedCount: data.loadedCount,
+          loadCap: data.loadCap,
+        }));
       }
 
       if (!isAppending) {
@@ -579,11 +594,14 @@ export default function Home() {
     let completedCount = 0;
     const concurrency = 3;
     let currentIndex = 0;
-    const rateLimitedIds = [];
-    let retryAfterSec = 0;
+    // A list dropped since this batch began (a new playlist, a player) no longer holds
+    // these rows, so their queued requests are skipped instead of spending the budget.
+    const generation = songListGenerationRef.current;
+    const listDropped = () => songListGenerationRef.current !== generation;
 
-    // One search, its outcome written onto the row. Resolves true when the answer was a
-    // 429, so the batch can come back for that row once at the end.
+    // One search, its outcome written onto the row. The request waits its turn in the
+    // shared pacer, and a 429 is retried there after its Retry-After; only a row whose
+    // retries ran out ends as rate-limited.
     const searchOne = async (targetSong) => {
       try {
         const queryParams = buildSearchRequest(targetSong, {
@@ -592,15 +610,14 @@ export default function Home() {
           strictness: currentStrictness,
         });
 
-        const res = await fetch(`/api/osu/search?${queryParams.toString()}`);
-        const result = await res.json().catch(() => ({}));
+        const outcome = await pacedSearch(queryParams, { shouldSkip: listDropped });
+        if (outcome.skipped) return;
+        const { res, result } = outcome;
 
         // Demo mode is an answer (there is simply no key to search with), not a failure.
         if (!result.isDemo && (!res.ok || !result.success)) {
-          const limited = res.status === 429;
-          if (limited) retryAfterSec = Math.max(retryAfterSec, Number(res.headers.get('Retry-After')) || 0);
-          markSearchFailed(targetSong.id, limited ? 'rate-limited' : 'failed');
-          return limited;
+          markSearchFailed(targetSong.id, outcome.rateLimited ? 'rate-limited' : 'failed');
+          return;
         }
 
         setSongs(prev => prev.map(s => {
@@ -629,14 +646,13 @@ export default function Home() {
         console.warn(`Search failed for ${targetSong.title}:`, err);
         markSearchFailed(targetSong.id, 'failed');
       }
-      return false;
     };
 
     async function searchNext() {
       if (currentIndex >= targets.length) return;
       const targetSong = targets[currentIndex++];
 
-      if (await searchOne(targetSong)) rateLimitedIds.push(targetSong.id);
+      await searchOne(targetSong);
 
       completedCount++;
       setSearchProgress(Math.round((completedCount / targets.length) * 100));
@@ -650,22 +666,6 @@ export default function Home() {
     }
 
     await Promise.all(pool);
-
-    // A 429 means "not now", so those rows get one more go once the batch is done, one at
-    // a time, after the wait osu! asked for. A row that was reset or re-searched in the
-    // meantime no longer carries the error and is left alone.
-    // A wait longer than the cap is not shortened: retrying before the window reopens only
-    // earns another 429, so those rows simply keep their Retry button.
-    if (rateLimitedIds.length > 0 && retryAfterSec <= RATE_LIMIT_RETRY_WAIT_CAP_S) {
-      const waitSec = Math.max(retryAfterSec, 1);
-      await new Promise(resolve => setTimeout(resolve, waitSec * 1000));
-      for (const id of rateLimitedIds) {
-        const current = songsRef.current.find(s => s.id === id);
-        if (current?.searchError !== 'rate-limited') continue;
-        setSongs(prev => prev.map(s => s.id === id ? { ...s, isSearching: true } : s));
-        await searchOne(current);
-      }
-    }
 
     setIsSearching(false);
     osuAudio.playSuccess();
@@ -864,11 +864,15 @@ export default function Home() {
         manualQuery,
       });
 
-      const res = await fetch(`/api/osu/search?${queryParams.toString()}`);
-      const result = await res.json().catch(() => ({}));
+      const generation = songListGenerationRef.current;
+      const outcome = await pacedSearch(queryParams, {
+        shouldSkip: () => songListGenerationRef.current !== generation,
+      });
+      if (outcome.skipped) return;
+      const { res, result } = outcome;
 
       if (!result.isDemo && (!res.ok || !result.success)) {
-        markSearchFailed(songId, res.status === 429 ? 'rate-limited' : 'failed');
+        markSearchFailed(songId, outcome.rateLimited ? 'rate-limited' : 'failed');
         return;
       }
 
@@ -975,6 +979,7 @@ export default function Home() {
   // left to keep downloading rows the list no longer holds: Cancel does the same abort, and
   // replacing the list must leave the same clean state.
   const dropSongList = () => {
+    songListGenerationRef.current += 1;
     handleCancelBatch();
     setDownloadingIds(new Set());
     setIsDownloadingZip(false);
