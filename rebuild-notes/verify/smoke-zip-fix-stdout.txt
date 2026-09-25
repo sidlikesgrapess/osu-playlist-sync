@@ -1,0 +1,6 @@
+ZIPFIX DONE {
+  "rowCount": 2,
+  "btnText": "Download All (2)",
+  "zipBtnText": "Bundle as .ZIP (2)",
+  "consoleErrors": []
+}
