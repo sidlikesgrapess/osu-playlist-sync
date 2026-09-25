@@ -1,0 +1,222 @@
+[
+  {
+    "name": "desktop",
+    "s1_playing": {
+      "src": "https://b.ppy.sh/preview/7000000.mp3",
+      "currentSrc": "https://b.ppy.sh/preview/7000000.mp3",
+      "net": 1,
+      "paused": false,
+      "handlers": 5
+    },
+    "s1_afterReplace": {
+      "rowsA": 0,
+      "audio": {
+        "src": null,
+        "currentSrc": "https://b.ppy.sh/preview/7000000.mp3",
+        "net": 0,
+        "paused": true,
+        "handlers": 0
+      }
+    },
+    "s2_loadingSrcSet": true,
+    "s2_toggleOffDuringLoad": {
+      "audio": {
+        "src": null,
+        "currentSrc": "https://b.ppy.sh/preview/7000010.mp3",
+        "net": 0,
+        "paused": true,
+        "handlers": 0
+      },
+      "unavailable": 0
+    },
+    "s2_dropDuringLoad": {
+      "rowsB": 0,
+      "audio": {
+        "src": null,
+        "currentSrc": "https://b.ppy.sh/preview/7000011.mp3",
+        "net": 0,
+        "paused": true,
+        "handlers": 0
+      },
+      "unavailable": 0
+    },
+    "s3_afterEnded": {
+      "audio": {
+        "src": null,
+        "currentSrc": "https://b.ppy.sh/preview/7000020.mp3",
+        "net": 0,
+        "paused": true,
+        "handlers": 0
+      },
+      "unavailable": 0
+    },
+    "s4_afterFail": {
+      "audio": {
+        "src": null,
+        "currentSrc": "https://b.ppy.sh/preview/7000021.mp3",
+        "net": 0,
+        "paused": true,
+        "handlers": 0
+      },
+      "unavailable": 1
+    },
+    "s5_replay": {
+      "src": "https://b.ppy.sh/preview/7000022.mp3",
+      "currentSrc": "https://b.ppy.sh/preview/7000022.mp3",
+      "net": 1,
+      "paused": false,
+      "handlers": 5
+    },
+    "s6_afterPlayerProfile": {
+      "rowsC": 0,
+      "audio": {
+        "src": null,
+        "currentSrc": "https://b.ppy.sh/preview/7000022.mp3",
+        "net": 0,
+        "paused": true,
+        "handlers": 0
+      }
+    },
+    "s6_playerPlaying": {
+      "src": "https://b.ppy.sh/preview/7000030.mp3",
+      "currentSrc": "https://b.ppy.sh/preview/7000030.mp3",
+      "net": 1,
+      "paused": false,
+      "handlers": 5
+    },
+    "s6_afterClearPlayer": {
+      "playerRows": false,
+      "audio": {
+        "src": null,
+        "currentSrc": "https://b.ppy.sh/preview/7000030.mp3",
+        "net": 0,
+        "paused": true,
+        "handlers": 0
+      }
+    },
+    "heapMB": [
+      17.3,
+      17.4,
+      17.48,
+      17.53,
+      17.68,
+      17.71
+    ],
+    "heapGrowthMB": 0.42,
+    "audioCount": 1,
+    "console": [
+      "[error] Failed to load resource: net::ERR_FAILED"
+    ],
+    "leaked": []
+  },
+  {
+    "name": "phone",
+    "s1_playing": {
+      "src": "https://b.ppy.sh/preview/7000155.mp3",
+      "currentSrc": "https://b.ppy.sh/preview/7000155.mp3",
+      "net": 1,
+      "paused": false,
+      "handlers": 5
+    },
+    "s1_afterReplace": {
+      "rowsA": 0,
+      "audio": {
+        "src": null,
+        "currentSrc": "https://b.ppy.sh/preview/7000155.mp3",
+        "net": 0,
+        "paused": true,
+        "handlers": 0
+      }
+    },
+    "s2_loadingSrcSet": true,
+    "s2_toggleOffDuringLoad": {
+      "audio": {
+        "src": null,
+        "currentSrc": "https://b.ppy.sh/preview/7000165.mp3",
+        "net": 0,
+        "paused": true,
+        "handlers": 0
+      },
+      "unavailable": 0
+    },
+    "s2_dropDuringLoad": {
+      "rowsB": 0,
+      "audio": {
+        "src": null,
+        "currentSrc": "https://b.ppy.sh/preview/7000166.mp3",
+        "net": 0,
+        "paused": true,
+        "handlers": 0
+      },
+      "unavailable": 0
+    },
+    "s3_afterEnded": {
+      "audio": {
+        "src": null,
+        "currentSrc": "https://b.ppy.sh/preview/7000175.mp3",
+        "net": 0,
+        "paused": true,
+        "handlers": 0
+      },
+      "unavailable": 0
+    },
+    "s4_afterFail": {
+      "audio": {
+        "src": null,
+        "currentSrc": "https://b.ppy.sh/preview/7000176.mp3",
+        "net": 0,
+        "paused": true,
+        "handlers": 0
+      },
+      "unavailable": 1
+    },
+    "s5_replay": {
+      "src": "https://b.ppy.sh/preview/7000177.mp3",
+      "currentSrc": "https://b.ppy.sh/preview/7000177.mp3",
+      "net": 1,
+      "paused": false,
+      "handlers": 5
+    },
+    "s6_afterPlayerProfile": {
+      "rowsC": 0,
+      "audio": {
+        "src": null,
+        "currentSrc": "https://b.ppy.sh/preview/7000177.mp3",
+        "net": 0,
+        "paused": true,
+        "handlers": 0
+      }
+    },
+    "s6_playerPlaying": {
+      "src": "https://b.ppy.sh/preview/7000185.mp3",
+      "currentSrc": "https://b.ppy.sh/preview/7000185.mp3",
+      "net": 1,
+      "paused": false,
+      "handlers": 5
+    },
+    "s6_afterClearPlayer": {
+      "playerRows": false,
+      "audio": {
+        "src": null,
+        "currentSrc": "https://b.ppy.sh/preview/7000185.mp3",
+        "net": 0,
+        "paused": true,
+        "handlers": 0
+      }
+    },
+    "heapMB": [
+      17.3,
+      17.4,
+      17.48,
+      17.53,
+      17.68,
+      17.71
+    ],
+    "heapGrowthMB": 0.42,
+    "audioCount": 1,
+    "console": [
+      "[error] Failed to load resource: net::ERR_FAILED"
+    ],
+    "leaked": []
+  }
+]

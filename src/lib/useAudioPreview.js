@@ -173,42 +173,74 @@ export function createPreviewStore({ play, stop: stopPlayback } = {}) {
 // rows and its alt-picker modal, PlayerSections' rows) shares the same <audio> element and
 // the same play state -- the whole point of "one source of truth for play state" (item 2). ---
 
-let audioEl = null;
+/**
+ * The `play`/`stop` pair `createPreviewStore` drives, wired to one lazily created media
+ * element from `createAudio()` (returns null when there is no window). `getStore` is a thunk
+ * because the handlers call back into the store this backend is passed to. Split out and
+ * exported so `test/useAudioPreview.test.mjs` can hand it a fake element.
+ *
+ * Stopping releases the media, not just pauses it: the element drops its src, so the old
+ * preview's buffered/decoded audio is freed as soon as playback stops for any reason (toggle
+ * off, ended, failure, or the last cover unmounting when a new search drops the list).
+ */
+export function createAudioBackend(createAudio, getStore) {
+  let audioEl = null;
 
-function ensureAudio() {
-  if (typeof window === 'undefined') return null;
-  if (!audioEl) {
-    audioEl = new window.Audio();
-    audioEl.volume = 0.5;
+  function ensureAudio() {
+    if (!audioEl) {
+      audioEl = createAudio();
+      if (audioEl) audioEl.volume = 0.5;
+    }
+    return audioEl;
   }
-  return audioEl;
+
+  // Detach first: clearing src fires `emptied`/`abort` (and can fire `error` in some
+  // browsers), and none of that may reach the store as a failure of the key just stopped.
+  function release(audio) {
+    audio.pause();
+    audio.onended = null;
+    audio.onwaiting = null;
+    audio.onstalled = null;
+    audio.onplaying = null;
+    audio.onerror = null;
+    if (audio.hasAttribute('src')) {
+      audio.removeAttribute('src');
+      audio.load(); // without load() the element keeps the old resource despite no src
+    }
+  }
+
+  return {
+    play: (previewUrl) => {
+      const audio = ensureAudio();
+      if (!audio) return Promise.reject(new Error('no window'));
+      audio.pause();
+      const store = getStore();
+      // Handlers are properties, not addEventListener, so each attempt replaces the last
+      // one's and every handler is bound to the key it was set up for. The store ignores a
+      // key that is no longer current, so a late event from an old src cannot mark the new one.
+      audio.onended = () => store.stop();
+      audio.onwaiting = () => store.setBuffering(previewUrl, true);
+      // `stalled` only means the network went quiet; buffered audio may still be playing, and
+      // then no `playing` event would follow to clear the spinner. Count it only when the
+      // element really has nothing ahead to play (below HAVE_FUTURE_DATA).
+      audio.onstalled = () => {
+        if (audio.readyState < 3) store.setBuffering(previewUrl, true);
+      };
+      audio.onplaying = () => store.setBuffering(previewUrl, false);
+      audio.onerror = () => store.fail(previewUrl);
+      audio.src = previewUrl;
+      return audio.play();
+    },
+    stop: () => {
+      if (audioEl) release(audioEl);
+    },
+  };
 }
 
-const store = createPreviewStore({
-  play: (previewUrl) => {
-    const audio = ensureAudio();
-    if (!audio) return Promise.reject(new Error('no window'));
-    audio.pause();
-    // Handlers are properties, not addEventListener, so each attempt replaces the last one's
-    // and every handler is bound to the key it was set up for. The store ignores a key that
-    // is no longer current, so a late event from an old src cannot mark the new one.
-    audio.onended = () => store.stop();
-    audio.onwaiting = () => store.setBuffering(previewUrl, true);
-    // `stalled` only means the network went quiet; buffered audio may still be playing, and
-    // then no `playing` event would follow to clear the spinner. Count it only when the
-    // element really has nothing ahead to play (below HAVE_FUTURE_DATA).
-    audio.onstalled = () => {
-      if (audio.readyState < 3) store.setBuffering(previewUrl, true);
-    };
-    audio.onplaying = () => store.setBuffering(previewUrl, false);
-    audio.onerror = () => store.fail(previewUrl);
-    audio.src = previewUrl;
-    return audio.play();
-  },
-  stop: () => {
-    if (audioEl) audioEl.pause();
-  },
-});
+const store = createPreviewStore(createAudioBackend(
+  () => (typeof window === 'undefined' ? null : new window.Audio()),
+  () => store,
+));
 
 const EMPTY_SNAPSHOT = { activeKey: null, loadingKey: null, bufferingKey: null, errorKeys: new Set() };
 function getServerSnapshot() {

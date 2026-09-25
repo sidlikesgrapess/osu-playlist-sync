@@ -1,7 +1,7 @@
 import { test } from 'node:test';
 import assert from 'node:assert/strict';
 
-import { createPreviewStore } from '../src/lib/useAudioPreview.js';
+import { createPreviewStore, createAudioBackend } from '../src/lib/useAudioPreview.js';
 
 // `toggle()` calls the injected `play()` from inside a `Promise.resolve().then(...)`,
 // so it lands one microtask after `toggle()` returns. Tests that call `resolveNext()`
@@ -323,4 +323,134 @@ test('no-op events keep the snapshot reference and send no notification', async 
   const buffering = store.getSnapshot();
   store.setBuffering('a.mp3', true);
   assert.equal(store.getSnapshot(), buffering);
+});
+
+// --- createAudioBackend: the browser wiring, against a fake media element. ---
+
+// Mimics the parts of HTMLMediaElement the backend touches. `play()` stays pending until the
+// test settles it; clearing src + load() rejects a pending play with AbortError, the way a
+// real element does.
+function makeFakeAudio() {
+  const log = [];
+  let srcAttr = null;
+  let pending = null;
+  const el = {
+    log,
+    volume: 1,
+    readyState: 0,
+    onended: null, onwaiting: null, onstalled: null, onplaying: null, onerror: null,
+    get src() { return srcAttr ?? ''; },
+    set src(v) { srcAttr = v; log.push(`src=${v}`); },
+    hasAttribute: (name) => name === 'src' && srcAttr !== null,
+    getAttribute: (name) => (name === 'src' ? srcAttr : null),
+    removeAttribute: (name) => { if (name === 'src') srcAttr = null; log.push(`remove:${name}`); },
+    pause: () => log.push('pause'),
+    load: () => {
+      log.push('load');
+      if (pending) { const p = pending; pending = null; p.reject(Object.assign(new Error('aborted'), { name: 'AbortError' })); }
+    },
+    play: () => new Promise((resolve, reject) => { log.push('play'); pending = { resolve, reject }; }),
+    resolvePlay() { const p = pending; pending = null; p.resolve(); },
+  };
+  return el;
+}
+
+function makeBrowserStore() {
+  const audio = makeFakeAudio();
+  let created = 0;
+  let store;
+  const backend = createAudioBackend(() => { created += 1; return audio; }, () => store);
+  store = createPreviewStore(backend);
+  return { store, audio, createdCount: () => created };
+}
+
+const HANDLERS = ['onended', 'onwaiting', 'onstalled', 'onplaying', 'onerror'];
+
+test('backend: stop after play releases the media (no src, load() called, handlers null)', async () => {
+  const { store, audio } = makeBrowserStore();
+  const p = store.toggle('a.mp3');
+  await flush();
+  assert.equal(audio.getAttribute('src'), 'a.mp3');
+  assert.equal(audio.volume, 0.5);
+  audio.resolvePlay();
+  await p;
+  assert.equal(store.getSnapshot().activeKey, 'a.mp3');
+
+  await store.toggle('a.mp3'); // toggle off
+  assert.equal(audio.getAttribute('src'), null);
+  assert.deepEqual(audio.log.slice(-3), ['pause', 'remove:src', 'load']);
+  for (const h of HANDLERS) assert.equal(audio[h], null, `${h} cleared`);
+});
+
+test('backend: a later play after a stop sets src again and resolves, reusing the element', async () => {
+  const { store, audio, createdCount } = makeBrowserStore();
+  let p = store.toggle('a.mp3');
+  await flush();
+  audio.resolvePlay();
+  await p;
+  store.stop();
+
+  p = store.toggle('b.mp3');
+  await flush();
+  assert.equal(audio.getAttribute('src'), 'b.mp3');
+  for (const h of HANDLERS) assert.equal(typeof audio[h], 'function', `${h} bound again`);
+  audio.resolvePlay();
+  await p;
+  assert.equal(store.getSnapshot().activeKey, 'b.mp3');
+  assert.equal(createdCount(), 1, 'one shared element');
+});
+
+test('backend: stop during loading swallows the AbortError and flags no error', async () => {
+  const { store, audio } = makeBrowserStore();
+  const p = store.toggle('a.mp3');
+  await flush();
+  store.stop(); // load() inside release rejects the pending play()
+  await p; // must resolve: the rejection belongs to a superseded attempt
+  const s = store.getSnapshot();
+  assert.equal(s.activeKey, null);
+  assert.equal(s.loadingKey, null);
+  assert.equal(s.errorKeys.size, 0);
+  assert.equal(audio.getAttribute('src'), null);
+});
+
+test('backend: the last cover unregistering (a dropped list) releases the media', async () => {
+  const { store, audio } = makeBrowserStore();
+  const row = {};
+  store.register('a.mp3', row);
+  const p = store.toggle('a.mp3');
+  await flush();
+  audio.resolvePlay();
+  await p;
+
+  store.unregister('a.mp3', row);
+  assert.equal(store.getSnapshot().activeKey, null);
+  assert.equal(audio.getAttribute('src'), null);
+  for (const h of HANDLERS) assert.equal(audio[h], null);
+});
+
+test('backend: onended and onerror release the media, and a fail keeps only its own error', async () => {
+  const { store, audio } = makeBrowserStore();
+  let p = store.toggle('a.mp3');
+  await flush();
+  audio.resolvePlay();
+  await p;
+  audio.onended();
+  assert.equal(audio.getAttribute('src'), null);
+  assert.equal(store.getSnapshot().errorKeys.size, 0);
+
+  p = store.toggle('b.mp3');
+  await flush();
+  audio.resolvePlay();
+  await p;
+  audio.onerror();
+  assert.equal(audio.getAttribute('src'), null);
+  assert.deepEqual([...store.getSnapshot().errorKeys], ['b.mp3']);
+  for (const h of HANDLERS) assert.equal(audio[h], null);
+});
+
+test('backend: stop with nothing loaded never touches or creates the element', () => {
+  const { store, audio, createdCount } = makeBrowserStore();
+  store.stop();
+  assert.equal(createdCount(), 0);
+  assert.equal(audio.log.length, 0);
 });

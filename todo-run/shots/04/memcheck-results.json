@@ -1,0 +1,706 @@
+[
+  {
+    "name": "desktop",
+    "viewport": {
+      "width": 1280,
+      "height": 800
+    },
+    "cycles": [
+      {
+        "playingA": {
+          "src": "https://b.ppy.sh/preview/5000000.mp3",
+          "currentSrc": "https://b.ppy.sh/preview/5000000.mp3",
+          "networkState": 1,
+          "paused": false,
+          "handlers": 5
+        },
+        "rowsAAfterPlayer": 0,
+        "afterPlayerSearch": {
+          "src": null,
+          "currentSrc": "https://b.ppy.sh/preview/5000000.mp3",
+          "networkState": 0,
+          "paused": true,
+          "handlers": 0
+        },
+        "heapAfterPlayer": 14551492,
+        "replayB": {
+          "src": "https://b.ppy.sh/preview/5000010.mp3",
+          "currentSrc": "https://b.ppy.sh/preview/5000010.mp3",
+          "networkState": 1,
+          "paused": false,
+          "handlers": 5
+        },
+        "toggleOff": {
+          "src": null,
+          "currentSrc": "https://b.ppy.sh/preview/5000010.mp3",
+          "networkState": 0,
+          "paused": true,
+          "handlers": 0
+        },
+        "previewErrorsShown": 0,
+        "rowsBAfterClear": 0,
+        "afterClear": {
+          "src": null,
+          "currentSrc": "https://b.ppy.sh/preview/5000010.mp3",
+          "networkState": 0,
+          "paused": true,
+          "handlers": 0
+        },
+        "heapB": 14650644
+      },
+      {
+        "playingA": {
+          "src": "https://b.ppy.sh/preview/5000020.mp3",
+          "currentSrc": "https://b.ppy.sh/preview/5000020.mp3",
+          "networkState": 1,
+          "paused": false,
+          "handlers": 5
+        },
+        "rowsAAfterPlayer": 0,
+        "afterPlayerSearch": {
+          "src": null,
+          "currentSrc": "https://b.ppy.sh/preview/5000020.mp3",
+          "networkState": 0,
+          "paused": true,
+          "handlers": 0
+        },
+        "heapAfterPlayer": 14816116,
+        "replayB": {
+          "src": "https://b.ppy.sh/preview/5000030.mp3",
+          "currentSrc": "https://b.ppy.sh/preview/5000030.mp3",
+          "networkState": 1,
+          "paused": false,
+          "handlers": 5
+        },
+        "toggleOff": {
+          "src": null,
+          "currentSrc": "https://b.ppy.sh/preview/5000030.mp3",
+          "networkState": 0,
+          "paused": true,
+          "handlers": 0
+        },
+        "previewErrorsShown": 0,
+        "rowsBAfterClear": 0,
+        "afterClear": {
+          "src": null,
+          "currentSrc": "https://b.ppy.sh/preview/5000030.mp3",
+          "networkState": 0,
+          "paused": true,
+          "handlers": 0
+        },
+        "heapB": 14874732
+      },
+      {
+        "playingA": {
+          "src": "https://b.ppy.sh/preview/5000040.mp3",
+          "currentSrc": "https://b.ppy.sh/preview/5000040.mp3",
+          "networkState": 1,
+          "paused": false,
+          "handlers": 5
+        },
+        "rowsAAfterPlayer": 0,
+        "afterPlayerSearch": {
+          "src": null,
+          "currentSrc": "https://b.ppy.sh/preview/5000040.mp3",
+          "networkState": 0,
+          "paused": true,
+          "handlers": 0
+        },
+        "heapAfterPlayer": 14907024,
+        "replayB": {
+          "src": "https://b.ppy.sh/preview/5000050.mp3",
+          "currentSrc": "https://b.ppy.sh/preview/5000050.mp3",
+          "networkState": 1,
+          "paused": false,
+          "handlers": 5
+        },
+        "toggleOff": {
+          "src": null,
+          "currentSrc": "https://b.ppy.sh/preview/5000050.mp3",
+          "networkState": 0,
+          "paused": true,
+          "handlers": 0
+        },
+        "previewErrorsShown": 0,
+        "rowsBAfterClear": 0,
+        "afterClear": {
+          "src": null,
+          "currentSrc": "https://b.ppy.sh/preview/5000050.mp3",
+          "networkState": 0,
+          "paused": true,
+          "handlers": 0
+        },
+        "heapB": 14982852
+      },
+      {
+        "playingA": {
+          "src": "https://b.ppy.sh/preview/5000060.mp3",
+          "currentSrc": "https://b.ppy.sh/preview/5000060.mp3",
+          "networkState": 1,
+          "paused": false,
+          "handlers": 5
+        },
+        "rowsAAfterPlayer": 0,
+        "afterPlayerSearch": {
+          "src": null,
+          "currentSrc": "https://b.ppy.sh/preview/5000060.mp3",
+          "networkState": 0,
+          "paused": true,
+          "handlers": 0
+        },
+        "heapAfterPlayer": 15025764,
+        "replayB": {
+          "src": "https://b.ppy.sh/preview/5000070.mp3",
+          "currentSrc": "https://b.ppy.sh/preview/5000070.mp3",
+          "networkState": 1,
+          "paused": false,
+          "handlers": 5
+        },
+        "toggleOff": {
+          "src": null,
+          "currentSrc": "https://b.ppy.sh/preview/5000070.mp3",
+          "networkState": 0,
+          "paused": true,
+          "handlers": 0
+        },
+        "previewErrorsShown": 0,
+        "rowsBAfterClear": 0,
+        "afterClear": {
+          "src": null,
+          "currentSrc": "https://b.ppy.sh/preview/5000070.mp3",
+          "networkState": 0,
+          "paused": true,
+          "handlers": 0
+        },
+        "heapB": 15049784
+      },
+      {
+        "playingA": {
+          "src": "https://b.ppy.sh/preview/5000080.mp3",
+          "currentSrc": "https://b.ppy.sh/preview/5000080.mp3",
+          "networkState": 1,
+          "paused": false,
+          "handlers": 5
+        },
+        "rowsAAfterPlayer": 0,
+        "afterPlayerSearch": {
+          "src": null,
+          "currentSrc": "https://b.ppy.sh/preview/5000080.mp3",
+          "networkState": 0,
+          "paused": true,
+          "handlers": 0
+        },
+        "heapAfterPlayer": 15090156,
+        "replayB": {
+          "src": "https://b.ppy.sh/preview/5000090.mp3",
+          "currentSrc": "https://b.ppy.sh/preview/5000090.mp3",
+          "networkState": 1,
+          "paused": false,
+          "handlers": 5
+        },
+        "toggleOff": {
+          "src": null,
+          "currentSrc": "https://b.ppy.sh/preview/5000090.mp3",
+          "networkState": 0,
+          "paused": true,
+          "handlers": 0
+        },
+        "previewErrorsShown": 0,
+        "rowsBAfterClear": 0,
+        "afterClear": {
+          "src": null,
+          "currentSrc": "https://b.ppy.sh/preview/5000090.mp3",
+          "networkState": 0,
+          "paused": true,
+          "handlers": 0
+        },
+        "heapB": 15124316
+      },
+      {
+        "playingA": {
+          "src": "https://b.ppy.sh/preview/5000100.mp3",
+          "currentSrc": "https://b.ppy.sh/preview/5000100.mp3",
+          "networkState": 1,
+          "paused": false,
+          "handlers": 5
+        },
+        "rowsAAfterPlayer": 0,
+        "afterPlayerSearch": {
+          "src": null,
+          "currentSrc": "https://b.ppy.sh/preview/5000100.mp3",
+          "networkState": 0,
+          "paused": true,
+          "handlers": 0
+        },
+        "heapAfterPlayer": 15156052,
+        "replayB": {
+          "src": "https://b.ppy.sh/preview/5000110.mp3",
+          "currentSrc": "https://b.ppy.sh/preview/5000110.mp3",
+          "networkState": 1,
+          "paused": false,
+          "handlers": 5
+        },
+        "toggleOff": {
+          "src": null,
+          "currentSrc": "https://b.ppy.sh/preview/5000110.mp3",
+          "networkState": 0,
+          "paused": true,
+          "handlers": 0
+        },
+        "previewErrorsShown": 0,
+        "rowsBAfterClear": 0,
+        "afterClear": {
+          "src": null,
+          "currentSrc": "https://b.ppy.sh/preview/5000110.mp3",
+          "networkState": 0,
+          "paused": true,
+          "handlers": 0
+        },
+        "heapB": 15296648
+      },
+      {
+        "playingA": {
+          "src": "https://b.ppy.sh/preview/5000120.mp3",
+          "currentSrc": "https://b.ppy.sh/preview/5000120.mp3",
+          "networkState": 1,
+          "paused": false,
+          "handlers": 5
+        },
+        "rowsAAfterPlayer": 0,
+        "afterPlayerSearch": {
+          "src": null,
+          "currentSrc": "https://b.ppy.sh/preview/5000120.mp3",
+          "networkState": 0,
+          "paused": true,
+          "handlers": 0
+        },
+        "heapAfterPlayer": 15322492,
+        "replayB": {
+          "src": "https://b.ppy.sh/preview/5000130.mp3",
+          "currentSrc": "https://b.ppy.sh/preview/5000130.mp3",
+          "networkState": 1,
+          "paused": false,
+          "handlers": 5
+        },
+        "toggleOff": {
+          "src": null,
+          "currentSrc": "https://b.ppy.sh/preview/5000130.mp3",
+          "networkState": 0,
+          "paused": true,
+          "handlers": 0
+        },
+        "previewErrorsShown": 0,
+        "rowsBAfterClear": 0,
+        "afterClear": {
+          "src": null,
+          "currentSrc": "https://b.ppy.sh/preview/5000130.mp3",
+          "networkState": 0,
+          "paused": true,
+          "handlers": 0
+        },
+        "heapB": 15333576
+      },
+      {
+        "playingA": {
+          "src": "https://b.ppy.sh/preview/5000140.mp3",
+          "currentSrc": "https://b.ppy.sh/preview/5000140.mp3",
+          "networkState": 1,
+          "paused": false,
+          "handlers": 5
+        },
+        "rowsAAfterPlayer": 0,
+        "afterPlayerSearch": {
+          "src": null,
+          "currentSrc": "https://b.ppy.sh/preview/5000140.mp3",
+          "networkState": 0,
+          "paused": true,
+          "handlers": 0
+        },
+        "heapAfterPlayer": 15332944,
+        "replayB": {
+          "src": "https://b.ppy.sh/preview/5000150.mp3",
+          "currentSrc": "https://b.ppy.sh/preview/5000150.mp3",
+          "networkState": 1,
+          "paused": false,
+          "handlers": 5
+        },
+        "toggleOff": {
+          "src": null,
+          "currentSrc": "https://b.ppy.sh/preview/5000150.mp3",
+          "networkState": 0,
+          "paused": true,
+          "handlers": 0
+        },
+        "previewErrorsShown": 0,
+        "rowsBAfterClear": 0,
+        "afterClear": {
+          "src": null,
+          "currentSrc": "https://b.ppy.sh/preview/5000150.mp3",
+          "networkState": 0,
+          "paused": true,
+          "handlers": 0
+        },
+        "heapB": 15341428
+      }
+    ],
+    "audioCount": 1,
+    "heapBFirst": 14650644,
+    "heapBLast": 15341428,
+    "heapGrowth": 690784,
+    "heapOk": true,
+    "consoleErrors": [],
+    "leakedRequests": []
+  },
+  {
+    "name": "phone",
+    "viewport": {
+      "width": 375,
+      "height": 812
+    },
+    "cycles": [
+      {
+        "playingA": {
+          "src": "https://b.ppy.sh/preview/5000160.mp3",
+          "currentSrc": "https://b.ppy.sh/preview/5000160.mp3",
+          "networkState": 1,
+          "paused": false,
+          "handlers": 5
+        },
+        "rowsAAfterPlayer": 0,
+        "afterPlayerSearch": {
+          "src": null,
+          "currentSrc": "https://b.ppy.sh/preview/5000160.mp3",
+          "networkState": 0,
+          "paused": true,
+          "handlers": 0
+        },
+        "heapAfterPlayer": 14543008,
+        "replayB": {
+          "src": "https://b.ppy.sh/preview/5000170.mp3",
+          "currentSrc": "https://b.ppy.sh/preview/5000170.mp3",
+          "networkState": 1,
+          "paused": false,
+          "handlers": 5
+        },
+        "toggleOff": {
+          "src": null,
+          "currentSrc": "https://b.ppy.sh/preview/5000170.mp3",
+          "networkState": 0,
+          "paused": true,
+          "handlers": 0
+        },
+        "previewErrorsShown": 0,
+        "rowsBAfterClear": 0,
+        "afterClear": {
+          "src": null,
+          "currentSrc": "https://b.ppy.sh/preview/5000170.mp3",
+          "networkState": 0,
+          "paused": true,
+          "handlers": 0
+        },
+        "heapB": 14648472
+      },
+      {
+        "playingA": {
+          "src": "https://b.ppy.sh/preview/5000180.mp3",
+          "currentSrc": "https://b.ppy.sh/preview/5000180.mp3",
+          "networkState": 1,
+          "paused": false,
+          "handlers": 5
+        },
+        "rowsAAfterPlayer": 0,
+        "afterPlayerSearch": {
+          "src": null,
+          "currentSrc": "https://b.ppy.sh/preview/5000180.mp3",
+          "networkState": 0,
+          "paused": true,
+          "handlers": 0
+        },
+        "heapAfterPlayer": 14751428,
+        "replayB": {
+          "src": "https://b.ppy.sh/preview/5000190.mp3",
+          "currentSrc": "https://b.ppy.sh/preview/5000190.mp3",
+          "networkState": 1,
+          "paused": false,
+          "handlers": 5
+        },
+        "toggleOff": {
+          "src": null,
+          "currentSrc": "https://b.ppy.sh/preview/5000190.mp3",
+          "networkState": 0,
+          "paused": true,
+          "handlers": 0
+        },
+        "previewErrorsShown": 0,
+        "rowsBAfterClear": 0,
+        "afterClear": {
+          "src": null,
+          "currentSrc": "https://b.ppy.sh/preview/5000190.mp3",
+          "networkState": 0,
+          "paused": true,
+          "handlers": 0
+        },
+        "heapB": 14873436
+      },
+      {
+        "playingA": {
+          "src": "https://b.ppy.sh/preview/5000200.mp3",
+          "currentSrc": "https://b.ppy.sh/preview/5000200.mp3",
+          "networkState": 1,
+          "paused": false,
+          "handlers": 5
+        },
+        "rowsAAfterPlayer": 0,
+        "afterPlayerSearch": {
+          "src": null,
+          "currentSrc": "https://b.ppy.sh/preview/5000200.mp3",
+          "networkState": 0,
+          "paused": true,
+          "handlers": 0
+        },
+        "heapAfterPlayer": 14906924,
+        "replayB": {
+          "src": "https://b.ppy.sh/preview/5000210.mp3",
+          "currentSrc": "https://b.ppy.sh/preview/5000210.mp3",
+          "networkState": 1,
+          "paused": false,
+          "handlers": 5
+        },
+        "toggleOff": {
+          "src": null,
+          "currentSrc": "https://b.ppy.sh/preview/5000210.mp3",
+          "networkState": 0,
+          "paused": true,
+          "handlers": 0
+        },
+        "previewErrorsShown": 0,
+        "rowsBAfterClear": 0,
+        "afterClear": {
+          "src": null,
+          "currentSrc": "https://b.ppy.sh/preview/5000210.mp3",
+          "networkState": 0,
+          "paused": true,
+          "handlers": 0
+        },
+        "heapB": 14980440
+      },
+      {
+        "playingA": {
+          "src": "https://b.ppy.sh/preview/5000220.mp3",
+          "currentSrc": "https://b.ppy.sh/preview/5000220.mp3",
+          "networkState": 1,
+          "paused": false,
+          "handlers": 5
+        },
+        "rowsAAfterPlayer": 0,
+        "afterPlayerSearch": {
+          "src": null,
+          "currentSrc": "https://b.ppy.sh/preview/5000220.mp3",
+          "networkState": 0,
+          "paused": true,
+          "handlers": 0
+        },
+        "heapAfterPlayer": 15024032,
+        "replayB": {
+          "src": "https://b.ppy.sh/preview/5000230.mp3",
+          "currentSrc": "https://b.ppy.sh/preview/5000230.mp3",
+          "networkState": 1,
+          "paused": false,
+          "handlers": 5
+        },
+        "toggleOff": {
+          "src": null,
+          "currentSrc": "https://b.ppy.sh/preview/5000230.mp3",
+          "networkState": 0,
+          "paused": true,
+          "handlers": 0
+        },
+        "previewErrorsShown": 0,
+        "rowsBAfterClear": 0,
+        "afterClear": {
+          "src": null,
+          "currentSrc": "https://b.ppy.sh/preview/5000230.mp3",
+          "networkState": 0,
+          "paused": true,
+          "handlers": 0
+        },
+        "heapB": 15048364
+      },
+      {
+        "playingA": {
+          "src": "https://b.ppy.sh/preview/5000240.mp3",
+          "currentSrc": "https://b.ppy.sh/preview/5000240.mp3",
+          "networkState": 1,
+          "paused": false,
+          "handlers": 5
+        },
+        "rowsAAfterPlayer": 0,
+        "afterPlayerSearch": {
+          "src": null,
+          "currentSrc": "https://b.ppy.sh/preview/5000240.mp3",
+          "networkState": 0,
+          "paused": true,
+          "handlers": 0
+        },
+        "heapAfterPlayer": 15083832,
+        "replayB": {
+          "src": "https://b.ppy.sh/preview/5000250.mp3",
+          "currentSrc": "https://b.ppy.sh/preview/5000250.mp3",
+          "networkState": 1,
+          "paused": false,
+          "handlers": 5
+        },
+        "toggleOff": {
+          "src": null,
+          "currentSrc": "https://b.ppy.sh/preview/5000250.mp3",
+          "networkState": 0,
+          "paused": true,
+          "handlers": 0
+        },
+        "previewErrorsShown": 0,
+        "rowsBAfterClear": 0,
+        "afterClear": {
+          "src": null,
+          "currentSrc": "https://b.ppy.sh/preview/5000250.mp3",
+          "networkState": 0,
+          "paused": true,
+          "handlers": 0
+        },
+        "heapB": 15122544
+      },
+      {
+        "playingA": {
+          "src": "https://b.ppy.sh/preview/5000260.mp3",
+          "currentSrc": "https://b.ppy.sh/preview/5000260.mp3",
+          "networkState": 1,
+          "paused": false,
+          "handlers": 5
+        },
+        "rowsAAfterPlayer": 0,
+        "afterPlayerSearch": {
+          "src": null,
+          "currentSrc": "https://b.ppy.sh/preview/5000260.mp3",
+          "networkState": 0,
+          "paused": true,
+          "handlers": 0
+        },
+        "heapAfterPlayer": 15154256,
+        "replayB": {
+          "src": "https://b.ppy.sh/preview/5000270.mp3",
+          "currentSrc": "https://b.ppy.sh/preview/5000270.mp3",
+          "networkState": 1,
+          "paused": false,
+          "handlers": 5
+        },
+        "toggleOff": {
+          "src": null,
+          "currentSrc": "https://b.ppy.sh/preview/5000270.mp3",
+          "networkState": 0,
+          "paused": true,
+          "handlers": 0
+        },
+        "previewErrorsShown": 0,
+        "rowsBAfterClear": 0,
+        "afterClear": {
+          "src": null,
+          "currentSrc": "https://b.ppy.sh/preview/5000270.mp3",
+          "networkState": 0,
+          "paused": true,
+          "handlers": 0
+        },
+        "heapB": 15296076
+      },
+      {
+        "playingA": {
+          "src": "https://b.ppy.sh/preview/5000280.mp3",
+          "currentSrc": "https://b.ppy.sh/preview/5000280.mp3",
+          "networkState": 1,
+          "paused": false,
+          "handlers": 5
+        },
+        "rowsAAfterPlayer": 0,
+        "afterPlayerSearch": {
+          "src": null,
+          "currentSrc": "https://b.ppy.sh/preview/5000280.mp3",
+          "networkState": 0,
+          "paused": true,
+          "handlers": 0
+        },
+        "heapAfterPlayer": 15319616,
+        "replayB": {
+          "src": "https://b.ppy.sh/preview/5000290.mp3",
+          "currentSrc": "https://b.ppy.sh/preview/5000290.mp3",
+          "networkState": 1,
+          "paused": false,
+          "handlers": 5
+        },
+        "toggleOff": {
+          "src": null,
+          "currentSrc": "https://b.ppy.sh/preview/5000290.mp3",
+          "networkState": 0,
+          "paused": true,
+          "handlers": 0
+        },
+        "previewErrorsShown": 0,
+        "rowsBAfterClear": 0,
+        "afterClear": {
+          "src": null,
+          "currentSrc": "https://b.ppy.sh/preview/5000290.mp3",
+          "networkState": 0,
+          "paused": true,
+          "handlers": 0
+        },
+        "heapB": 15332716
+      },
+      {
+        "playingA": {
+          "src": "https://b.ppy.sh/preview/5000300.mp3",
+          "currentSrc": "https://b.ppy.sh/preview/5000300.mp3",
+          "networkState": 1,
+          "paused": false,
+          "handlers": 5
+        },
+        "rowsAAfterPlayer": 0,
+        "afterPlayerSearch": {
+          "src": null,
+          "currentSrc": "https://b.ppy.sh/preview/5000300.mp3",
+          "networkState": 0,
+          "paused": true,
+          "handlers": 0
+        },
+        "heapAfterPlayer": 15332096,
+        "replayB": {
+          "src": "https://b.ppy.sh/preview/5000310.mp3",
+          "currentSrc": "https://b.ppy.sh/preview/5000310.mp3",
+          "networkState": 1,
+          "paused": false,
+          "handlers": 5
+        },
+        "toggleOff": {
+          "src": null,
+          "currentSrc": "https://b.ppy.sh/preview/5000310.mp3",
+          "networkState": 0,
+          "paused": true,
+          "handlers": 0
+        },
+        "previewErrorsShown": 0,
+        "rowsBAfterClear": 0,
+        "afterClear": {
+          "src": null,
+          "currentSrc": "https://b.ppy.sh/preview/5000310.mp3",
+          "networkState": 0,
+          "paused": true,
+          "handlers": 0
+        },
+        "heapB": 15340940
+      }
+    ],
+    "audioCount": 1,
+    "heapBFirst": 14648472,
+    "heapBLast": 15340940,
+    "heapGrowth": 692468,
+    "heapOk": true,
+    "consoleErrors": [],
+    "leakedRequests": []
+  }
+]
