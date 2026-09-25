@@ -1,11 +1,12 @@
 'use client';
 
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useRef } from 'react';
 import { Loader2, Sparkles, ArrowRight, Plus, User } from 'lucide-react';
 import { YouTubeIcon, SpotifyIcon, AppleMusicIcon, MusicNoteIcon } from './Icons';
 import { osuAudio } from '@/lib/soundEffects';
 import { strictnessLabel, strictnessSummary } from '@/lib/matchStrictness';
 import { submitPlatform } from '@/lib/platform';
+import { DOCK_TOP_VAR, dockTopFrom } from '@/lib/stickySections';
 
 const GAME_MODES = [
   { id: 'all', label: 'All Modes', color: '#3d374a', activeText: '#ffffff', activeBorder: 'rgba(255, 255, 255, 0.2)' },
@@ -87,6 +88,7 @@ const sampleButtonStyle = {
 export default function PlaylistInput({ onFetch, isLoading, hasSongs, searchMode, onSearchModeChange, mode, setMode, statusFilter, setStatusFilter, matchThreshold, setMatchThreshold, canRefetchStrictness, onStrictnessRefetch }) {
   const [url, setUrl] = useState('');
   const [isDocked, setIsDocked] = useState(false);
+  const dockRef = useRef(null);
 
   useEffect(() => {
     let ticking = false;
@@ -105,6 +107,29 @@ export default function PlaylistInput({ onFetch, isLoading, hasSongs, searchMode
     return () => {
       window.removeEventListener('scroll', handleScroll);
       window.removeEventListener('resize', handleScroll);
+    };
+  }, []);
+
+  // Publish where the docked bar ends, so the player section headers stick right under it
+  // (todo item 12). Measured, never hardcoded: the bar's height changes while it docks (its
+  // padding and the filter row animate), on resize and when the strictness row wraps, and a
+  // ResizeObserver follows every one of those frames.
+  useEffect(() => {
+    const el = dockRef.current;
+    if (!el) return undefined;
+    const root = document.documentElement;
+    const publish = () => {
+      const stickyTop = parseFloat(window.getComputedStyle(el).top);
+      root.style.setProperty(DOCK_TOP_VAR, `${dockTopFrom({ stickyTop, height: el.offsetHeight })}px`);
+    };
+    publish();
+    const observer = typeof ResizeObserver === 'function' ? new ResizeObserver(publish) : null;
+    observer?.observe(el);
+    window.addEventListener('resize', publish, { passive: true });
+    return () => {
+      observer?.disconnect();
+      window.removeEventListener('resize', publish);
+      root.style.removeProperty(DOCK_TOP_VAR);
     };
   }, []);
 
@@ -173,7 +198,7 @@ export default function PlaylistInput({ onFetch, isLoading, hasSongs, searchMode
   };
 
   return (
-    <div style={{
+    <div ref={dockRef} style={{
       maxWidth: '1240px',
       margin: '0 auto 18px',
       position: 'sticky',

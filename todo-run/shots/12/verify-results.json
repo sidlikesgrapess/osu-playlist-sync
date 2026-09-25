@@ -1,0 +1,720 @@
+{
+  "checks": {
+    "pick_calls": {
+      "pass": true,
+      "detail": {
+        "q": 1,
+        "userId": 1,
+        "beatmaps": 1,
+        "total": 3
+      }
+    },
+    "desktop_no_inner_scroll": {
+      "pass": true,
+      "detail": 0
+    },
+    "desktop_closed_headers_in_card_initial": {
+      "pass": true,
+      "detail": {
+        "most_played": {
+          "cardTop": 2443.09375,
+          "cardBottom": 2491.09375,
+          "hTop": 2444.09375,
+          "hBottom": 2490.09375
+        },
+        "favourite": {
+          "cardTop": 2501.09375,
+          "cardBottom": 2549.09375,
+          "hTop": 2502.09375,
+          "hBottom": 2548.09375
+        }
+      }
+    },
+    "desktop_best_full_length": {
+      "pass": true,
+      "detail": {
+        "rows": 25,
+        "s": [
+          1752,
+          1752,
+          1752,
+          1752
+        ]
+      }
+    },
+    "desktop_card_overflow_visible": {
+      "pass": true,
+      "detail": "visible"
+    },
+    "desktop_best_docked": {
+      "pass": true,
+      "detail": {
+        "hTop": 205,
+        "barBottom": 205,
+        "v": "205px"
+      }
+    },
+    "desktop_docked_one_line": {
+      "pass": true,
+      "detail": [
+        46,
+        46
+      ]
+    },
+    "desktop_no_hscroll": {
+      "pass": true,
+      "detail": [
+        1280,
+        1280
+      ]
+    },
+    "mp_one_call": {
+      "pass": true,
+      "detail": {
+        "q": 1,
+        "userId": 1,
+        "beatmaps": 2,
+        "total": 4
+      }
+    },
+    "desktop_pushed_out": {
+      "pass": true,
+      "detail": {
+        "bestBottom": 214.09375,
+        "mpTop": 226.09375
+      }
+    },
+    "desktop_mp_docked": {
+      "pass": true,
+      "detail": {
+        "cardTop": -1139.90625,
+        "cardBottom": 660.09375,
+        "hTop": 205,
+        "hBottom": 251,
+        "hHeight": 46,
+        "docked": "true",
+        "expanded": "true",
+        "label": "Collapse Most Played",
+        "rows": 25,
+        "bodyH": 1752,
+        "bodyScroll": [
+          1752,
+          1752,
+          1752,
+          1752
+        ],
+        "bodyTransition": "0.3s",
+        "cardOverflow": "visible"
+      }
+    },
+    "desktop_collapsed_in_view": {
+      "pass": true,
+      "detail": {
+        "cardTop": 553.09375,
+        "cardBottom": 601.09375,
+        "hTop": 554.09375,
+        "hBottom": 600.09375,
+        "hHeight": 46,
+        "docked": "false",
+        "expanded": "false",
+        "label": "Expand Most Played",
+        "rows": 0,
+        "bodyH": 0,
+        "bodyScroll": null,
+        "bodyTransition": null,
+        "cardOverflow": "visible",
+        "barBottom": 205,
+        "scrollY": 1815,
+        "maxScroll": 1815
+      }
+    },
+    "desktop_closed_headers_in_card_after_collapse": {
+      "pass": true,
+      "detail": {
+        "most_played": {
+          "cardTop": 553.09375,
+          "cardBottom": 601.09375,
+          "hTop": 554.09375,
+          "hBottom": 600.09375
+        },
+        "favourite": {
+          "cardTop": 611.09375,
+          "cardBottom": 659.09375,
+          "hTop": 612.09375,
+          "hBottom": 658.09375
+        }
+      }
+    },
+    "desktop_reopen_no_call": {
+      "pass": true,
+      "detail": {
+        "q": 1,
+        "userId": 1,
+        "beatmaps": 2,
+        "total": 4
+      }
+    },
+    "phone_no_inner_scroll": {
+      "pass": true,
+      "detail": 0
+    },
+    "phone_closed_headers_in_card_initial": {
+      "pass": true,
+      "detail": {
+        "favourite": {
+          "cardTop": 4596.3125,
+          "cardBottom": 4642.3125,
+          "hTop": 4597.3125,
+          "hBottom": 4641.3125
+        }
+      }
+    },
+    "phone_best_full_length": {
+      "pass": true,
+      "detail": {
+        "rows": 25,
+        "s": [
+          2942,
+          2942,
+          2942,
+          2942
+        ]
+      }
+    },
+    "phone_card_overflow_visible": {
+      "pass": true,
+      "detail": "visible"
+    },
+    "phone_best_docked": {
+      "pass": true,
+      "detail": {
+        "hTop": 335,
+        "barBottom": 335,
+        "v": "335px"
+      }
+    },
+    "phone_docked_one_line": {
+      "pass": true,
+      "detail": [
+        44,
+        44
+      ]
+    },
+    "phone_no_hscroll": {
+      "pass": true,
+      "detail": [
+        375,
+        375
+      ]
+    },
+    "phone_pushed_out": {
+      "pass": true,
+      "detail": {
+        "bestBottom": 344.3125,
+        "mpTop": 356.3125
+      }
+    },
+    "phone_mp_docked": {
+      "pass": true,
+      "detail": {
+        "cardTop": -2084.6875,
+        "cardBottom": 896.3125,
+        "hTop": 335,
+        "hBottom": 379,
+        "hHeight": 44,
+        "docked": "true",
+        "expanded": "true",
+        "label": "Collapse Most Played",
+        "rows": 25,
+        "bodyH": 2935,
+        "bodyScroll": [
+          2935,
+          2935,
+          2935,
+          2935
+        ],
+        "bodyTransition": "0.3s",
+        "cardOverflow": "visible"
+      }
+    },
+    "phone_collapsed_in_view": {
+      "pass": true,
+      "detail": {
+        "cardTop": 570.3125,
+        "cardBottom": 616.3125,
+        "hTop": 571.3125,
+        "hBottom": 615.3125,
+        "hHeight": 44,
+        "docked": "false",
+        "expanded": "false",
+        "label": "Expand Most Played",
+        "rows": 0,
+        "bodyH": 0,
+        "bodyScroll": null,
+        "bodyTransition": null,
+        "cardOverflow": "visible",
+        "barBottom": 335,
+        "scrollY": 3198,
+        "maxScroll": 3198
+      }
+    },
+    "phone_closed_headers_in_card_after_collapse": {
+      "pass": true,
+      "detail": {
+        "most_played": {
+          "cardTop": 570.3125,
+          "cardBottom": 616.3125,
+          "hTop": 571.3125,
+          "hBottom": 615.3125
+        },
+        "favourite": {
+          "cardTop": 626.3125,
+          "cardBottom": 672.3125,
+          "hTop": 627.3125,
+          "hBottom": 671.3125
+        }
+      }
+    },
+    "phone_reopen_no_call": {
+      "pass": true,
+      "detail": {
+        "q": 1,
+        "userId": 1,
+        "beatmaps": 2,
+        "total": 4
+      }
+    },
+    "show_more_50_no_call": {
+      "pass": true,
+      "detail": {
+        "rows": 50,
+        "c": {
+          "q": 1,
+          "userId": 1,
+          "beatmaps": 2,
+          "total": 4
+        }
+      }
+    },
+    "reduced_motion_transition": {
+      "pass": true,
+      "detail": "0s"
+    },
+    "final_calls": {
+      "pass": true,
+      "detail": {
+        "q": 1,
+        "userId": 1,
+        "beatmaps": 2,
+        "total": 4
+      }
+    }
+  },
+  "log": [
+    "Loading the image 'https://osu.ppy.sh/images/layout/avatar-guest@2x.png' violates the following Content Security Policy directive: \"img-src 'self' https://assets.ppy.sh https://a.ppy.sh https://i.ytimg.com https://lh3.googleusercontent.com https://i.scdn.co https://*.mzstatic.com\". The action has been blocked.",
+    "Loading the image 'https://osu.ppy.sh/images/layout/avatar-guest@2x.png' violates the following Content Security Policy directive: \"img-src 'self' https://assets.ppy.sh https://a.ppy.sh https://i.ytimg.com https://lh3.googleusercontent.com https://i.scdn.co https://*.mzstatic.com\". The action has been blocked.",
+    "Loading the image 'https://osu.ppy.sh/images/layout/avatar-guest@2x.png' violates the following Content Security Policy directive: \"img-src 'self' https://assets.ppy.sh https://a.ppy.sh https://i.ytimg.com https://lh3.googleusercontent.com https://i.scdn.co https://*.mzstatic.com\". The action has been blocked.",
+    "Loading the image 'https://osu.ppy.sh/images/layout/avatar-guest@2x.png' violates the following Content Security Policy directive: \"img-src 'self' https://assets.ppy.sh https://a.ppy.sh https://i.ytimg.com https://lh3.googleusercontent.com https://i.scdn.co https://*.mzstatic.com\". The action has been blocked.",
+    "Loading the image 'https://osu.ppy.sh/images/layout/avatar-guest@2x.png' violates the following Content Security Policy directive: \"img-src 'self' https://assets.ppy.sh https://a.ppy.sh https://i.ytimg.com https://lh3.googleusercontent.com https://i.scdn.co https://*.mzstatic.com\". The action has been blocked.",
+    "Loading the image 'https://osu.ppy.sh/images/layout/avatar-guest@2x.png' violates the following Content Security Policy directive: \"img-src 'self' https://assets.ppy.sh https://a.ppy.sh https://i.ytimg.com https://lh3.googleusercontent.com https://i.scdn.co https://*.mzstatic.com\". The action has been blocked.",
+    "Loading the image 'https://osu.ppy.sh/images/layout/avatar-guest@2x.png' violates the following Content Security Policy directive: \"img-src 'self' https://assets.ppy.sh https://a.ppy.sh https://i.ytimg.com https://lh3.googleusercontent.com https://i.scdn.co https://*.mzstatic.com\". The action has been blocked.",
+    "Loading the image 'https://osu.ppy.sh/images/layout/avatar-guest@2x.png' violates the following Content Security Policy directive: \"img-src 'self' https://assets.ppy.sh https://a.ppy.sh https://i.ytimg.com https://lh3.googleusercontent.com https://i.scdn.co https://*.mzstatic.com\". The action has been blocked.",
+    "Loading the image 'https://osu.ppy.sh/images/layout/avatar-guest@2x.png' violates the following Content Security Policy directive: \"img-src 'self' https://assets.ppy.sh https://a.ppy.sh https://i.ytimg.com https://lh3.googleusercontent.com https://i.scdn.co https://*.mzstatic.com\". The action has been blocked.",
+    "Loading the image 'https://osu.ppy.sh/images/layout/avatar-guest@2x.png' violates the following Content Security Policy directive: \"img-src 'self' https://assets.ppy.sh https://a.ppy.sh https://i.ytimg.com https://lh3.googleusercontent.com https://i.scdn.co https://*.mzstatic.com\". The action has been blocked.",
+    "Loading the image 'https://osu.ppy.sh/images/layout/avatar-guest@2x.png' violates the following Content Security Policy directive: \"img-src 'self' https://assets.ppy.sh https://a.ppy.sh https://i.ytimg.com https://lh3.googleusercontent.com https://i.scdn.co https://*.mzstatic.com\". The action has been blocked.",
+    "Loading the image 'https://osu.ppy.sh/images/layout/avatar-guest@2x.png' violates the following Content Security Policy directive: \"img-src 'self' https://assets.ppy.sh https://a.ppy.sh https://i.ytimg.com https://lh3.googleusercontent.com https://i.scdn.co https://*.mzstatic.com\". The action has been blocked.",
+    "Loading the image 'https://osu.ppy.sh/images/layout/avatar-guest@2x.png' violates the following Content Security Policy directive: \"img-src 'self' https://assets.ppy.sh https://a.ppy.sh https://i.ytimg.com https://lh3.googleusercontent.com https://i.scdn.co https://*.mzstatic.com\". The action has been blocked.",
+    "Loading the image 'https://osu.ppy.sh/images/layout/avatar-guest@2x.png' violates the following Content Security Policy directive: \"img-src 'self' https://assets.ppy.sh https://a.ppy.sh https://i.ytimg.com https://lh3.googleusercontent.com https://i.scdn.co https://*.mzstatic.com\". The action has been blocked.",
+    "Loading the image 'https://osu.ppy.sh/images/layout/avatar-guest@2x.png' violates the following Content Security Policy directive: \"img-src 'self' https://assets.ppy.sh https://a.ppy.sh https://i.ytimg.com https://lh3.googleusercontent.com https://i.scdn.co https://*.mzstatic.com\". The action has been blocked.",
+    "Loading the image 'https://osu.ppy.sh/images/layout/avatar-guest@2x.png' violates the following Content Security Policy directive: \"img-src 'self' https://assets.ppy.sh https://a.ppy.sh https://i.ytimg.com https://lh3.googleusercontent.com https://i.scdn.co https://*.mzstatic.com\". The action has been blocked."
+  ],
+  "geo": {
+    "desktop_mid_best": {
+      "barBottom": 205,
+      "dockVar": "205px",
+      "scrollY": 1158,
+      "maxScroll": 1815,
+      "sw": 1280,
+      "vw": 1280,
+      "secs": {
+        "best": {
+          "cardTop": -599.90625,
+          "cardBottom": 1200.09375,
+          "hTop": 205,
+          "hBottom": 251,
+          "hHeight": 46,
+          "docked": "true",
+          "expanded": "true",
+          "label": "Collapse Best Performances",
+          "rows": 25,
+          "bodyH": 1752,
+          "bodyScroll": [
+            1752,
+            1752,
+            1752,
+            1752
+          ],
+          "bodyTransition": "0.3s",
+          "cardOverflow": "visible"
+        },
+        "most_played": {
+          "cardTop": 1210.09375,
+          "cardBottom": 1258.09375,
+          "hTop": 1211.09375,
+          "hBottom": 1257.09375,
+          "hHeight": 46,
+          "docked": "false",
+          "expanded": "false",
+          "label": "Expand Most Played",
+          "rows": 0,
+          "bodyH": 0,
+          "bodyScroll": null,
+          "bodyTransition": null,
+          "cardOverflow": "visible"
+        },
+        "favourite": {
+          "cardTop": 1268.09375,
+          "cardBottom": 1316.09375,
+          "hTop": 1269.09375,
+          "hBottom": 1315.09375,
+          "hHeight": 46,
+          "docked": "false",
+          "expanded": "false",
+          "label": "Expand Favourites",
+          "rows": 0,
+          "bodyH": 0,
+          "bodyScroll": null,
+          "bodyTransition": null,
+          "cardOverflow": "visible"
+        }
+      },
+      "scrollers": 0
+    },
+    "desktop_boundary": {
+      "barBottom": 205,
+      "dockVar": "205px",
+      "scrollY": 2143,
+      "maxScroll": 3567,
+      "sw": 1280,
+      "vw": 1280,
+      "secs": {
+        "best": {
+          "cardTop": -1584.90625,
+          "cardBottom": 215.09375,
+          "hTop": 168.09375,
+          "hBottom": 214.09375,
+          "hHeight": 46,
+          "docked": "true",
+          "expanded": "true",
+          "label": "Collapse Best Performances",
+          "rows": 25,
+          "bodyH": 1752,
+          "bodyScroll": [
+            1752,
+            1752,
+            1752,
+            1752
+          ],
+          "bodyTransition": "0.3s",
+          "cardOverflow": "visible"
+        },
+        "most_played": {
+          "cardTop": 225.09375,
+          "cardBottom": 2025.09375,
+          "hTop": 226.09375,
+          "hBottom": 272.09375,
+          "hHeight": 46,
+          "docked": "false",
+          "expanded": "true",
+          "label": "Collapse Most Played",
+          "rows": 25,
+          "bodyH": 1752,
+          "bodyScroll": [
+            1752,
+            1752,
+            1752,
+            1752
+          ],
+          "bodyTransition": "0.3s",
+          "cardOverflow": "visible"
+        },
+        "favourite": {
+          "cardTop": 2035.09375,
+          "cardBottom": 2083.09375,
+          "hTop": 2036.09375,
+          "hBottom": 2082.09375,
+          "hHeight": 46,
+          "docked": "false",
+          "expanded": "false",
+          "label": "Expand Favourites",
+          "rows": 0,
+          "bodyH": 0,
+          "bodyScroll": null,
+          "bodyTransition": null,
+          "cardOverflow": "visible"
+        }
+      },
+      "scrollers": 0
+    },
+    "desktop_collapsed": {
+      "barBottom": 205,
+      "dockVar": "205px",
+      "scrollY": 1815,
+      "maxScroll": 1815,
+      "sw": 1280,
+      "vw": 1280,
+      "secs": {
+        "best": {
+          "cardTop": -1256.90625,
+          "cardBottom": 543.09375,
+          "hTop": 205,
+          "hBottom": 251,
+          "hHeight": 46,
+          "docked": "true",
+          "expanded": "true",
+          "label": "Collapse Best Performances",
+          "rows": 25,
+          "bodyH": 1752,
+          "bodyScroll": [
+            1752,
+            1752,
+            1752,
+            1752
+          ],
+          "bodyTransition": "0.3s",
+          "cardOverflow": "visible"
+        },
+        "most_played": {
+          "cardTop": 553.09375,
+          "cardBottom": 601.09375,
+          "hTop": 554.09375,
+          "hBottom": 600.09375,
+          "hHeight": 46,
+          "docked": "false",
+          "expanded": "false",
+          "label": "Expand Most Played",
+          "rows": 0,
+          "bodyH": 0,
+          "bodyScroll": null,
+          "bodyTransition": null,
+          "cardOverflow": "visible"
+        },
+        "favourite": {
+          "cardTop": 611.09375,
+          "cardBottom": 659.09375,
+          "hTop": 612.09375,
+          "hBottom": 658.09375,
+          "hHeight": 46,
+          "docked": "false",
+          "expanded": "false",
+          "label": "Expand Favourites",
+          "rows": 0,
+          "bodyH": 0,
+          "bodyScroll": null,
+          "bodyTransition": null,
+          "cardOverflow": "visible"
+        }
+      },
+      "scrollers": 0
+    },
+    "phone_mid_best": {
+      "barBottom": 335,
+      "dockVar": "335px",
+      "scrollY": 1964,
+      "maxScroll": 6133,
+      "sw": 375,
+      "vw": 375,
+      "secs": {
+        "best": {
+          "cardTop": -1193.6875,
+          "cardBottom": 1794.3125,
+          "hTop": 335,
+          "hBottom": 379,
+          "hHeight": 44,
+          "docked": "true",
+          "expanded": "true",
+          "label": "Collapse Best Performances",
+          "rows": 25,
+          "bodyH": 2942,
+          "bodyScroll": [
+            2942,
+            2942,
+            2942,
+            2942
+          ],
+          "bodyTransition": "0.3s",
+          "cardOverflow": "visible"
+        },
+        "most_played": {
+          "cardTop": 1804.3125,
+          "cardBottom": 4785.3125,
+          "hTop": 1805.3125,
+          "hBottom": 1849.3125,
+          "hHeight": 44,
+          "docked": "false",
+          "expanded": "true",
+          "label": "Collapse Most Played",
+          "rows": 25,
+          "bodyH": 2935,
+          "bodyScroll": [
+            2935,
+            2935,
+            2935,
+            2935
+          ],
+          "bodyTransition": "0.3s",
+          "cardOverflow": "visible"
+        },
+        "favourite": {
+          "cardTop": 4795.3125,
+          "cardBottom": 4841.3125,
+          "hTop": 4796.3125,
+          "hBottom": 4840.3125,
+          "hHeight": 44,
+          "docked": "false",
+          "expanded": "false",
+          "label": "Expand Favourites",
+          "rows": 0,
+          "bodyH": 0,
+          "bodyScroll": null,
+          "bodyTransition": null,
+          "cardOverflow": "visible"
+        }
+      },
+      "scrollers": 0
+    },
+    "phone_boundary": {
+      "barBottom": 335,
+      "dockVar": "335px",
+      "scrollY": 3413,
+      "maxScroll": 6133,
+      "sw": 375,
+      "vw": 375,
+      "secs": {
+        "best": {
+          "cardTop": -2642.6875,
+          "cardBottom": 345.3125,
+          "hTop": 300.3125,
+          "hBottom": 344.3125,
+          "hHeight": 44,
+          "docked": "true",
+          "expanded": "true",
+          "label": "Collapse Best Performances",
+          "rows": 25,
+          "bodyH": 2942,
+          "bodyScroll": [
+            2942,
+            2942,
+            2942,
+            2942
+          ],
+          "bodyTransition": "0.3s",
+          "cardOverflow": "visible"
+        },
+        "most_played": {
+          "cardTop": 355.3125,
+          "cardBottom": 3336.3125,
+          "hTop": 356.3125,
+          "hBottom": 400.3125,
+          "hHeight": 44,
+          "docked": "false",
+          "expanded": "true",
+          "label": "Collapse Most Played",
+          "rows": 25,
+          "bodyH": 2935,
+          "bodyScroll": [
+            2935,
+            2935,
+            2935,
+            2935
+          ],
+          "bodyTransition": "0.3s",
+          "cardOverflow": "visible"
+        },
+        "favourite": {
+          "cardTop": 3346.3125,
+          "cardBottom": 3392.3125,
+          "hTop": 3347.3125,
+          "hBottom": 3391.3125,
+          "hHeight": 44,
+          "docked": "false",
+          "expanded": "false",
+          "label": "Expand Favourites",
+          "rows": 0,
+          "bodyH": 0,
+          "bodyScroll": null,
+          "bodyTransition": null,
+          "cardOverflow": "visible"
+        }
+      },
+      "scrollers": 0
+    },
+    "phone_collapsed": {
+      "barBottom": 335,
+      "dockVar": "335px",
+      "scrollY": 3198,
+      "maxScroll": 3198,
+      "sw": 375,
+      "vw": 375,
+      "secs": {
+        "best": {
+          "cardTop": -2427.6875,
+          "cardBottom": 560.3125,
+          "hTop": 335,
+          "hBottom": 379,
+          "hHeight": 44,
+          "docked": "true",
+          "expanded": "true",
+          "label": "Collapse Best Performances",
+          "rows": 25,
+          "bodyH": 2942,
+          "bodyScroll": [
+            2942,
+            2942,
+            2942,
+            2942
+          ],
+          "bodyTransition": "0.3s",
+          "cardOverflow": "visible"
+        },
+        "most_played": {
+          "cardTop": 570.3125,
+          "cardBottom": 616.3125,
+          "hTop": 571.3125,
+          "hBottom": 615.3125,
+          "hHeight": 44,
+          "docked": "false",
+          "expanded": "false",
+          "label": "Expand Most Played",
+          "rows": 0,
+          "bodyH": 0,
+          "bodyScroll": null,
+          "bodyTransition": null,
+          "cardOverflow": "visible"
+        },
+        "favourite": {
+          "cardTop": 626.3125,
+          "cardBottom": 672.3125,
+          "hTop": 627.3125,
+          "hBottom": 671.3125,
+          "hHeight": 44,
+          "docked": "false",
+          "expanded": "false",
+          "label": "Expand Favourites",
+          "rows": 0,
+          "bodyH": 0,
+          "bodyScroll": null,
+          "bodyTransition": null,
+          "cardOverflow": "visible"
+        }
+      },
+      "scrollers": 0
+    }
+  },
+  "calls": [
+    "/api/osu/player?q=mrekk&page=1",
+    "/api/osu/player?userId=7562902",
+    "/api/osu/player/beatmaps?userId=7562902&type=best&mode=all",
+    "/api/osu/player/beatmaps?userId=7562902&type=most_played&mode=all"
+  ]
+}

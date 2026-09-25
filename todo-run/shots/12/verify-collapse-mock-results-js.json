@@ -1,0 +1,217 @@
+{
+  "cases": {
+    "desktop_best_with_content_below": {
+      "before": {
+        "hT": 205,
+        "sy": 1338,
+        "max": 5319,
+        "dock": 205,
+        "anchor": "auto"
+      },
+      "mid": [
+        411,
+        411,
+        411,
+        411,
+        411,
+        411,
+        411,
+        411
+      ],
+      "after": {
+        "hT": 411.09375,
+        "sy": 353,
+        "max": 3567,
+        "dock": 205,
+        "anchor": "auto"
+      },
+      "scrollLog": [
+        353
+      ],
+      "stCalls": [
+        {
+          "a": "[{\"top\":353,\"behavior\":\"auto\"}]",
+          "sy": 1338,
+          "cardTop": -779.90625,
+          "var": "205px"
+        }
+      ],
+      "landedAtDock": false
+    },
+    "desktop_mp_with_content_below": {
+      "before": {
+        "hT": 205,
+        "sy": 3148,
+        "max": 5319,
+        "dock": 205,
+        "anchor": "auto"
+      },
+      "mid": [
+        411,
+        411,
+        411,
+        411,
+        411,
+        411,
+        411,
+        411
+      ],
+      "after": {
+        "hT": 411.09375,
+        "sy": 2163,
+        "max": 3567,
+        "dock": 205,
+        "anchor": "auto"
+      },
+      "scrollLog": [
+        2163,
+        2163
+      ],
+      "stCalls": [
+        {
+          "a": "[{\"top\":2163,\"behavior\":\"auto\"}]",
+          "sy": 3148,
+          "cardTop": -779.90625,
+          "var": "205px"
+        }
+      ],
+      "landedAtDock": false
+    },
+    "desktop_fav_last": {
+      "before": {
+        "hT": 205,
+        "sy": 4958,
+        "max": 5319,
+        "dock": 205,
+        "anchor": "auto"
+      },
+      "mid": [
+        411,
+        647,
+        754,
+        754,
+        754,
+        754,
+        754,
+        754
+      ],
+      "after": {
+        "hT": 754.09375,
+        "sy": 3630,
+        "max": 3630,
+        "dock": 205,
+        "anchor": "auto"
+      },
+      "scrollLog": [
+        3973,
+        3973,
+        3973,
+        3938,
+        3938,
+        3938,
+        3818,
+        3818,
+        3818,
+        3737
+      ],
+      "stCalls": [
+        {
+          "a": "[{\"top\":3973,\"behavior\":\"auto\"}]",
+          "sy": 4958,
+          "cardTop": -779.90625,
+          "var": "205px"
+        }
+      ],
+      "landedAtDock": false
+    },
+    "phone_best_with_content_below": {
+      "before": {
+        "hT": 335,
+        "sy": 2105,
+        "max": 8283,
+        "dock": 335,
+        "anchor": "auto"
+      },
+      "mid": [
+        671,
+        671,
+        671,
+        671,
+        671,
+        671,
+        671,
+        671
+      ],
+      "after": {
+        "hT": 671.3125,
+        "sy": 437,
+        "max": 5608,
+        "dock": 335,
+        "anchor": "auto"
+      },
+      "scrollLog": [
+        437,
+        437,
+        437,
+        437
+      ],
+      "stCalls": [
+        {
+          "a": "[{\"top\":437,\"behavior\":\"auto\"}]",
+          "sy": 2105,
+          "cardTop": -1332.6875,
+          "var": "335px"
+        }
+      ],
+      "landedAtDock": false
+    },
+    "phone_fav_last": {
+      "before": {
+        "hT": 335,
+        "sy": 7567,
+        "max": 8283,
+        "dock": 335,
+        "anchor": "auto"
+      },
+      "mid": [
+        671,
+        671,
+        768,
+        768,
+        768,
+        768,
+        768,
+        768
+      ],
+      "after": {
+        "hT": 768.3125,
+        "sy": 5802,
+        "max": 5802,
+        "dock": 335,
+        "anchor": "auto"
+      },
+      "scrollLog": [
+        5899,
+        5899,
+        5899,
+        5899,
+        5899,
+        5868,
+        5868,
+        5868,
+        5868,
+        5868
+      ],
+      "stCalls": [
+        {
+          "a": "[{\"top\":5899,\"behavior\":\"auto\"}]",
+          "sy": 7567,
+          "cardTop": -1332.6875,
+          "var": "335px"
+        }
+      ],
+      "landedAtDock": false
+    }
+  },
+  "unmockedOsu": []
+}

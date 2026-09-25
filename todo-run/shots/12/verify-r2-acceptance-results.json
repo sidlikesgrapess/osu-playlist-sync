@@ -1,0 +1,2313 @@
+{
+  "checks": {
+    "A10_best_first_open_one_call": {
+      "pass": true,
+      "detail": [
+        "/api/osu/player/beatmaps?userId=7562902&type=best&mode=all"
+      ]
+    },
+    "A1_no_inner_scroll_or_maxheight": {
+      "pass": true,
+      "detail": []
+    },
+    "A1_best_full_length": {
+      "pass": true,
+      "detail": [
+        1752,
+        1752,
+        1752,
+        1752
+      ]
+    },
+    "A6_card_not_overflow_hidden": {
+      "pass": true,
+      "detail": [
+        "visible",
+        "10px"
+      ]
+    },
+    "A7_aria": {
+      "pass": true,
+      "detail": [
+        "Collapse Best Performances",
+        "Expand Most Played"
+      ]
+    },
+    "A10_mp_first_open_one_call": {
+      "pass": true,
+      "detail": [
+        "/api/osu/player/beatmaps?userId=7562902&type=best&mode=all",
+        "/api/osu/player/beatmaps?userId=7562902&type=most_played&mode=all"
+      ]
+    },
+    "A9_body_transition_easing": {
+      "pass": true,
+      "detail": "grid-template-rows 0.3s cubic-bezier(0.16, 1, 0.3, 1)"
+    },
+    "A9_open_animates_intermediate_heights": {
+      "pass": false,
+      "detail": {
+        "finalH": 1752,
+        "mids": [],
+        "n": 32
+      }
+    },
+    "desktop_A3_best_docked_at_bar_bottom": {
+      "pass": true,
+      "detail": {
+        "hTop": 205,
+        "bar": 205
+      }
+    },
+    "desktop_A4_var_equals_bar_bottom": {
+      "pass": true,
+      "detail": [
+        205,
+        205
+      ]
+    },
+    "desktop_A5_header_below_bar": {
+      "pass": true,
+      "detail": {
+        "barHit": true,
+        "z": "30",
+        "barZ": "45",
+        "hit": true
+      }
+    },
+    "desktop_A11_one_line": {
+      "pass": true,
+      "detail": {
+        "hH": [
+          46,
+          46
+        ],
+        "btn": {
+          "x": 1221,
+          "y": 212.5,
+          "width": 30,
+          "height": 30,
+          "top": 212.5,
+          "right": 1251,
+          "bottom": 242.5,
+          "left": 1221
+        },
+        "trunc": false
+      }
+    },
+    "desktop_A11_no_hscroll": {
+      "pass": true,
+      "detail": [
+        1280,
+        1280
+      ]
+    },
+    "desktop_A4_tracks_bar_during_dock_anim": {
+      "pass": false,
+      "detail": {
+        "worst": 22.80000000000001,
+        "barChanged": true,
+        "first": [
+          [
+            3,
+            280,
+            280
+          ],
+          [
+            37,
+            266,
+            280
+          ],
+          [
+            64,
+            266,
+            266
+          ],
+          [
+            73,
+            260.9,
+            266
+          ]
+        ]
+      }
+    },
+    "desktop_A5_push_out_no_overlap": {
+      "pass": true,
+      "detail": []
+    },
+    "desktop_A5_best_actually_pushed_up": {
+      "pass": true,
+      "detail": [
+        [
+          -120,
+          205,
+          326
+        ],
+        [
+          -108,
+          205,
+          314
+        ],
+        [
+          -96,
+          205,
+          302
+        ],
+        [
+          -84,
+          205,
+          290
+        ],
+        [
+          -72,
+          205,
+          278
+        ],
+        [
+          -60,
+          205,
+          266
+        ],
+        [
+          -48,
+          196,
+          254
+        ],
+        [
+          -36,
+          184,
+          242
+        ],
+        [
+          -24,
+          172,
+          230
+        ],
+        [
+          -12,
+          160,
+          218
+        ],
+        [
+          0,
+          148,
+          206
+        ],
+        [
+          12,
+          136,
+          205
+        ],
+        [
+          24,
+          124,
+          205
+        ],
+        [
+          36,
+          112,
+          205
+        ],
+        [
+          48,
+          100,
+          205
+        ],
+        [
+          60,
+          88,
+          205
+        ]
+      ]
+    },
+    "desktop_A8_best_was_docked": {
+      "pass": true,
+      "detail": 205
+    },
+    "desktop_A8_collapse_best_lands_on_dock": {
+      "pass": false,
+      "detail": {
+        "hTop": 206.09375,
+        "bar": 205,
+        "rows": 0
+      }
+    },
+    "desktop_A8_header_stays_in_view_during_collapse": {
+      "pass": true,
+      "detail": []
+    },
+    "desktop_A8_closed_header_inside_card": {
+      "pass": true,
+      "detail": {
+        "cardTop": 205.09375,
+        "cardBottom": 253.09375,
+        "hTop": 206.09375,
+        "hBottom": 252.09375,
+        "hH": 46,
+        "hRight": 1259,
+        "pos": "static",
+        "z": "30",
+        "bg": "rgba(0, 0, 0, 0)",
+        "expanded": "false",
+        "label": "Expand Best Performances",
+        "mainExpanded": "false",
+        "rows": 0,
+        "bodyH": 0,
+        "bodyScroll": null,
+        "bodyTrans": null,
+        "chevTrans": "0.3s",
+        "hitInHeader": true,
+        "labelTrunc": false,
+        "btnRect": {
+          "x": 1221,
+          "y": 212.59375,
+          "width": 30,
+          "height": 30,
+          "top": 212.59375,
+          "right": 1251,
+          "bottom": 242.59375,
+          "left": 1221
+        },
+        "cardOverflow": "visible",
+        "cardRadius": "10px"
+      }
+    },
+    "desktop_A10_reopen_best_no_call_keyboard": {
+      "pass": true,
+      "detail": {
+        "rows": 25,
+        "n": 0
+      }
+    },
+    "desktop_A8_collapse_mp_main_btn_in_view": {
+      "pass": true,
+      "detail": {
+        "hTop": 554.09375,
+        "bar": 205,
+        "scrollY": 1815,
+        "max": 1815
+      }
+    },
+    "desktop_A10_reopen_mp_no_call": {
+      "pass": true,
+      "detail": 0
+    },
+    "desktop_A11_no_hscroll_end": {
+      "pass": true,
+      "detail": 1280
+    },
+    "phone_A3_best_docked_at_bar_bottom": {
+      "pass": true,
+      "detail": {
+        "hTop": 335,
+        "bar": 335
+      }
+    },
+    "phone_A4_var_equals_bar_bottom": {
+      "pass": true,
+      "detail": [
+        335,
+        335
+      ]
+    },
+    "phone_A5_header_below_bar": {
+      "pass": true,
+      "detail": {
+        "barHit": true,
+        "z": "30",
+        "barZ": "45",
+        "hit": true
+      }
+    },
+    "phone_A11_one_line": {
+      "pass": true,
+      "detail": {
+        "hH": [
+          44,
+          44
+        ],
+        "btn": {
+          "x": 320,
+          "y": 341.5,
+          "width": 30,
+          "height": 30,
+          "top": 341.5,
+          "right": 350,
+          "bottom": 371.5,
+          "left": 320
+        },
+        "trunc": false
+      }
+    },
+    "phone_A11_no_hscroll": {
+      "pass": true,
+      "detail": [
+        375,
+        375
+      ]
+    },
+    "phone_A4_tracks_bar_during_dock_anim": {
+      "pass": false,
+      "detail": {
+        "worst": 14,
+        "barChanged": true,
+        "first": [
+          [
+            2,
+            409,
+            409
+          ],
+          [
+            34,
+            395,
+            409
+          ],
+          [
+            60,
+            395,
+            395
+          ],
+          [
+            72,
+            389.9,
+            395
+          ]
+        ]
+      }
+    },
+    "phone_A5_push_out_no_overlap": {
+      "pass": true,
+      "detail": []
+    },
+    "phone_A5_best_actually_pushed_up": {
+      "pass": true,
+      "detail": [
+        [
+          -120,
+          335,
+          456
+        ],
+        [
+          -108,
+          335,
+          444
+        ],
+        [
+          -96,
+          335,
+          432
+        ],
+        [
+          -84,
+          335,
+          420
+        ],
+        [
+          -72,
+          335,
+          408
+        ],
+        [
+          -60,
+          335,
+          396
+        ],
+        [
+          -48,
+          328,
+          384
+        ],
+        [
+          -36,
+          316,
+          372
+        ],
+        [
+          -24,
+          304,
+          360
+        ],
+        [
+          -12,
+          292,
+          348
+        ],
+        [
+          0,
+          280,
+          336
+        ],
+        [
+          12,
+          268,
+          335
+        ],
+        [
+          24,
+          256,
+          335
+        ],
+        [
+          36,
+          244,
+          335
+        ],
+        [
+          48,
+          232,
+          335
+        ],
+        [
+          60,
+          220,
+          335
+        ]
+      ]
+    },
+    "phone_A8_best_was_docked": {
+      "pass": true,
+      "detail": 335
+    },
+    "phone_A8_collapse_best_lands_on_dock": {
+      "pass": false,
+      "detail": {
+        "hTop": 336.3125,
+        "bar": 335,
+        "rows": 0
+      }
+    },
+    "phone_A8_header_stays_in_view_during_collapse": {
+      "pass": true,
+      "detail": []
+    },
+    "phone_A8_closed_header_inside_card": {
+      "pass": true,
+      "detail": {
+        "cardTop": 335.3125,
+        "cardBottom": 381.3125,
+        "hTop": 336.3125,
+        "hBottom": 380.3125,
+        "hH": 44,
+        "hRight": 358,
+        "pos": "static",
+        "z": "30",
+        "bg": "rgba(0, 0, 0, 0)",
+        "expanded": "false",
+        "label": "Expand Best Performances",
+        "mainExpanded": "false",
+        "rows": 0,
+        "bodyH": 0,
+        "bodyScroll": null,
+        "bodyTrans": null,
+        "chevTrans": "0.3s",
+        "hitInHeader": true,
+        "labelTrunc": false,
+        "btnRect": {
+          "x": 320,
+          "y": 341.8125,
+          "width": 30,
+          "height": 30,
+          "top": 341.8125,
+          "right": 350,
+          "bottom": 371.8125,
+          "left": 320
+        },
+        "cardOverflow": "visible",
+        "cardRadius": "10px"
+      }
+    },
+    "phone_A10_reopen_best_no_call_keyboard": {
+      "pass": true,
+      "detail": {
+        "rows": 25,
+        "n": 0
+      }
+    },
+    "phone_A8_collapse_mp_main_btn_in_view": {
+      "pass": true,
+      "detail": {
+        "hTop": 571.3125,
+        "bar": 335,
+        "scrollY": 3198,
+        "max": 3198
+      }
+    },
+    "phone_A10_reopen_mp_no_call": {
+      "pass": true,
+      "detail": 0
+    },
+    "phone_A11_no_hscroll_end": {
+      "pass": true,
+      "detail": 375
+    },
+    "A4_var_after_resize_900": {
+      "pass": true,
+      "detail": [
+        205,
+        205,
+        205
+      ]
+    },
+    "A2_show_more_25_no_call": {
+      "pass": true,
+      "detail": {
+        "rows": 50,
+        "smText": "Show more (57 left)",
+        "n": 0
+      }
+    },
+    "A1_after_show_more_full_length": {
+      "pass": true,
+      "detail": [
+        3427,
+        3427,
+        3427,
+        3427
+      ]
+    },
+    "A9_reduced_motion_none": {
+      "pass": true,
+      "detail": [
+        "none",
+        "0s"
+      ]
+    },
+    "A9_reduced_motion_collapse_instant_auto": {
+      "pass": false,
+      "detail": {
+        "smoothUsed": {
+          "used": [
+            "auto"
+          ],
+          "h": 3427
+        },
+        "hTop": 206.09375,
+        "bar": 205
+      }
+    },
+    "A10_total_calls": {
+      "pass": true,
+      "detail": {
+        "q": 1,
+        "userId": 1,
+        "beatmaps": 2,
+        "total": 4
+      }
+    }
+  },
+  "log": [
+    "Loading the image 'https://osu.ppy.sh/images/layout/avatar-guest@2x.png' violates the following Content Security Policy directive: \"img-src 'self' https://assets.ppy.sh https://a.ppy.sh https://i.ytim",
+    "Loading the image 'https://osu.ppy.sh/images/layout/avatar-guest@2x.png' violates the following Content Security Policy directive: \"img-src 'self' https://assets.ppy.sh https://a.ppy.sh https://i.ytim",
+    "Loading the image 'https://osu.ppy.sh/images/layout/avatar-guest@2x.png' violates the following Content Security Policy directive: \"img-src 'self' https://assets.ppy.sh https://a.ppy.sh https://i.ytim",
+    "Loading the image 'https://osu.ppy.sh/images/layout/avatar-guest@2x.png' violates the following Content Security Policy directive: \"img-src 'self' https://assets.ppy.sh https://a.ppy.sh https://i.ytim",
+    "Loading the image 'https://osu.ppy.sh/images/layout/avatar-guest@2x.png' violates the following Content Security Policy directive: \"img-src 'self' https://assets.ppy.sh https://a.ppy.sh https://i.ytim",
+    "Loading the image 'https://osu.ppy.sh/images/layout/avatar-guest@2x.png' violates the following Content Security Policy directive: \"img-src 'self' https://assets.ppy.sh https://a.ppy.sh https://i.ytim",
+    "Loading the image 'https://osu.ppy.sh/images/layout/avatar-guest@2x.png' violates the following Content Security Policy directive: \"img-src 'self' https://assets.ppy.sh https://a.ppy.sh https://i.ytim",
+    "Loading the image 'https://osu.ppy.sh/images/layout/avatar-guest@2x.png' violates the following Content Security Policy directive: \"img-src 'self' https://assets.ppy.sh https://a.ppy.sh https://i.ytim",
+    "Loading the image 'https://osu.ppy.sh/images/layout/avatar-guest@2x.png' violates the following Content Security Policy directive: \"img-src 'self' https://assets.ppy.sh https://a.ppy.sh https://i.ytim",
+    "Loading the image 'https://osu.ppy.sh/images/layout/avatar-guest@2x.png' violates the following Content Security Policy directive: \"img-src 'self' https://assets.ppy.sh https://a.ppy.sh https://i.ytim",
+    "Loading the image 'https://osu.ppy.sh/images/layout/avatar-guest@2x.png' violates the following Content Security Policy directive: \"img-src 'self' https://assets.ppy.sh https://a.ppy.sh https://i.ytim",
+    "Loading the image 'https://osu.ppy.sh/images/layout/avatar-guest@2x.png' violates the following Content Security Policy directive: \"img-src 'self' https://assets.ppy.sh https://a.ppy.sh https://i.ytim",
+    "Loading the image 'https://osu.ppy.sh/images/layout/avatar-guest@2x.png' violates the following Content Security Policy directive: \"img-src 'self' https://assets.ppy.sh https://a.ppy.sh https://i.ytim",
+    "Loading the image 'https://osu.ppy.sh/images/layout/avatar-guest@2x.png' violates the following Content Security Policy directive: \"img-src 'self' https://assets.ppy.sh https://a.ppy.sh https://i.ytim",
+    "Loading the image 'https://osu.ppy.sh/images/layout/avatar-guest@2x.png' violates the following Content Security Policy directive: \"img-src 'self' https://assets.ppy.sh https://a.ppy.sh https://i.ytim",
+    "Loading the image 'https://osu.ppy.sh/images/layout/avatar-guest@2x.png' violates the following Content Security Policy directive: \"img-src 'self' https://assets.ppy.sh https://a.ppy.sh https://i.ytim"
+  ],
+  "data": {
+    "g0": {
+      "barBottom": 427.09375,
+      "barZ": "45",
+      "barHitInBar": true,
+      "dockVar": 280,
+      "scrollY": 0,
+      "maxScroll": 1890,
+      "sw": 1280,
+      "vw": 1280,
+      "vh": 800,
+      "s": {
+        "best": {
+          "cardTop": 633.09375,
+          "cardBottom": 2433.09375,
+          "hTop": 634.09375,
+          "hBottom": 680.09375,
+          "hH": 46,
+          "hRight": 1259,
+          "pos": "sticky",
+          "z": "30",
+          "bg": "rgb(35, 32, 48)",
+          "expanded": "true",
+          "label": "Collapse Best Performances",
+          "mainExpanded": "true",
+          "rows": 25,
+          "bodyH": 1752,
+          "bodyScroll": [
+            1752,
+            1752,
+            1752,
+            1752
+          ],
+          "bodyTrans": "grid-template-rows 0.3s cubic-bezier(0.16, 1, 0.3, 1)",
+          "chevTrans": "0.3s",
+          "hitInHeader": true,
+          "labelTrunc": false,
+          "btnRect": {
+            "x": 1221,
+            "y": 641.59375,
+            "width": 30,
+            "height": 30,
+            "top": 641.59375,
+            "right": 1251,
+            "bottom": 671.59375,
+            "left": 1221
+          },
+          "cardOverflow": "visible",
+          "cardRadius": "10px"
+        },
+        "most_played": {
+          "cardTop": 2443.09375,
+          "cardBottom": 2491.09375,
+          "hTop": 2444.09375,
+          "hBottom": 2490.09375,
+          "hH": 46,
+          "hRight": 1259,
+          "pos": "static",
+          "z": "30",
+          "bg": "rgba(0, 0, 0, 0)",
+          "expanded": "false",
+          "label": "Expand Most Played",
+          "mainExpanded": "false",
+          "rows": 0,
+          "bodyH": 0,
+          "bodyScroll": null,
+          "bodyTrans": null,
+          "chevTrans": "0.3s",
+          "hitInHeader": null,
+          "labelTrunc": false,
+          "btnRect": {
+            "x": 1221,
+            "y": 2451.59375,
+            "width": 30,
+            "height": 30,
+            "top": 2451.59375,
+            "right": 1251,
+            "bottom": 2481.59375,
+            "left": 1221
+          },
+          "cardOverflow": "visible",
+          "cardRadius": "10px"
+        },
+        "favourite": {
+          "cardTop": 2501.09375,
+          "cardBottom": 2549.09375,
+          "hTop": 2502.09375,
+          "hBottom": 2548.09375,
+          "hH": 46,
+          "hRight": 1259,
+          "pos": "static",
+          "z": "30",
+          "bg": "rgba(0, 0, 0, 0)",
+          "expanded": "false",
+          "label": "Expand Favourites",
+          "mainExpanded": "false",
+          "rows": 0,
+          "bodyH": 0,
+          "bodyScroll": null,
+          "bodyTrans": null,
+          "chevTrans": "0.3s",
+          "hitInHeader": null,
+          "labelTrunc": false,
+          "btnRect": {
+            "x": 1221,
+            "y": 2509.59375,
+            "width": 30,
+            "height": 30,
+            "top": 2509.59375,
+            "right": 1251,
+            "bottom": 2539.59375,
+            "left": 1221
+          },
+          "cardOverflow": "visible",
+          "cardRadius": "10px"
+        }
+      },
+      "bad": []
+    },
+    "openSamples": [
+      [
+        5,
+        1752
+      ],
+      [
+        16,
+        1752
+      ],
+      [
+        33,
+        1752
+      ],
+      [
+        51,
+        1752
+      ],
+      [
+        65,
+        1752
+      ],
+      [
+        82,
+        1752
+      ],
+      [
+        104,
+        1752
+      ],
+      [
+        116,
+        1752
+      ],
+      [
+        132,
+        1752
+      ],
+      [
+        149,
+        1752
+      ],
+      [
+        166,
+        1752
+      ],
+      [
+        182,
+        1752
+      ],
+      [
+        198,
+        1752
+      ],
+      [
+        215,
+        1752
+      ],
+      [
+        232,
+        1752
+      ],
+      [
+        249,
+        1752
+      ],
+      [
+        266,
+        1752
+      ],
+      [
+        282,
+        1752
+      ],
+      [
+        298,
+        1752
+      ],
+      [
+        315,
+        1752
+      ],
+      [
+        333,
+        1752
+      ],
+      [
+        349,
+        1752
+      ],
+      [
+        366,
+        1752
+      ],
+      [
+        382,
+        1752
+      ],
+      [
+        399,
+        1752
+      ],
+      [
+        415,
+        1752
+      ],
+      [
+        431,
+        1752
+      ],
+      [
+        449,
+        1752
+      ],
+      [
+        465,
+        1752
+      ],
+      [
+        481,
+        1752
+      ],
+      [
+        498,
+        1752
+      ],
+      [
+        515,
+        1752
+      ]
+    ],
+    "desktop_midBest": {
+      "barBottom": 205,
+      "barZ": "45",
+      "barHitInBar": true,
+      "dockVar": 205,
+      "scrollY": 878,
+      "maxScroll": 3567,
+      "sw": 1280,
+      "vw": 1280,
+      "vh": 800,
+      "s": {
+        "best": {
+          "cardTop": -319.90625,
+          "cardBottom": 1480.09375,
+          "hTop": 205,
+          "hBottom": 251,
+          "hH": 46,
+          "hRight": 1259,
+          "pos": "sticky",
+          "z": "30",
+          "bg": "rgb(35, 32, 48)",
+          "expanded": "true",
+          "label": "Collapse Best Performances",
+          "mainExpanded": "true",
+          "rows": 25,
+          "bodyH": 1752,
+          "bodyScroll": [
+            1752,
+            1752,
+            1752,
+            1752
+          ],
+          "bodyTrans": "grid-template-rows 0.3s cubic-bezier(0.16, 1, 0.3, 1)",
+          "chevTrans": "0.3s",
+          "hitInHeader": true,
+          "labelTrunc": false,
+          "btnRect": {
+            "x": 1221,
+            "y": 212.5,
+            "width": 30,
+            "height": 30,
+            "top": 212.5,
+            "right": 1251,
+            "bottom": 242.5,
+            "left": 1221
+          },
+          "cardOverflow": "visible",
+          "cardRadius": "10px"
+        },
+        "most_played": {
+          "cardTop": 1490.09375,
+          "cardBottom": 3290.09375,
+          "hTop": 1491.09375,
+          "hBottom": 1537.09375,
+          "hH": 46,
+          "hRight": 1259,
+          "pos": "sticky",
+          "z": "30",
+          "bg": "rgb(35, 32, 48)",
+          "expanded": "true",
+          "label": "Collapse Most Played",
+          "mainExpanded": "true",
+          "rows": 25,
+          "bodyH": 1752,
+          "bodyScroll": [
+            1752,
+            1752,
+            1752,
+            1752
+          ],
+          "bodyTrans": "grid-template-rows 0.3s cubic-bezier(0.16, 1, 0.3, 1)",
+          "chevTrans": "0.3s",
+          "hitInHeader": null,
+          "labelTrunc": false,
+          "btnRect": {
+            "x": 1221,
+            "y": 1498.59375,
+            "width": 30,
+            "height": 30,
+            "top": 1498.59375,
+            "right": 1251,
+            "bottom": 1528.59375,
+            "left": 1221
+          },
+          "cardOverflow": "visible",
+          "cardRadius": "10px"
+        },
+        "favourite": {
+          "cardTop": 3300.09375,
+          "cardBottom": 3348.09375,
+          "hTop": 3301.09375,
+          "hBottom": 3347.09375,
+          "hH": 46,
+          "hRight": 1259,
+          "pos": "static",
+          "z": "30",
+          "bg": "rgba(0, 0, 0, 0)",
+          "expanded": "false",
+          "label": "Expand Favourites",
+          "mainExpanded": "false",
+          "rows": 0,
+          "bodyH": 0,
+          "bodyScroll": null,
+          "bodyTrans": null,
+          "chevTrans": "0.3s",
+          "hitInHeader": null,
+          "labelTrunc": false,
+          "btnRect": {
+            "x": 1221,
+            "y": 3308.59375,
+            "width": 30,
+            "height": 30,
+            "top": 3308.59375,
+            "right": 1251,
+            "bottom": 3338.59375,
+            "left": 1221
+          },
+          "cardOverflow": "visible",
+          "cardRadius": "10px"
+        }
+      },
+      "bad": []
+    },
+    "desktop_labelTrunc": {
+      "best": false
+    },
+    "desktop_dockTrack": [
+      [
+        3,
+        280,
+        280
+      ],
+      [
+        37,
+        266,
+        280
+      ],
+      [
+        64,
+        266,
+        266
+      ],
+      [
+        73,
+        260.9,
+        266
+      ],
+      [
+        95,
+        254.4,
+        261
+      ],
+      [
+        121,
+        231.2,
+        254
+      ],
+      [
+        142,
+        223.6,
+        231
+      ],
+      [
+        169,
+        213.8,
+        224
+      ],
+      [
+        188,
+        210.7,
+        214
+      ],
+      [
+        205,
+        208.5,
+        211
+      ],
+      [
+        224,
+        207.3,
+        208
+      ],
+      [
+        240,
+        206.5,
+        207
+      ],
+      [
+        271,
+        205.5,
+        207
+      ],
+      [
+        293,
+        205.2,
+        205
+      ],
+      [
+        320,
+        205.1,
+        205
+      ],
+      [
+        336,
+        205,
+        205
+      ],
+      [
+        353,
+        205,
+        205
+      ],
+      [
+        371,
+        205,
+        205
+      ],
+      [
+        386,
+        205,
+        205
+      ],
+      [
+        403,
+        205,
+        205
+      ],
+      [
+        419,
+        205,
+        205
+      ],
+      [
+        437,
+        205,
+        205
+      ],
+      [
+        453,
+        205,
+        205
+      ],
+      [
+        469,
+        205,
+        205
+      ],
+      [
+        486,
+        205,
+        205
+      ],
+      [
+        503,
+        205,
+        205
+      ],
+      [
+        520,
+        205,
+        205
+      ],
+      [
+        536,
+        205,
+        205
+      ],
+      [
+        552,
+        205,
+        205
+      ],
+      [
+        570,
+        205,
+        205
+      ],
+      [
+        586,
+        205,
+        205
+      ],
+      [
+        603,
+        205,
+        205
+      ]
+    ],
+    "desktop_sweep": [
+      {
+        "o": -120,
+        "bestTop": 205,
+        "bestBottom": 251,
+        "mpTop": 326.09375,
+        "bar": 205,
+        "bestCardBottom": 315.09375,
+        "mpHit": true
+      },
+      {
+        "o": -108,
+        "bestTop": 205,
+        "bestBottom": 251,
+        "mpTop": 314.09375,
+        "bar": 205,
+        "bestCardBottom": 303.09375,
+        "mpHit": true
+      },
+      {
+        "o": -96,
+        "bestTop": 205,
+        "bestBottom": 251,
+        "mpTop": 302.09375,
+        "bar": 205,
+        "bestCardBottom": 291.09375,
+        "mpHit": true
+      },
+      {
+        "o": -84,
+        "bestTop": 205,
+        "bestBottom": 251,
+        "mpTop": 290.09375,
+        "bar": 205,
+        "bestCardBottom": 279.09375,
+        "mpHit": true
+      },
+      {
+        "o": -72,
+        "bestTop": 205,
+        "bestBottom": 251,
+        "mpTop": 278.09375,
+        "bar": 205,
+        "bestCardBottom": 267.09375,
+        "mpHit": true
+      },
+      {
+        "o": -60,
+        "bestTop": 205,
+        "bestBottom": 251,
+        "mpTop": 266.09375,
+        "bar": 205,
+        "bestCardBottom": 255.09375,
+        "mpHit": true
+      },
+      {
+        "o": -48,
+        "bestTop": 196.09375,
+        "bestBottom": 242.09375,
+        "mpTop": 254.09375,
+        "bar": 205,
+        "bestCardBottom": 243.09375,
+        "mpHit": true
+      },
+      {
+        "o": -36,
+        "bestTop": 184.09375,
+        "bestBottom": 230.09375,
+        "mpTop": 242.09375,
+        "bar": 205,
+        "bestCardBottom": 231.09375,
+        "mpHit": true
+      },
+      {
+        "o": -24,
+        "bestTop": 172.09375,
+        "bestBottom": 218.09375,
+        "mpTop": 230.09375,
+        "bar": 205,
+        "bestCardBottom": 219.09375,
+        "mpHit": true
+      },
+      {
+        "o": -12,
+        "bestTop": 160.09375,
+        "bestBottom": 206.09375,
+        "mpTop": 218.09375,
+        "bar": 205,
+        "bestCardBottom": 207.09375,
+        "mpHit": true
+      },
+      {
+        "o": 0,
+        "bestTop": 148.09375,
+        "bestBottom": 194.09375,
+        "mpTop": 206.09375,
+        "bar": 205,
+        "bestCardBottom": 195.09375,
+        "mpHit": true
+      },
+      {
+        "o": 12,
+        "bestTop": 136.09375,
+        "bestBottom": 182.09375,
+        "mpTop": 205,
+        "bar": 205,
+        "bestCardBottom": 183.09375,
+        "mpHit": true
+      },
+      {
+        "o": 24,
+        "bestTop": 124.09375,
+        "bestBottom": 170.09375,
+        "mpTop": 205,
+        "bar": 205,
+        "bestCardBottom": 171.09375,
+        "mpHit": true
+      },
+      {
+        "o": 36,
+        "bestTop": 112.09375,
+        "bestBottom": 158.09375,
+        "mpTop": 205,
+        "bar": 205,
+        "bestCardBottom": 159.09375,
+        "mpHit": true
+      },
+      {
+        "o": 48,
+        "bestTop": 100.09375,
+        "bestBottom": 146.09375,
+        "mpTop": 205,
+        "bar": 205,
+        "bestCardBottom": 147.09375,
+        "mpHit": true
+      },
+      {
+        "o": 60,
+        "bestTop": 88.09375,
+        "bestBottom": 134.09375,
+        "mpTop": 205,
+        "bar": 205,
+        "bestCardBottom": 135.09375,
+        "mpHit": true
+      }
+    ],
+    "desktop_collapseBest": {
+      "before": {
+        "cardTop": -694.90625,
+        "cardBottom": 1105.09375,
+        "hTop": 205,
+        "hBottom": 251,
+        "hH": 46,
+        "hRight": 1259,
+        "pos": "sticky",
+        "z": "30",
+        "bg": "rgb(35, 32, 48)",
+        "expanded": "true",
+        "label": "Collapse Best Performances",
+        "mainExpanded": "true",
+        "rows": 25,
+        "bodyH": 1752,
+        "bodyScroll": [
+          1752,
+          1752,
+          1752,
+          1752
+        ],
+        "bodyTrans": "grid-template-rows 0.3s cubic-bezier(0.16, 1, 0.3, 1)",
+        "chevTrans": "0.3s",
+        "hitInHeader": true,
+        "labelTrunc": false,
+        "btnRect": {
+          "x": 1221,
+          "y": 212.5,
+          "width": 30,
+          "height": 30,
+          "top": 212.5,
+          "right": 1251,
+          "bottom": 242.5,
+          "left": 1221
+        },
+        "cardOverflow": "visible",
+        "cardRadius": "10px"
+      },
+      "after": {
+        "cardTop": 205.09375,
+        "cardBottom": 253.09375,
+        "hTop": 206.09375,
+        "hBottom": 252.09375,
+        "hH": 46,
+        "hRight": 1259,
+        "pos": "static",
+        "z": "30",
+        "bg": "rgba(0, 0, 0, 0)",
+        "expanded": "false",
+        "label": "Expand Best Performances",
+        "mainExpanded": "false",
+        "rows": 0,
+        "bodyH": 0,
+        "bodyScroll": null,
+        "bodyTrans": null,
+        "chevTrans": "0.3s",
+        "hitInHeader": true,
+        "labelTrunc": false,
+        "btnRect": {
+          "x": 1221,
+          "y": 212.59375,
+          "width": 30,
+          "height": 30,
+          "top": 212.59375,
+          "right": 1251,
+          "bottom": 242.59375,
+          "left": 1221
+        },
+        "cardOverflow": "visible",
+        "cardRadius": "10px"
+      },
+      "track": [
+        [
+          3,
+          206
+        ],
+        [
+          18,
+          206
+        ],
+        [
+          36,
+          206
+        ],
+        [
+          51,
+          206
+        ],
+        [
+          69,
+          206
+        ],
+        [
+          84,
+          206
+        ],
+        [
+          101,
+          206
+        ],
+        [
+          118,
+          206
+        ],
+        [
+          135,
+          206
+        ],
+        [
+          153,
+          206
+        ],
+        [
+          168,
+          206
+        ],
+        [
+          186,
+          206
+        ],
+        [
+          202,
+          206
+        ],
+        [
+          218,
+          206
+        ],
+        [
+          234,
+          206
+        ],
+        [
+          252,
+          206
+        ],
+        [
+          269,
+          206
+        ],
+        [
+          285,
+          206
+        ],
+        [
+          301,
+          206
+        ],
+        [
+          318,
+          206
+        ],
+        [
+          336,
+          206
+        ],
+        [
+          351,
+          206
+        ],
+        [
+          368,
+          206
+        ],
+        [
+          385,
+          206
+        ],
+        [
+          402,
+          206
+        ],
+        [
+          419,
+          206
+        ],
+        [
+          434,
+          206
+        ],
+        [
+          452,
+          206
+        ],
+        [
+          468,
+          206
+        ],
+        [
+          485,
+          206
+        ],
+        [
+          501,
+          206
+        ]
+      ],
+      "bar": 205
+    },
+    "desktop_collapseMP": {
+      "before": {
+        "cardTop": -494.90625,
+        "cardBottom": 1305.09375,
+        "hTop": 205,
+        "hBottom": 251,
+        "hH": 46,
+        "hRight": 1259,
+        "pos": "sticky",
+        "z": "30",
+        "bg": "rgb(35, 32, 48)",
+        "expanded": "true",
+        "label": "Collapse Most Played",
+        "mainExpanded": "true",
+        "rows": 25,
+        "bodyH": 1752,
+        "bodyScroll": [
+          1752,
+          1752,
+          1752,
+          1752
+        ],
+        "bodyTrans": "grid-template-rows 0.3s cubic-bezier(0.16, 1, 0.3, 1)",
+        "chevTrans": "0.3s",
+        "hitInHeader": true,
+        "labelTrunc": false,
+        "btnRect": {
+          "x": 1221,
+          "y": 211.5,
+          "width": 30,
+          "height": 30,
+          "top": 211.5,
+          "right": 1251,
+          "bottom": 241.5,
+          "left": 1221
+        },
+        "cardOverflow": "visible",
+        "cardRadius": "10px"
+      },
+      "after": {
+        "cardTop": 553.09375,
+        "cardBottom": 601.09375,
+        "hTop": 554.09375,
+        "hBottom": 600.09375,
+        "hH": 46,
+        "hRight": 1259,
+        "pos": "static",
+        "z": "30",
+        "bg": "rgba(0, 0, 0, 0)",
+        "expanded": "false",
+        "label": "Expand Most Played",
+        "mainExpanded": "false",
+        "rows": 0,
+        "bodyH": 0,
+        "bodyScroll": null,
+        "bodyTrans": null,
+        "chevTrans": "0.3s",
+        "hitInHeader": true,
+        "labelTrunc": false,
+        "btnRect": {
+          "x": 1221,
+          "y": 561.59375,
+          "width": 30,
+          "height": 30,
+          "top": 561.59375,
+          "right": 1251,
+          "bottom": 591.59375,
+          "left": 1221
+        },
+        "cardOverflow": "visible",
+        "cardRadius": "10px"
+      },
+      "bar": 205,
+      "scrollY": 1815,
+      "max": 1815
+    },
+    "phone_midBest": {
+      "barBottom": 335,
+      "barZ": "45",
+      "barHitInBar": true,
+      "dockVar": 335,
+      "scrollY": 961,
+      "maxScroll": 6133,
+      "sw": 375,
+      "vw": 375,
+      "vh": 812,
+      "s": {
+        "best": {
+          "cardTop": -190.6875,
+          "cardBottom": 2797.3125,
+          "hTop": 335,
+          "hBottom": 379,
+          "hH": 44,
+          "hRight": 358,
+          "pos": "sticky",
+          "z": "30",
+          "bg": "rgb(35, 32, 48)",
+          "expanded": "true",
+          "label": "Collapse Best Performances",
+          "mainExpanded": "true",
+          "rows": 25,
+          "bodyH": 2942,
+          "bodyScroll": [
+            2942,
+            2942,
+            2942,
+            2942
+          ],
+          "bodyTrans": "grid-template-rows 0.3s cubic-bezier(0.16, 1, 0.3, 1)",
+          "chevTrans": "0.3s",
+          "hitInHeader": true,
+          "labelTrunc": false,
+          "btnRect": {
+            "x": 320,
+            "y": 341.5,
+            "width": 30,
+            "height": 30,
+            "top": 341.5,
+            "right": 350,
+            "bottom": 371.5,
+            "left": 320
+          },
+          "cardOverflow": "visible",
+          "cardRadius": "10px"
+        },
+        "most_played": {
+          "cardTop": 2807.3125,
+          "cardBottom": 5788.3125,
+          "hTop": 2808.3125,
+          "hBottom": 2852.3125,
+          "hH": 44,
+          "hRight": 358,
+          "pos": "sticky",
+          "z": "30",
+          "bg": "rgb(35, 32, 48)",
+          "expanded": "true",
+          "label": "Collapse Most Played",
+          "mainExpanded": "true",
+          "rows": 25,
+          "bodyH": 2935,
+          "bodyScroll": [
+            2935,
+            2935,
+            2935,
+            2935
+          ],
+          "bodyTrans": "grid-template-rows 0.3s cubic-bezier(0.16, 1, 0.3, 1)",
+          "chevTrans": "0.3s",
+          "hitInHeader": null,
+          "labelTrunc": false,
+          "btnRect": {
+            "x": 320,
+            "y": 2814.8125,
+            "width": 30,
+            "height": 30,
+            "top": 2814.8125,
+            "right": 350,
+            "bottom": 2844.8125,
+            "left": 320
+          },
+          "cardOverflow": "visible",
+          "cardRadius": "10px"
+        },
+        "favourite": {
+          "cardTop": 5798.3125,
+          "cardBottom": 5844.3125,
+          "hTop": 5799.3125,
+          "hBottom": 5843.3125,
+          "hH": 44,
+          "hRight": 358,
+          "pos": "static",
+          "z": "30",
+          "bg": "rgba(0, 0, 0, 0)",
+          "expanded": "false",
+          "label": "Expand Favourites",
+          "mainExpanded": "false",
+          "rows": 0,
+          "bodyH": 0,
+          "bodyScroll": null,
+          "bodyTrans": null,
+          "chevTrans": "0.3s",
+          "hitInHeader": null,
+          "labelTrunc": false,
+          "btnRect": {
+            "x": 320,
+            "y": 5805.8125,
+            "width": 30,
+            "height": 30,
+            "top": 5805.8125,
+            "right": 350,
+            "bottom": 5835.8125,
+            "left": 320
+          },
+          "cardOverflow": "visible",
+          "cardRadius": "10px"
+        }
+      },
+      "bad": []
+    },
+    "phone_labelTrunc": {
+      "best": false
+    },
+    "phone_dockTrack": [
+      [
+        2,
+        409,
+        409
+      ],
+      [
+        34,
+        395,
+        409
+      ],
+      [
+        60,
+        395,
+        395
+      ],
+      [
+        72,
+        389.9,
+        395
+      ],
+      [
+        93,
+        384.3,
+        390
+      ],
+      [
+        111,
+        371.3,
+        384
+      ],
+      [
+        132,
+        361.2,
+        371
+      ],
+      [
+        155,
+        348,
+        361
+      ],
+      [
+        176,
+        343.8,
+        348
+      ],
+      [
+        190,
+        340.7,
+        344
+      ],
+      [
+        210,
+        338.5,
+        341
+      ],
+      [
+        230,
+        337.3,
+        338
+      ],
+      [
+        248,
+        336.5,
+        337
+      ],
+      [
+        258,
+        335.9,
+        337
+      ],
+      [
+        274,
+        335.5,
+        336
+      ],
+      [
+        288,
+        335.2,
+        335
+      ],
+      [
+        304,
+        335.1,
+        335
+      ],
+      [
+        322,
+        335.1,
+        335
+      ],
+      [
+        338,
+        335,
+        335
+      ],
+      [
+        355,
+        335,
+        335
+      ],
+      [
+        373,
+        335,
+        335
+      ],
+      [
+        388,
+        335,
+        335
+      ],
+      [
+        406,
+        335,
+        335
+      ],
+      [
+        422,
+        335,
+        335
+      ],
+      [
+        437,
+        335,
+        335
+      ],
+      [
+        455,
+        335,
+        335
+      ],
+      [
+        471,
+        335,
+        335
+      ],
+      [
+        487,
+        335,
+        335
+      ],
+      [
+        505,
+        335,
+        335
+      ],
+      [
+        521,
+        335,
+        335
+      ],
+      [
+        539,
+        335,
+        335
+      ],
+      [
+        555,
+        335,
+        335
+      ],
+      [
+        571,
+        335,
+        335
+      ],
+      [
+        588,
+        335,
+        335
+      ],
+      [
+        605,
+        335,
+        335
+      ]
+    ],
+    "phone_sweep": [
+      {
+        "o": -120,
+        "bestTop": 335,
+        "bestBottom": 379,
+        "mpTop": 456.3125,
+        "bar": 335,
+        "bestCardBottom": 445.3125,
+        "mpHit": true
+      },
+      {
+        "o": -108,
+        "bestTop": 335,
+        "bestBottom": 379,
+        "mpTop": 444.3125,
+        "bar": 335,
+        "bestCardBottom": 433.3125,
+        "mpHit": true
+      },
+      {
+        "o": -96,
+        "bestTop": 335,
+        "bestBottom": 379,
+        "mpTop": 432.3125,
+        "bar": 335,
+        "bestCardBottom": 421.3125,
+        "mpHit": true
+      },
+      {
+        "o": -84,
+        "bestTop": 335,
+        "bestBottom": 379,
+        "mpTop": 420.3125,
+        "bar": 335,
+        "bestCardBottom": 409.3125,
+        "mpHit": true
+      },
+      {
+        "o": -72,
+        "bestTop": 335,
+        "bestBottom": 379,
+        "mpTop": 408.3125,
+        "bar": 335,
+        "bestCardBottom": 397.3125,
+        "mpHit": true
+      },
+      {
+        "o": -60,
+        "bestTop": 335,
+        "bestBottom": 379,
+        "mpTop": 396.3125,
+        "bar": 335,
+        "bestCardBottom": 385.3125,
+        "mpHit": true
+      },
+      {
+        "o": -48,
+        "bestTop": 328.3125,
+        "bestBottom": 372.3125,
+        "mpTop": 384.3125,
+        "bar": 335,
+        "bestCardBottom": 373.3125,
+        "mpHit": true
+      },
+      {
+        "o": -36,
+        "bestTop": 316.3125,
+        "bestBottom": 360.3125,
+        "mpTop": 372.3125,
+        "bar": 335,
+        "bestCardBottom": 361.3125,
+        "mpHit": true
+      },
+      {
+        "o": -24,
+        "bestTop": 304.3125,
+        "bestBottom": 348.3125,
+        "mpTop": 360.3125,
+        "bar": 335,
+        "bestCardBottom": 349.3125,
+        "mpHit": true
+      },
+      {
+        "o": -12,
+        "bestTop": 292.3125,
+        "bestBottom": 336.3125,
+        "mpTop": 348.3125,
+        "bar": 335,
+        "bestCardBottom": 337.3125,
+        "mpHit": true
+      },
+      {
+        "o": 0,
+        "bestTop": 280.3125,
+        "bestBottom": 324.3125,
+        "mpTop": 336.3125,
+        "bar": 335,
+        "bestCardBottom": 325.3125,
+        "mpHit": true
+      },
+      {
+        "o": 12,
+        "bestTop": 268.3125,
+        "bestBottom": 312.3125,
+        "mpTop": 335,
+        "bar": 335,
+        "bestCardBottom": 313.3125,
+        "mpHit": true
+      },
+      {
+        "o": 24,
+        "bestTop": 256.3125,
+        "bestBottom": 300.3125,
+        "mpTop": 335,
+        "bar": 335,
+        "bestCardBottom": 301.3125,
+        "mpHit": true
+      },
+      {
+        "o": 36,
+        "bestTop": 244.3125,
+        "bestBottom": 288.3125,
+        "mpTop": 335,
+        "bar": 335,
+        "bestCardBottom": 289.3125,
+        "mpHit": true
+      },
+      {
+        "o": 48,
+        "bestTop": 232.3125,
+        "bestBottom": 276.3125,
+        "mpTop": 335,
+        "bar": 335,
+        "bestCardBottom": 277.3125,
+        "mpHit": true
+      },
+      {
+        "o": 60,
+        "bestTop": 220.3125,
+        "bestBottom": 264.3125,
+        "mpTop": 335,
+        "bar": 335,
+        "bestCardBottom": 265.3125,
+        "mpHit": true
+      }
+    ],
+    "phone_collapseBest": {
+      "before": {
+        "cardTop": -564.6875,
+        "cardBottom": 2423.3125,
+        "hTop": 335,
+        "hBottom": 379,
+        "hH": 44,
+        "hRight": 358,
+        "pos": "sticky",
+        "z": "30",
+        "bg": "rgb(35, 32, 48)",
+        "expanded": "true",
+        "label": "Collapse Best Performances",
+        "mainExpanded": "true",
+        "rows": 25,
+        "bodyH": 2942,
+        "bodyScroll": [
+          2942,
+          2942,
+          2942,
+          2942
+        ],
+        "bodyTrans": "grid-template-rows 0.3s cubic-bezier(0.16, 1, 0.3, 1)",
+        "chevTrans": "0.3s",
+        "hitInHeader": true,
+        "labelTrunc": false,
+        "btnRect": {
+          "x": 320,
+          "y": 341.5,
+          "width": 30,
+          "height": 30,
+          "top": 341.5,
+          "right": 350,
+          "bottom": 371.5,
+          "left": 320
+        },
+        "cardOverflow": "visible",
+        "cardRadius": "10px"
+      },
+      "after": {
+        "cardTop": 335.3125,
+        "cardBottom": 381.3125,
+        "hTop": 336.3125,
+        "hBottom": 380.3125,
+        "hH": 44,
+        "hRight": 358,
+        "pos": "static",
+        "z": "30",
+        "bg": "rgba(0, 0, 0, 0)",
+        "expanded": "false",
+        "label": "Expand Best Performances",
+        "mainExpanded": "false",
+        "rows": 0,
+        "bodyH": 0,
+        "bodyScroll": null,
+        "bodyTrans": null,
+        "chevTrans": "0.3s",
+        "hitInHeader": true,
+        "labelTrunc": false,
+        "btnRect": {
+          "x": 320,
+          "y": 341.8125,
+          "width": 30,
+          "height": 30,
+          "top": 341.8125,
+          "right": 350,
+          "bottom": 371.8125,
+          "left": 320
+        },
+        "cardOverflow": "visible",
+        "cardRadius": "10px"
+      },
+      "track": [
+        [
+          12,
+          336
+        ],
+        [
+          27,
+          336
+        ],
+        [
+          44,
+          336
+        ],
+        [
+          60,
+          336
+        ],
+        [
+          78,
+          336
+        ],
+        [
+          94,
+          336
+        ],
+        [
+          111,
+          336
+        ],
+        [
+          127,
+          336
+        ],
+        [
+          144,
+          336
+        ],
+        [
+          161,
+          336
+        ],
+        [
+          177,
+          336
+        ],
+        [
+          194,
+          336
+        ],
+        [
+          210,
+          336
+        ],
+        [
+          227,
+          336
+        ],
+        [
+          244,
+          336
+        ],
+        [
+          261,
+          336
+        ],
+        [
+          277,
+          336
+        ],
+        [
+          295,
+          336
+        ],
+        [
+          310,
+          336
+        ],
+        [
+          328,
+          336
+        ],
+        [
+          344,
+          336
+        ],
+        [
+          360,
+          336
+        ],
+        [
+          377,
+          336
+        ],
+        [
+          394,
+          336
+        ],
+        [
+          410,
+          336
+        ],
+        [
+          427,
+          336
+        ],
+        [
+          443,
+          336
+        ],
+        [
+          461,
+          336
+        ],
+        [
+          478,
+          336
+        ],
+        [
+          495,
+          336
+        ],
+        [
+          510,
+          336
+        ]
+      ],
+      "bar": 335
+    },
+    "phone_collapseMP": {
+      "before": {
+        "cardTop": -364.6875,
+        "cardBottom": 2616.3125,
+        "hTop": 335,
+        "hBottom": 379,
+        "hH": 44,
+        "hRight": 358,
+        "pos": "sticky",
+        "z": "30",
+        "bg": "rgb(35, 32, 48)",
+        "expanded": "true",
+        "label": "Collapse Most Played",
+        "mainExpanded": "true",
+        "rows": 25,
+        "bodyH": 2935,
+        "bodyScroll": [
+          2935,
+          2935,
+          2935,
+          2935
+        ],
+        "bodyTrans": "grid-template-rows 0.3s cubic-bezier(0.16, 1, 0.3, 1)",
+        "chevTrans": "0.3s",
+        "hitInHeader": true,
+        "labelTrunc": false,
+        "btnRect": {
+          "x": 320,
+          "y": 340.5,
+          "width": 30,
+          "height": 30,
+          "top": 340.5,
+          "right": 350,
+          "bottom": 370.5,
+          "left": 320
+        },
+        "cardOverflow": "visible",
+        "cardRadius": "10px"
+      },
+      "after": {
+        "cardTop": 570.3125,
+        "cardBottom": 616.3125,
+        "hTop": 571.3125,
+        "hBottom": 615.3125,
+        "hH": 44,
+        "hRight": 358,
+        "pos": "static",
+        "z": "30",
+        "bg": "rgba(0, 0, 0, 0)",
+        "expanded": "false",
+        "label": "Expand Most Played",
+        "mainExpanded": "false",
+        "rows": 0,
+        "bodyH": 0,
+        "bodyScroll": null,
+        "bodyTrans": null,
+        "chevTrans": "0.3s",
+        "hitInHeader": true,
+        "labelTrunc": false,
+        "btnRect": {
+          "x": 320,
+          "y": 577.8125,
+          "width": 30,
+          "height": 30,
+          "top": 577.8125,
+          "right": 350,
+          "bottom": 607.8125,
+          "left": 320
+        },
+        "cardOverflow": "visible",
+        "cardRadius": "10px"
+      },
+      "bar": 335,
+      "scrollY": 3198,
+      "max": 3198
+    }
+  },
+  "counts": {
+    "q": 1,
+    "userId": 1,
+    "beatmaps": 2,
+    "total": 4
+  },
+  "calls": [
+    "/api/osu/player?q=mrekk&page=1",
+    "/api/osu/player?userId=7562902",
+    "/api/osu/player/beatmaps?userId=7562902&type=best&mode=all",
+    "/api/osu/player/beatmaps?userId=7562902&type=most_played&mode=all"
+  ]
+}

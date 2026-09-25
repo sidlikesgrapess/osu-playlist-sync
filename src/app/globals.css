@@ -268,6 +268,15 @@ button, a, input, select {
   }
 }
 
+/* Player sections (todo item 12): the body's open and close, the chevron and the docked
+   header look all animate from inline styles. PlayerSections also drops them from script,
+   this is the backstop for the first paint before it has read the media query. */
+@media (prefers-reduced-motion: reduce) {
+  .ps-anim {
+    transition: none !important;
+  }
+}
+
 /* Compact search bar for narrow (mobile-portrait) viewports */
 @media (max-width: 480px) {
   /* The search type toggle keeps its words, which say what the modes are; only its icons go,

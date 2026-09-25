@@ -1,6 +1,6 @@
 'use client';
 
-import { useState, useEffect, memo } from 'react';
+import { useState, useEffect, useRef, memo } from 'react';
 import {
   Trophy, Play, Heart, ChevronDown,
   Loader2, Download, ExternalLink,
@@ -11,6 +11,7 @@ import { OverrideMark, OverrideNotice } from './MatchNotice';
 import { osuAudio } from '@/lib/soundEffects';
 import { getStarColor, formatCompactNumber, getStatusBadgeStyle } from '@/lib/beatmapFormat';
 import { useAudioPreview } from '@/lib/useAudioPreview';
+import { DOCK_TOP_VAR, parseDockTop, isHeaderDocked, collapseScrollTarget } from '@/lib/stickySections';
 
 const SECTION_META = {
   best: { label: 'Best Performances', icon: Trophy, color: '#ffbb22' },
@@ -20,8 +21,95 @@ const SECTION_META = {
 
 const GRADES = ['XH', 'X', 'SH', 'S', 'A', 'B', 'C', 'D', 'F'];
 
-// ~6 rows before the list starts scrolling instead of growing the page.
-const LIST_MAX_HEIGHT = 400;
+// Todo item 12: an open section shows its revealed rows at full length in the page, and its
+// header docks under the search bar while you scroll through it. The motion uses the search
+// bar's own dock easing (PlaylistInput.js), so the two move as one.
+const DOCK_EASE = 'cubic-bezier(0.16, 1, 0.3, 1)';
+const BODY_MS = 300;
+// If a transitionend never arrives (the grid transition is unsupported, the tab is hidden),
+// the closed body still unmounts, a little after the transition would have ended.
+const UNMOUNT_FALLBACK_MS = BODY_MS + 150;
+
+// Rounded corners come from the header and the card's own background, never from
+// `overflow: hidden` on the card: that would make the card a scroll container and the header
+// would stick to it instead of the viewport.
+const CARD_RADIUS = 10;
+const INNER_RADIUS = CARD_RADIUS - 1;
+
+function usePrefersReducedMotion() {
+  const [reduced, setReduced] = useState(false);
+  useEffect(() => {
+    if (typeof window === 'undefined' || !window.matchMedia) return undefined;
+    const query = window.matchMedia('(prefers-reduced-motion: reduce)');
+    const update = () => setReduced(query.matches);
+    update();
+    query.addEventListener?.('change', update);
+    return () => query.removeEventListener?.('change', update);
+  }, []);
+  return reduced;
+}
+
+function readDockTop() {
+  return parseDockTop(window.getComputedStyle(document.documentElement).getPropertyValue(DOCK_TOP_VAR));
+}
+
+/**
+ * Animates a section body between 0 and its full height with the grid-template-rows 0fr to
+ * 1fr trick, which needs no measuring. The body stays mounted while it closes and unmounts
+ * once the transition ends, so hundreds of hidden rows do not stay in the DOM.
+ */
+function SectionBody({ id, isOpen, reducedMotion, children }) {
+  const [isRendered, setIsRendered] = useState(isOpen);
+  const [isExpanded, setIsExpanded] = useState(isOpen);
+
+  useEffect(() => {
+    if (isOpen) {
+      setIsRendered(true);
+      if (reducedMotion) {
+        setIsExpanded(true);
+        return undefined;
+      }
+      // Let the collapsed frame paint first, or the browser has nothing to transition from.
+      let second = 0;
+      const first = requestAnimationFrame(() => {
+        second = requestAnimationFrame(() => setIsExpanded(true));
+      });
+      return () => {
+        cancelAnimationFrame(first);
+        cancelAnimationFrame(second);
+      };
+    }
+    setIsExpanded(false);
+    if (reducedMotion) {
+      setIsRendered(false);
+      return undefined;
+    }
+    const timer = setTimeout(() => setIsRendered(false), UNMOUNT_FALLBACK_MS);
+    return () => clearTimeout(timer);
+  }, [isOpen, reducedMotion]);
+
+  if (!isRendered) return null;
+
+  return (
+    <div
+      id={id}
+      className="ps-anim"
+      data-expanded={isExpanded ? 'true' : 'false'}
+      onTransitionEnd={(e) => {
+        if (e.target === e.currentTarget && !isOpen) setIsRendered(false);
+      }}
+      style={{
+        display: 'grid',
+        gridTemplateRows: isExpanded ? '1fr' : '0fr',
+        transition: reducedMotion ? 'none' : `grid-template-rows ${BODY_MS}ms ${DOCK_EASE}`,
+      }}
+    >
+      <div style={{ minHeight: 0, overflow: 'hidden' }}>
+        {children}
+      </div>
+    </div>
+  );
+}
 
 // F-20: a section shows this many rows before "Show more" reveals the rest. The data is
 // already in memory (`allItems`), so revealing more is never a new fetch.
@@ -309,6 +397,55 @@ export default function PlayerSections({
     setRevealCounts({});
   }, [mode, status]);
 
+  const reducedMotion = usePrefersReducedMotion();
+  const cardRefs = useRef({});
+
+  // Which open headers are docked right now, only for their docked look (shadow, square top
+  // corners). Docking itself is plain `position: sticky` and needs no script at all.
+  const [dockedKey, setDockedKey] = useState('');
+  const openKey = Object.keys(SECTION_META).filter(type => sections[type]?.isOpen).join(',');
+  useEffect(() => {
+    let frame = 0;
+    const measure = () => {
+      frame = 0;
+      const dockTop = readDockTop();
+      const docked = openKey.split(',').filter(type => {
+        const card = cardRefs.current[type];
+        return card && isHeaderDocked({ cardTop: card.getBoundingClientRect().top, dockTop });
+      });
+      const next = docked.join(',');
+      setDockedKey(prev => (prev === next ? prev : next));
+    };
+    const schedule = () => {
+      if (!frame) frame = requestAnimationFrame(measure);
+    };
+    measure();
+    window.addEventListener('scroll', schedule, { passive: true });
+    window.addEventListener('resize', schedule, { passive: true });
+    return () => {
+      if (frame) cancelAnimationFrame(frame);
+      window.removeEventListener('scroll', schedule);
+      window.removeEventListener('resize', schedule);
+    };
+  }, [openKey]);
+  const dockedTypes = new Set(dockedKey ? dockedKey.split(',') : []);
+
+  const handleToggle = (type, isOpen) => {
+    osuAudio.playClick();
+    // Collapsing a docked section: jump so the collapsed header lands where the docked one
+    // is, instead of leaving the user far below it (see collapseScrollTarget).
+    const card = cardRefs.current[type];
+    if (isOpen && card) {
+      const target = collapseScrollTarget({
+        cardTop: card.getBoundingClientRect().top,
+        scrollY: window.scrollY,
+        dockTop: readDockTop(),
+      });
+      if (target !== null) window.scrollTo({ top: target, behavior: 'auto' });
+    }
+    onToggleSection(type);
+  };
+
   return (
     <div style={{ maxWidth: '1240px', margin: '0 auto 40px', display: 'flex', flexDirection: 'column', gap: '10px' }}>
       {Object.entries(SECTION_META).map(([type, meta]) => {
@@ -325,71 +462,141 @@ export default function PlayerSections({
           ? `${allItems.length.toLocaleString()} of ${total.toLocaleString()}`
           : total.toLocaleString();
 
+        const isOpen = Boolean(section.isOpen);
+        const isDocked = isOpen && dockedTypes.has(type);
+        const bodyId = `player-section-body-${type}`;
+        const toggleLabel = `${isOpen ? 'Collapse' : 'Expand'} ${meta.label}`;
+
         return (
           <div
             key={type}
+            ref={el => { cardRefs.current[type] = el; }}
             className="osu-glass"
+            data-section={type}
             style={{
-              borderRadius: '10px',
-              overflow: 'hidden',
+              borderRadius: `${CARD_RADIUS}px`,
+              // No overflow here (see CARD_RADIUS): the header sticks inside this card, so
+              // the card's bottom edge is what pushes it out when the next section arrives.
               border: '1px solid rgba(255, 255, 255, 0.08)',
               background: '#1c1a25',
             }}
           >
-            {/* Section header */}
-            <button
-              className="osu-btn-interactive"
-              onClick={() => {
-                osuAudio.playClick();
-                onToggleSection(type);
-              }}
-              onMouseEnter={() => osuAudio.playHover()}
+            {/* Section header. Sticky within its own card at the line PlaylistInput
+                publishes, so it sits under the navbar (z 60) and the search bar (z 45). */}
+            <div
+              className="ps-anim ps-header"
+              data-docked={isDocked ? 'true' : 'false'}
               style={{
-                width: '100%',
+                // The dock offset belongs to sticky only. On any other positioned element
+                // `top` shifts it, which would float a closed header far below its card.
+                position: isOpen ? 'sticky' : 'static',
+                top: isOpen ? `var(${DOCK_TOP_VAR}, 56px)` : 'auto',
+                zIndex: 30,
                 display: 'flex',
                 alignItems: 'center',
-                gap: '10px',
-                padding: '12px 16px',
-                background: section.isOpen ? '#232030' : 'transparent',
-                border: 'none',
-                borderBottom: section.isOpen ? '1px solid rgba(255, 255, 255, 0.07)' : 'none',
-                cursor: 'pointer',
-                fontFamily: 'inherit',
-                textAlign: 'left',
+                gap: '4px',
+                padding: '0 8px 0 0',
+                background: isOpen ? '#232030' : 'transparent',
+                borderBottom: `1px solid ${isOpen ? 'rgba(255, 255, 255, 0.07)' : 'transparent'}`,
+                borderRadius: isOpen
+                  ? (isDocked ? '0px' : `${INNER_RADIUS}px ${INNER_RADIUS}px 0 0`)
+                  : `${INNER_RADIUS}px`,
+                boxShadow: isDocked ? '0 10px 22px rgba(0, 0, 0, 0.5)' : '0 0 0 rgba(0, 0, 0, 0)',
+                transition: reducedMotion
+                  ? 'none'
+                  : `box-shadow 0.28s ${DOCK_EASE}, border-radius 0.28s ${DOCK_EASE}, background-color 0.28s ${DOCK_EASE}, border-color 0.28s ${DOCK_EASE}`,
               }}
             >
-              <Icon size={16} color={meta.color} style={{ flexShrink: 0 }} />
-              <span style={{ fontSize: '0.92rem', fontWeight: 900, color: '#ffffff' }}>
-                {meta.label}
-              </span>
-              <span style={{
-                fontSize: '0.7rem',
-                fontWeight: 800,
-                color: '#887c93',
-                background: 'rgba(0, 0, 0, 0.3)',
-                border: '1px solid rgba(255, 255, 255, 0.07)',
-                padding: '2px 7px',
-                borderRadius: '4px',
-              }}>
-                {countLabel}
-              </span>
-
-              <span style={{ flex: 1 }} />
-
-              {section.isLoading && <Loader2 size={14} className="spin-slow" color="#ffbb22" />}
-              <ChevronDown
-                size={16}
-                color="#887c93"
+              <button
+                type="button"
+                className="osu-btn-interactive"
+                aria-expanded={isOpen}
+                aria-controls={bodyId}
+                onClick={() => handleToggle(type, isOpen)}
+                onMouseEnter={() => osuAudio.playHover()}
                 style={{
-                  transform: section.isOpen ? 'rotate(180deg)' : 'rotate(0deg)',
-                  transition: 'transform 0.2s ease',
-                  flexShrink: 0,
+                  flex: 1,
+                  minWidth: 0,
+                  display: 'flex',
+                  alignItems: 'center',
+                  gap: '10px',
+                  padding: '12px 8px 12px 16px',
+                  background: 'transparent',
+                  border: 'none',
+                  cursor: 'pointer',
+                  fontFamily: 'inherit',
+                  textAlign: 'left',
+                  whiteSpace: 'nowrap',
                 }}
-              />
-            </button>
+              >
+                <Icon size={16} color={meta.color} style={{ flexShrink: 0 }} />
+                <span style={{
+                  fontSize: '0.92rem',
+                  fontWeight: 900,
+                  color: '#ffffff',
+                  minWidth: 0,
+                  overflow: 'hidden',
+                  textOverflow: 'ellipsis',
+                }}>
+                  {meta.label}
+                </span>
+                <span style={{
+                  fontSize: '0.7rem',
+                  fontWeight: 800,
+                  color: '#887c93',
+                  background: 'rgba(0, 0, 0, 0.3)',
+                  border: '1px solid rgba(255, 255, 255, 0.07)',
+                  padding: '2px 7px',
+                  borderRadius: '4px',
+                  flexShrink: 0,
+                }}>
+                  {countLabel}
+                </span>
 
-            {/* Section body */}
-            {section.isOpen && (
+                <span style={{ flex: 1 }} />
+
+                {section.isLoading && <Loader2 size={14} className="spin-slow" color="#ffbb22" style={{ flexShrink: 0 }} />}
+              </button>
+
+              {/* The explicit collapse control. The whole header toggles too; this is the
+                  visible, labelled affordance, and it works the same while docked. */}
+              <button
+                type="button"
+                className="osu-btn-interactive ps-collapse-btn"
+                aria-expanded={isOpen}
+                aria-controls={bodyId}
+                aria-label={toggleLabel}
+                title={toggleLabel}
+                onClick={() => handleToggle(type, isOpen)}
+                onMouseEnter={() => osuAudio.playHover()}
+                style={{
+                  flexShrink: 0,
+                  display: 'inline-flex',
+                  alignItems: 'center',
+                  justifyContent: 'center',
+                  width: '30px',
+                  height: '30px',
+                  borderRadius: '6px',
+                  background: isOpen ? '#2c2838' : 'transparent',
+                  border: `1px solid ${isOpen ? 'rgba(255, 255, 255, 0.1)' : 'transparent'}`,
+                  cursor: 'pointer',
+                  fontFamily: 'inherit',
+                }}
+              >
+                <ChevronDown
+                  size={16}
+                  color={isOpen ? '#c6b8ce' : '#887c93'}
+                  className="ps-anim"
+                  style={{
+                    transform: isOpen ? 'rotate(180deg)' : 'rotate(0deg)',
+                    transition: reducedMotion ? 'none' : `transform ${BODY_MS}ms ${DOCK_EASE}`,
+                  }}
+                />
+              </button>
+            </div>
+
+            {/* Section body, animated open and shut */}
+            <SectionBody id={bodyId} isOpen={isOpen} reducedMotion={reducedMotion}>
               <div style={{ padding: '10px 12px', display: 'flex', flexDirection: 'column', gap: '7px' }}>
                 {section.error && (
                   <div style={{
@@ -453,21 +660,10 @@ export default function PlayerSections({
                   );
                 })()}
 
-                {/* The revealed window scrolls in place -- roughly six rows tall, so an open
-                    section never pushes the ones below it off the screen. */}
+                {/* Every revealed row sits in the page at full length (todo item 12); the
+                    header above stays docked while you scroll through them. */}
                 {visibleRows.length > 0 && (
-                  <div style={{
-                    maxHeight: `${LIST_MAX_HEIGHT}px`,
-                    overflowY: 'auto',
-                    display: 'flex',
-                    flexDirection: 'column',
-                    gap: '7px',
-                    // Cancel the body's right padding so the scrollbar sits against
-                    // the card edge, then hold the rows clear of it — otherwise it
-                    // overlaps the .OSZ button on hover.
-                    marginRight: '-12px',
-                    paddingRight: '9px',
-                  }}>
+                  <div style={{ display: 'flex', flexDirection: 'column', gap: '7px' }}>
                     {visibleRows.map((song, idx) => {
                       // Position is part of the row key: a duplicate id would
                       // otherwise collide and make React duplicate or drop rows.
@@ -517,7 +713,7 @@ export default function PlayerSections({
                   </button>
                 )}
               </div>
-            )}
+            </SectionBody>
           </div>
         );
       })}

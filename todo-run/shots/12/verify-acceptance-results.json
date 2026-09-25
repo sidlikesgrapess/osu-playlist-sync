@@ -1,0 +1,483 @@
+{
+  "checks": {
+    "A10_initial_calls": {
+      "pass": true,
+      "detail": [
+        "/api/osu/player?q=mrekk&page=1",
+        "/api/osu/player?userId=7562902",
+        "/api/osu/player/beatmaps?userId=7562902&type=best&mode=all"
+      ]
+    },
+    "A1_no_inner_scroll": {
+      "pass": true,
+      "detail": []
+    },
+    "A1_best_full_length": {
+      "pass": true,
+      "detail": {
+        "cT": 633.09375,
+        "cB": 2433.09375,
+        "hT": 634.09375,
+        "hB": 680.09375,
+        "hH": 46,
+        "pos": "sticky",
+        "z": "30",
+        "bg": "rgb(35, 32, 48)",
+        "exp": "true",
+        "label": "Collapse Best Performances",
+        "rows": 25,
+        "bodyH": 1752,
+        "bodySc": [
+          1752,
+          1752,
+          1752,
+          1752
+        ],
+        "tr": "grid-template-rows 0.3s cubic-bezier(0.16, 1, 0.3, 1)",
+        "hitInHeader": true,
+        "cardRadius": "10px",
+        "cardOv": "visible"
+      }
+    },
+    "A6_card_not_overflow_hidden_rounded": {
+      "pass": true,
+      "detail": [
+        "visible",
+        "10px"
+      ]
+    },
+    "A5_header_z_below_bar": {
+      "pass": true,
+      "detail": [
+        "30",
+        "45"
+      ]
+    },
+    "A5_closed_headers_not_sticky": {
+      "pass": true,
+      "detail": "relative"
+    },
+    "A4_var_tracks_bar": {
+      "pass": true,
+      "detail": [
+        {
+          "y": 150,
+          "bar": 280,
+          "v": "280px"
+        },
+        {
+          "y": 200,
+          "bar": 205,
+          "v": "205px"
+        },
+        {
+          "y": 260,
+          "bar": 205,
+          "v": "205px"
+        }
+      ]
+    },
+    "A3_desktop_best_docked": {
+      "pass": true,
+      "detail": {
+        "hT": 205,
+        "bar": 205,
+        "v": "205px",
+        "hit": true
+      }
+    },
+    "A10_mp_one_call": {
+      "pass": true,
+      "detail": [
+        "/api/osu/player/beatmaps?userId=7562902&type=best&mode=all",
+        "/api/osu/player/beatmaps?userId=7562902&type=most_played&mode=all"
+      ]
+    },
+    "A5_no_overlap_sweep": {
+      "pass": true,
+      "detail": []
+    },
+    "A5_prev_pushed_out": {
+      "pass": true,
+      "detail": [
+        {
+          "y": 2113.09375,
+          "bT": 198.1,
+          "bB": 244.1,
+          "mT": 256.1,
+          "overlap": false,
+          "bAboveDock": true,
+          "mHit": true,
+          "bHit": true
+        },
+        {
+          "y": 2123.09375,
+          "bT": 188.1,
+          "bB": 234.1,
+          "mT": 246.1,
+          "overlap": false,
+          "bAboveDock": true,
+          "mHit": true,
+          "bHit": true
+        }
+      ]
+    },
+    "A5_headers_painted_on_top": {
+      "pass": true,
+      "detail": []
+    },
+    "A3_desktop_mp_docked": {
+      "pass": true,
+      "detail": {
+        "hT": 205,
+        "bar": 205
+      }
+    },
+    "A7_label_collapse": {
+      "pass": true,
+      "detail": "Collapse Most Played"
+    },
+    "A8_collapse_in_view": {
+      "pass": true,
+      "detail": {
+        "hT": 696.09375,
+        "bar": 205,
+        "mid": [
+          411.1,
+          582.1,
+          677.1,
+          695.1,
+          696.1,
+          696.1,
+          696.1,
+          696.1
+        ],
+        "sc": [
+          "[{\"top\":2163,\"behavior\":\"auto\"}]"
+        ],
+        "label": "Expand Most Played"
+      }
+    },
+    "A7_label_expand": {
+      "pass": true,
+      "detail": "Expand Most Played"
+    },
+    "A10_no_calls_collapse_reopen": {
+      "pass": true,
+      "detail": {
+        "calls": 0,
+        "rows": 25
+      }
+    },
+    "A8_best_collapse_via_header": {
+      "pass": true,
+      "detail": {
+        "hT": 411.09375,
+        "exp": "false"
+      }
+    },
+    "A9_transition_easing": {
+      "pass": true,
+      "detail": "grid-template-rows 0.3s cubic-bezier(0.16, 1, 0.3, 1)"
+    },
+    "A2_show_more": {
+      "pass": false,
+      "detail": {
+        "sm": "Show more (57 left)",
+        "rows": 50,
+        "calls": 0
+      }
+    },
+    "A4_var_on_resize": {
+      "pass": true,
+      "detail": {
+        "v": "205px",
+        "bar": 205
+      }
+    },
+    "A3_phone_best_docked": {
+      "pass": true,
+      "detail": {
+        "hT": 335,
+        "bar": 335,
+        "v": "335px"
+      }
+    },
+    "A11_phone_one_line": {
+      "pass": true,
+      "detail": [
+        44,
+        44
+      ]
+    },
+    "A11_phone_no_hscroll": {
+      "pass": true,
+      "detail": 375
+    },
+    "A5_phone_no_overlap": {
+      "pass": true,
+      "detail": []
+    },
+    "A3_phone_mp_docked": {
+      "pass": true,
+      "detail": {
+        "hT": 335,
+        "bar": 335
+      }
+    },
+    "A8_phone_collapse_in_view": {
+      "pass": true,
+      "detail": {
+        "hT": 712.3125,
+        "calls": 0
+      }
+    },
+    "A9_reduced_motion_instant": {
+      "pass": true,
+      "detail": {
+        "trd": "0s",
+        "tr": "none"
+      }
+    },
+    "A9_reduced_collapse_auto": {
+      "pass": true,
+      "detail": {
+        "sc2": [
+          "[{\"top\":6267,\"behavior\":\"auto\"}]"
+        ],
+        "rows": 0,
+        "hT": 712.3125
+      }
+    },
+    "A10_total_calls": {
+      "pass": false,
+      "detail": [
+        "/api/osu/player?q=mrekk&page=1",
+        "/api/osu/player?userId=7562902",
+        "/api/osu/player/beatmaps?userId=7562902&type=best&mode=all",
+        "/api/osu/player/beatmaps?userId=7562902&type=most_played&mode=all"
+      ]
+    }
+  },
+  "log": [],
+  "samples": {
+    "sweep": [
+      {
+        "y": 2043.09375,
+        "bT": 205,
+        "bB": 251,
+        "mT": 326.1,
+        "overlap": false,
+        "bAboveDock": false,
+        "mHit": true,
+        "bHit": true
+      },
+      {
+        "y": 2053.09375,
+        "bT": 205,
+        "bB": 251,
+        "mT": 316.1,
+        "overlap": false,
+        "bAboveDock": false,
+        "mHit": true,
+        "bHit": true
+      },
+      {
+        "y": 2063.09375,
+        "bT": 205,
+        "bB": 251,
+        "mT": 306.1,
+        "overlap": false,
+        "bAboveDock": false,
+        "mHit": true,
+        "bHit": true
+      },
+      {
+        "y": 2073.09375,
+        "bT": 205,
+        "bB": 251,
+        "mT": 296.1,
+        "overlap": false,
+        "bAboveDock": false,
+        "mHit": true,
+        "bHit": true
+      },
+      {
+        "y": 2083.09375,
+        "bT": 205,
+        "bB": 251,
+        "mT": 286.1,
+        "overlap": false,
+        "bAboveDock": false,
+        "mHit": true,
+        "bHit": true
+      },
+      {
+        "y": 2093.09375,
+        "bT": 205,
+        "bB": 251,
+        "mT": 276.1,
+        "overlap": false,
+        "bAboveDock": false,
+        "mHit": true,
+        "bHit": true
+      },
+      {
+        "y": 2103.09375,
+        "bT": 205,
+        "bB": 251,
+        "mT": 266.1,
+        "overlap": false,
+        "bAboveDock": false,
+        "mHit": true,
+        "bHit": true
+      },
+      {
+        "y": 2113.09375,
+        "bT": 198.1,
+        "bB": 244.1,
+        "mT": 256.1,
+        "overlap": false,
+        "bAboveDock": true,
+        "mHit": true,
+        "bHit": true
+      },
+      {
+        "y": 2123.09375,
+        "bT": 188.1,
+        "bB": 234.1,
+        "mT": 246.1,
+        "overlap": false,
+        "bAboveDock": true,
+        "mHit": true,
+        "bHit": true
+      },
+      {
+        "y": 2133.09375,
+        "bT": 178.1,
+        "bB": 224.1,
+        "mT": 236.1,
+        "overlap": false,
+        "bAboveDock": true,
+        "mHit": true,
+        "bHit": false
+      },
+      {
+        "y": 2143.09375,
+        "bT": 168.1,
+        "bB": 214.1,
+        "mT": 226.1,
+        "overlap": false,
+        "bAboveDock": true,
+        "mHit": true,
+        "bHit": false
+      },
+      {
+        "y": 2153.09375,
+        "bT": 158.1,
+        "bB": 204.1,
+        "mT": 216.1,
+        "overlap": false,
+        "bAboveDock": true,
+        "mHit": true,
+        "bHit": false
+      },
+      {
+        "y": 2163.09375,
+        "bT": 148.1,
+        "bB": 194.1,
+        "mT": 206.1,
+        "overlap": false,
+        "bAboveDock": true,
+        "mHit": true,
+        "bHit": false
+      },
+      {
+        "y": 2173.09375,
+        "bT": 138.1,
+        "bB": 184.1,
+        "mT": 205,
+        "overlap": false,
+        "bAboveDock": true,
+        "mHit": true,
+        "bHit": false
+      },
+      {
+        "y": 2183.09375,
+        "bT": 128.1,
+        "bB": 174.1,
+        "mT": 205,
+        "overlap": false,
+        "bAboveDock": true,
+        "mHit": true,
+        "bHit": false
+      },
+      {
+        "y": 2193.09375,
+        "bT": 118.1,
+        "bB": 164.1,
+        "mT": 205,
+        "overlap": false,
+        "bAboveDock": true,
+        "mHit": true,
+        "bHit": false
+      },
+      {
+        "y": 2203.09375,
+        "bT": 108.1,
+        "bB": 154.1,
+        "mT": 205,
+        "overlap": false,
+        "bAboveDock": true,
+        "mHit": true,
+        "bHit": false
+      },
+      {
+        "y": 2213.09375,
+        "bT": 98.1,
+        "bB": 144.1,
+        "mT": 205,
+        "overlap": false,
+        "bAboveDock": true,
+        "mHit": true,
+        "bHit": false
+      },
+      {
+        "y": 2223.09375,
+        "bT": 88.1,
+        "bB": 134.1,
+        "mT": 205,
+        "overlap": false,
+        "bAboveDock": true,
+        "mHit": true,
+        "bHit": false
+      },
+      {
+        "y": 2233.09375,
+        "bT": 78.1,
+        "bB": 124.1,
+        "mT": 205,
+        "overlap": false,
+        "bAboveDock": true,
+        "mHit": true,
+        "bHit": false
+      },
+      {
+        "y": 2243.09375,
+        "bT": 68.1,
+        "bB": 114.1,
+        "mT": 205,
+        "overlap": false,
+        "bAboveDock": true,
+        "mHit": true,
+        "bHit": false
+      }
+    ]
+  },
+  "calls": [
+    "/api/osu/player?q=mrekk&page=1",
+    "/api/osu/player?userId=7562902",
+    "/api/osu/player/beatmaps?userId=7562902&type=best&mode=all",
+    "/api/osu/player/beatmaps?userId=7562902&type=most_played&mode=all"
+  ]
+}
