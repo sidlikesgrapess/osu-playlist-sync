@@ -31,14 +31,7 @@ It returns `needs-decision` with the scope when a design question comes up; ask,
 `decisions` and `scope`.
 
 ## Interrupted run notes (2026-09-25, usage limit)
-- Item 10 was mid-implementation when the limit hit (workflow run wf_4244cd95-259). The dirty
-  tree IS the checkpoint: page.js, PlayerProfile.js, PlayerResults.js, new src/lib/playerView.js,
-  test/playerView.test.mjs, items/10-change-player.md. Do not reset. Relaunch item 10 with the
-  saved decision below; the implement agent continues from `git status`/`git diff`.
-  - USER decision for 10: "Back vs clear". 'Change player' keeps the profile and its ticks and
-    returns to the player search results list. Trash clears only the current side, tooltip
-    'Clear player results' / 'Clear playlist results'. Remove the double click sound.
-    Also own the bug: a new name search must clear playerProfile (check if 09 fixed it).
+- Item 10 is DONE (baf94e3, verified round 1). Next up: item 11 (ask the user first), then 12.
 - Item 12 decisions are already recorded in items/12-sticky-sections.md (sticky stack + a
   collapse button per section). Pass them as `decisions`.
 - Item 11: must ask the user before changing anything. Item 13 (F-46): confirm approach with user.
