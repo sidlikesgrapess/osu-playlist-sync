@@ -19,16 +19,14 @@
 
 ## Remaining
 
-- select all exact matches
-- mode switcher has yt,spotify, AM, single song combine them into playlist/song search.
-- memory leak? the cached beatmaps and pics have to be deleted when the user pulls up a
-  new search or player search (is song preview cached?)
-- song preview should show a loading or errors. (network)
-- breakcore playlist has 11 songs but only 7 are fetched.
+- select all confirmed matches (come up with a good name) button instead of Select all since the tickmark of the top row does the same thing.
+- mode switcher has yt,spotify, AM, single song combine them into playlist/song search. So then we will have song/playlist saerch and player search
+- is there memory leak problem? the cached beatmaps and pics have to be deleted when the user pulls up a new search or player search (is song preview cached?)
+- song preview should show a loading or errors. (network) as song as its loading it should show a buffering animation
+- breakcore playlist has 11 songs but only 7 are fetched. This is the playlist https://music.youtube.com/playlist?list=PLJU2iuLr5pzzwD1BjsQSX4Exb-w1Wc2Kp.
 - are we loading every image and beatmap for the player search at once? is it expensive?
-  if yes then we could have dynamic scroll based loading
-- the player search menu cards(eg - most played) are very small. we could have a infinite
-  expand menu with the title eg Most played" header on top of the screen docked like the
+  if yes then we could have dynamic scroll based loading... if loading everything at once consuming less api calls, then so be it. (Don change this one without confirmation from user)
+- the player search menu cards(eg - most played) dont expand to full length. we could have a fullscreen expand menu with the title eg Most played" header on top of the screen docked like the
   search bar. The animation should be fluid and similar to the searhbar. Once one card
   ends the next card docks to the top like Functions in an IDE like VSCode.
 - maybe a little bounce on every hover animation? toggleable
@@ -37,7 +35,10 @@
   and show the popup only past 500. In the same change, pace Search All under the
   60/min /api/osu/search limit so a 500 song Search All does not end in "osu! is busy"
   rows. Overrides the F-18 "keep 100" decision in REBUILD_PLAN.md.
-- the Change player button and the trash icon is confusing
+- The top bar that has the download options is not global. When doing player search it deletes all the old song search results that we ticked and vice versa.
+- the Change player button and the trash icon is confusing. Change player deletes the search and so does the trash icon. I think change player should just go back to the prev screen with the player results.
+- need to redo F-46 with a better approach. (confirm approach with user)
+- Re:Re: split
 
 ## Long term goals
 
