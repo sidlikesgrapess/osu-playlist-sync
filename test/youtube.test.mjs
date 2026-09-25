@@ -165,3 +165,36 @@ test('extractMusicData carries the window counts for YouTube, and plain counts f
     [1, 1, 0, false, null],
   );
 });
+
+// YouTube can leave unavailable videos out of the window entirely and say so only in an
+// alert. The header length still counts them (item 01, the breakcore playlist).
+const counts = (out) => [out.returnedCount, out.loadedCount, out.unavailableCount, out.truncated, out.playlistLength];
+
+test('videos YouTube hides from a real window are counted from the header length', async () => {
+  const { readFile } = await import('node:fs/promises');
+  const data = JSON.parse(await readFile(new URL('./fixtures/youtube-hidden-unavailable.json', import.meta.url), 'utf8'));
+  const out = parsePlaylistData(data);
+  assert.deepEqual(counts(out), [7, 11, 4, false, 11]);
+  assert.equal(out.songs.length, 7);
+});
+
+test('a complete window shorter than its header counts the shortfall as unavailable', () => {
+  const items = [lockup('aaaaaaaaaaa', 'A'), lockup('bbbbbbbbbbb', 'B'), lockup('ccccccccccc', 'C')];
+  assert.deepEqual(counts(parsePlaylistData(browse(items, { header: pageHeader([['5 videos']]) }))), [3, 5, 2, false, 5]);
+});
+
+test('hidden items add to the unplayable ones present in the window', () => {
+  const items = [lockup('aaaaaaaaaaa', 'A'), lockup('bbbbbbbbbbb', 'B', { isPlayable: false }), lockup('ccccccccccc', 'C'), lockup('ddddddddddd', 'D')];
+  assert.deepEqual(counts(parsePlaylistData(browse(items, { header: pageHeader([['5 videos']]) }))), [3, 5, 2, false, 5]);
+});
+
+test('a truncated window infers no hidden items from the header length', () => {
+  const items = [lockup('aaaaaaaaaaa', 'A'), lockup('bbbbbbbbbbb', 'B'), lockup('ccccccccccc', 'C'), continuation];
+  assert.deepEqual(counts(parsePlaylistData(browse(items, { header: pageHeader([['5 videos']]) }))), [3, 3, 0, true, 5]);
+});
+
+test('without a header length, or with an empty window, nothing is inferred', () => {
+  const items = [lockup('aaaaaaaaaaa', 'A'), lockup('bbbbbbbbbbb', 'B')];
+  assert.deepEqual(counts(parsePlaylistData(browse(items))), [2, 2, 0, false, null]);
+  assert.deepEqual(counts(parsePlaylistData(browse([], { header: pageHeader([['5 videos']]) }))), [0, 0, 0, false, 5]);
+});

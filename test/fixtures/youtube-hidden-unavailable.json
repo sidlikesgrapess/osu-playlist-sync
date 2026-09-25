@@ -1,0 +1,317 @@
+{
+ "header": {
+  "pageHeaderRenderer": {
+   "pageTitle": "Why does my breakcore playlist have drums and bass?",
+   "content": {
+    "pageHeaderViewModel": {
+     "title": {
+      "dynamicTextViewModel": {
+       "text": {
+        "content": "Why does my breakcore playlist have drums and bass?"
+       }
+      }
+     },
+     "metadata": {
+      "contentMetadataViewModel": {
+       "metadataRows": [
+        {
+         "metadataParts": [
+          {
+           "avatarStack": {
+            "avatarStackViewModel": {
+             "avatars": [
+              {
+               "avatarViewModel": {
+                "avatarImageSize": "AVATAR_SIZE_XS"
+               }
+              }
+             ],
+             "text": {
+              "content": "by Siddartha Guha",
+              "commandRuns": [
+               {
+                "startIndex": 0,
+                "length": 17
+               }
+              ],
+              "styleRuns": [
+               {
+                "startIndex": 0,
+                "length": 17,
+                "fontColor": 4294967295,
+                "weightLabel": "FONT_WEIGHT_NORMAL"
+               }
+              ]
+             }
+            }
+           }
+          }
+         ]
+        },
+        {
+         "metadataParts": [
+          {
+           "text": {
+            "content": "Playlist"
+           }
+          },
+          {
+           "text": {
+            "content": "11 videos"
+           }
+          },
+          {
+           "text": {
+            "content": "24 views"
+           }
+          }
+         ]
+        }
+       ],
+       "delimiter": "•"
+      }
+     },
+     "hasTopbarAnimation": true,
+     "enableFlexibleActionsButtonsWrapper": false
+    }
+   },
+   "enableSidebarView": true
+  }
+ },
+ "alerts": [
+  {
+   "alertWithButtonRenderer": {
+    "type": "INFO",
+    "text": {
+     "simpleText": "4 unavailable videos are hidden"
+    },
+    "dismissButton": {
+     "buttonRenderer": {
+      "style": "STYLE_DEFAULT",
+      "size": "SIZE_DEFAULT",
+      "isDisabled": false,
+      "icon": {
+       "iconType": "CLOSE"
+      }
+     }
+    }
+   }
+  }
+ ],
+ "metadata": {
+  "playlistMetadataRenderer": {
+   "title": "Why does my breakcore playlist have drums and bass?"
+  }
+ },
+ "contents": {
+  "twoColumnBrowseResultsRenderer": {
+   "tabs": [
+    {
+     "tabRenderer": {
+      "content": {
+       "sectionListRenderer": {
+        "contents": [
+         {
+          "itemSectionRenderer": {
+           "contents": [
+            {
+             "lockupViewModel": {
+              "contentId": "PGG9StqI5Cw",
+              "metadata": {
+               "lockupMetadataViewModel": {
+                "title": {
+                 "content": "i fell asleep in a sea of clouds"
+                },
+                "metadata": {
+                 "contentMetadataViewModel": {
+                  "metadataRows": [
+                   {
+                    "metadataParts": [
+                     {
+                      "text": {
+                       "content": "Deathbrain"
+                      }
+                     }
+                    ]
+                   }
+                  ]
+                 }
+                }
+               }
+              }
+             }
+            },
+            {
+             "lockupViewModel": {
+              "contentId": "6kmHfIkDhO0",
+              "metadata": {
+               "lockupMetadataViewModel": {
+                "title": {
+                 "content": "Celsius"
+                },
+                "metadata": {
+                 "contentMetadataViewModel": {
+                  "metadataRows": [
+                   {
+                    "metadataParts": [
+                     {
+                      "text": {
+                       "content": "nihmune - Topic"
+                      }
+                     }
+                    ]
+                   }
+                  ]
+                 }
+                }
+               }
+              }
+             }
+            },
+            {
+             "lockupViewModel": {
+              "contentId": "zEiJVkulVrY",
+              "metadata": {
+               "lockupMetadataViewModel": {
+                "title": {
+                 "content": "Lavender Sky - Patterns ft @rino"
+                },
+                "metadata": {
+                 "contentMetadataViewModel": {
+                  "metadataRows": [
+                   {
+                    "metadataParts": [
+                     {
+                      "text": {
+                       "content": "Patterns"
+                      }
+                     }
+                    ]
+                   }
+                  ]
+                 }
+                }
+               }
+              }
+             }
+            },
+            {
+             "lockupViewModel": {
+              "contentId": "D_g4udDanNM",
+              "metadata": {
+               "lockupMetadataViewModel": {
+                "title": {
+                 "content": "endlessly"
+                },
+                "metadata": {
+                 "contentMetadataViewModel": {
+                  "metadataRows": [
+                   {
+                    "metadataParts": [
+                     {
+                      "text": {
+                       "content": "chanpan"
+                      }
+                     }
+                    ]
+                   }
+                  ]
+                 }
+                }
+               }
+              }
+             }
+            },
+            {
+             "lockupViewModel": {
+              "contentId": "2YcPf0a4n0Q",
+              "metadata": {
+               "lockupMetadataViewModel": {
+                "title": {
+                 "content": "D A N N Y - TAKE ME"
+                },
+                "metadata": {
+                 "contentMetadataViewModel": {
+                  "metadataRows": [
+                   {
+                    "metadataParts": [
+                     {
+                      "text": {
+                       "content": "broke records and D A N N Y"
+                      }
+                     }
+                    ]
+                   }
+                  ]
+                 }
+                }
+               }
+              }
+             }
+            },
+            {
+             "lockupViewModel": {
+              "contentId": "idINGrIe9M8",
+              "metadata": {
+               "lockupMetadataViewModel": {
+                "title": {
+                 "content": "Reverie"
+                },
+                "metadata": {
+                 "contentMetadataViewModel": {
+                  "metadataRows": [
+                   {
+                    "metadataParts": [
+                     {
+                      "text": {
+                       "content": "Release - Topic"
+                      }
+                     }
+                    ]
+                   }
+                  ]
+                 }
+                }
+               }
+              }
+             }
+            },
+            {
+             "lockupViewModel": {
+              "contentId": "wjxExqvxvC8",
+              "metadata": {
+               "lockupMetadataViewModel": {
+                "title": {
+                 "content": "Old Computer Room"
+                },
+                "metadata": {
+                 "contentMetadataViewModel": {
+                  "metadataRows": [
+                   {
+                    "metadataParts": [
+                     {
+                      "text": {
+                       "content": "SLVMLORD"
+                      }
+                     }
+                    ]
+                   }
+                  ]
+                 }
+                }
+               }
+              }
+             }
+            }
+           ]
+          }
+         }
+        ]
+       }
+      }
+     }
+    }
+   ]
+  }
+ }
+}

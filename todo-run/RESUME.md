@@ -22,3 +22,10 @@ Rules every agent follows:
 - Minimal live osu! calls (at most one live flow per verify round). Polite mirror pacing.
 - Matching changes: `npm run bench` before and after; curve changes go in `src/lib/matchStrictness.js`.
 - Desktop and mobile rows are separate (`SongRow.js` / `SongCardMobile.js`).
+
+## The per-item workflow
+Script: `todo-run/todo-item.workflow.js`. Launch with Workflow `{scriptPath: "<abs path to that file>", args: {...}}`.
+Args: `id` ("01"), `notes` ("items/01-breakcore.md"), `text` (the todo line), optional `hint`,
+`decisions` (the user's answer or `ASSUMED: ...`), `scope` (a saved scope object to skip the scope stage).
+It returns `needs-decision` with the scope when a design question comes up; ask, then relaunch with
+`decisions` and `scope`.

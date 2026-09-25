@@ -91,9 +91,10 @@ export function extractVideoId(url) {
  * says when there were more.
  *
  * Returns the songs plus the counts the page reports:
- * - `loadedCount`: video items in the fetched window,
+ * - `loadedCount`: video items in the fetched window, plus any YouTube hid from it,
  * - `returnedCount`: songs kept from them,
- * - `unavailableCount`: items YouTube marks unplayable (private, deleted, blocked),
+ * - `unavailableCount`: items YouTube marks unplayable (private, deleted, blocked), plus
+ *   items it leaves out of the window entirely (see `parsePlaylistData`),
  * - `truncated`: the window ends in a continuation, or the `maxVideos` cap cut it short,
  * - `playlistLength`: the real length when the header states it, else `null`.
  *
@@ -298,6 +299,17 @@ export function parsePlaylistData(data, maxVideos = 100) {
     else songs.push(read.song);
   }
 
+  // YouTube can drop unavailable videos from the window altogether, leaving only an alert
+  // ("4 unavailable videos are hidden") that is locale dependent and never parsed. The
+  // header length still counts them, so in a complete window the shortfall is exactly the
+  // hidden items. A truncated window cannot tell hidden items from ones not yet loaded, and
+  // an empty one may be a shape we failed to read, so neither infers anything.
+  const playlistLength = readPlaylistLength(data?.header);
+  if (!truncated && loadedCount > 0 && playlistLength > loadedCount) {
+    unavailableCount += playlistLength - loadedCount;
+    loadedCount = playlistLength;
+  }
+
   return {
     playlistTitle,
     songs,
@@ -305,7 +317,7 @@ export function parsePlaylistData(data, maxVideos = 100) {
     loadedCount,
     unavailableCount,
     truncated,
-    playlistLength: readPlaylistLength(data?.header),
+    playlistLength,
   };
 }
 
