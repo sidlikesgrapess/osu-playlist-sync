@@ -39,9 +39,12 @@ const nextConfig = {
       {
         source: '/:path*',
         headers: [
-          // Report-Only until the client-ui preview has downloaded once from each browser
-          // mirror and any host it reports has been added to mirrors.js (plan 2.4).
-          { key: 'Content-Security-Policy-Report-Only', value: contentSecurityPolicy },
+          // Enforcing (plan 2.4): a preview play, both browser mirrors (catboy.best direct,
+          // and the api.nerinyan.moe -> dl.nerinyan.moe -> s3.us-west-2.idrivee2.com redirect
+          // chain nerinyan actually takes), and the song table's covers all ran under
+          // Report-Only first and produced zero violations once mirrors.js listed every
+          // redirect hop; re-verified clean under enforcement before this was flipped.
+          { key: 'Content-Security-Policy', value: contentSecurityPolicy },
           { key: 'X-Content-Type-Options', value: 'nosniff' },
           { key: 'Referrer-Policy', value: 'strict-origin-when-cross-origin' },
         ],

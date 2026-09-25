@@ -12,6 +12,7 @@ import PlayerProfile from '@/components/PlayerProfile';
 import PlayerResults from '@/components/PlayerResults';
 import PlayerSections from '@/components/PlayerSections';
 import DownloadToast from '@/components/DownloadToast';
+import TruncationDialog from '@/components/TruncationDialog';
 import { GitHubIcon } from '@/components/Icons';
 import { Star } from 'lucide-react';
 import { osuAudio } from '@/lib/soundEffects';
@@ -79,6 +80,16 @@ const PLATFORM_BADGE = {
 // the save before the browser has started reading the blob (Safari and Firefox do).
 const REVOKE_DELAY_MS = 10_000;
 
+// REBUILD_PLAN.md 2.1 item 5: `truncated` is structural (a continuation, or the maxVideos
+// cap), so the message only distinguishes whether the real length was readable at all.
+// No dash in either string.
+function truncationMessage({ playlistLength, loadedCount }) {
+  if (playlistLength && playlistLength > loadedCount) {
+    return `This playlist has ${playlistLength} songs. osu!Sync loads the first 100.`;
+  }
+  return 'This playlist has more than 100 songs. osu!Sync loads the first 100.';
+}
+
 function downloadBlob(blob, filename) {
   if (typeof window === 'undefined') return;
   const url = URL.createObjectURL(blob);
@@ -121,6 +132,10 @@ export default function Home() {
 
   // Download completion toasts
   const [toasts, setToasts] = useState([]);
+
+  // The YouTube truncation popup (2.1 item 5 / 2.4 item 9). Unlike `playlistMeta`, this is
+  // set on every fetch that comes back `truncated`, appends included, and clears on OK.
+  const [truncationNotice, setTruncationNotice] = useState(null);
 
   // osu! player search state
   const [playerResults, setPlayerResults] = useState([]);
@@ -449,6 +464,12 @@ export default function Home() {
 
       if (!res.ok) {
         throw new Error(data.error || 'Could not load playlist items');
+      }
+
+      // Once per fetch, first load or append alike -- an append still hits the same
+      // 100-item cap, and the user needs to know the same way.
+      if (data.truncated) {
+        setTruncationNotice(truncationMessage({ playlistLength: data.playlistLength, loadedCount: data.loadedCount }));
       }
 
       if (!isAppending) {
@@ -1132,6 +1153,12 @@ export default function Home() {
   };
 
   const handleClearList = () => {
+    // A running batch is not left to keep downloading rows this list is about to drop --
+    // Cancel does the same abort, and clearing the list must leave the same clean state.
+    handleCancelBatch();
+    setDownloadingIds(new Set());
+    setIsDownloadingZip(false);
+    setZipProgress(0);
     setSongs([]);
     setPlaylistMeta(null);
     setSelectedIds(new Set());
@@ -1218,12 +1245,16 @@ export default function Home() {
               isSearching={false}
               searchProgress={0}
               unsearchedCount={0}
+              isBatchActive={isBatchActive}
+              onCancelBatch={handleCancelBatch}
               onOpenExport={() => setIsExportOpen(true)}
               onClearList={handleClearPlayer}
             />
 
             <PlayerSections
               sections={playerSections}
+              mode={mode}
+              status={statusFilter}
               selectedIds={selectedIds}
               onToggleSelect={handleToggleSelect}
               onSelectMany={handleSelectMany}
@@ -1275,6 +1306,21 @@ export default function Home() {
               </div>
             )}
 
+            {/* REBUILD_PLAN.md 2.1 item 5: "Showing X of Y songs. N are unavailable on
+                YouTube." -- only worth saying when something was actually dropped. */}
+            {playlistMeta?.unavailableCount > 0 && (
+              <div style={{
+                maxWidth: '1240px',
+                margin: '0 auto 10px',
+                fontSize: '0.76rem',
+                fontWeight: 700,
+                color: '#9a90a6',
+              }}>
+                Showing {playlistMeta.returnedCount} of {playlistMeta.loadedCount} songs.{' '}
+                {playlistMeta.unavailableCount} {playlistMeta.unavailableCount === 1 ? 'is' : 'are'} unavailable on YouTube.
+              </div>
+            )}
+
             {/* Frosted Glass Stats & Action Bar */}
             <StatsBar
               totalSongs={songs.length}
@@ -1288,6 +1334,8 @@ export default function Home() {
               isSearching={isSearching}
               searchProgress={searchProgress}
               unsearchedCount={unsearchedCount}
+              isBatchActive={isBatchActive}
+              onCancelBatch={handleCancelBatch}
               onSearchAllRemaining={handleSearchAllRemaining}
               onOpenExport={() => setIsExportOpen(true)}
               onClearList={handleClearList}
@@ -1361,6 +1409,13 @@ export default function Home() {
         isOpen={isSetupOpen}
         onClose={() => setIsSetupOpen(false)}
         systemStatus={systemStatus}
+      />
+
+      {/* REBUILD_PLAN.md 2.1 item 5: truncation notice, once per fetch */}
+      <TruncationDialog
+        isOpen={!!truncationNotice}
+        message={truncationNotice}
+        onClose={() => setTruncationNotice(null)}
       />
     </div>
   );
