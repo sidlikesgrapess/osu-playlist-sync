@@ -82,10 +82,11 @@ const sampleButtonStyle = {
   whiteSpace: 'nowrap',
 };
 
-export default function PlaylistInput({ onFetch, isLoading, hasSongs, mode, setMode, statusFilter, setStatusFilter, matchThreshold, setMatchThreshold, canRefetchStrictness, onStrictnessRefetch }) {
+// `searchMode` ('songs' | 'player') is owned by page.js, because it is also which result set
+// is on screen (todo item 09). Flipping it never fetches or drops anything.
+export default function PlaylistInput({ onFetch, isLoading, hasSongs, searchMode, onSearchModeChange, mode, setMode, statusFilter, setStatusFilter, matchThreshold, setMatchThreshold, canRefetchStrictness, onStrictnessRefetch }) {
   const [url, setUrl] = useState('');
   const [isDocked, setIsDocked] = useState(false);
-  const [searchMode, setSearchMode] = useState('songs');
 
   useEffect(() => {
     let ticking = false;
@@ -140,7 +141,7 @@ export default function PlaylistInput({ onFetch, isLoading, hasSongs, mode, setM
 
   const handleSearchModeChange = (nextMode) => {
     if (nextMode === searchMode) return;
-    setSearchMode(nextMode);
+    onSearchModeChange(nextMode);
     osuAudio.playClick();
   };
 
@@ -155,8 +156,8 @@ export default function PlaylistInput({ onFetch, isLoading, hasSongs, mode, setM
 
   const handleQuickSample = (sampleVal, platform = 'auto') => {
     setUrl(sampleVal);
-    // The toggle follows the sample, so a later typed search goes where the sample went.
-    setSearchMode(platform === 'player' ? 'player' : 'songs');
+    // The toggle follows the sample (page.js sets it from the submission), so a later typed
+    // search goes where the sample went.
     osuAudio.playClick();
     onFetch(sampleVal, platform);
   };

@@ -1,0 +1,208 @@
+[
+  {
+    "name": "desktop",
+    "checks": {
+      "1_playlist_ticks_10": {
+        "pass": true,
+        "detail": 10
+      },
+      "1b_playlist_ticks_9": {
+        "pass": true,
+        "detail": 9
+      },
+      "10_switch_stops_preview": {
+        "pass": true,
+        "detail": [
+          {
+            "src": null,
+            "paused": true
+          }
+        ]
+      },
+      "4_bar_in_empty_player_view": {
+        "pass": true,
+        "detail": 9
+      },
+      "4b_note_in_player_view": {
+        "pass": true,
+        "detail": "Includes 9 ticked in Playlist"
+      },
+      "2a_playlist_rows_hidden": {
+        "pass": true
+      },
+      "5_player_search_keeps_playlist_ticks": {
+        "pass": true,
+        "detail": 9
+      },
+      "3_union_dedup_12": {
+        "pass": true,
+        "detail": 12
+      },
+      "3b_note_player_view": {
+        "pass": true,
+        "detail": "Includes 7 ticked in Playlist"
+      },
+      "1c_playlist_rows_back": {
+        "pass": true,
+        "detail": 10
+      },
+      "1d_title_back": {
+        "pass": true
+      },
+      "3c_union_in_playlist_view": {
+        "pass": true,
+        "detail": 12
+      },
+      "3d_note_playlist_view": {
+        "pass": true,
+        "detail": "Includes 3 ticked in Player"
+      },
+      "3e_batch_fetches_union_once": {
+        "pass": true,
+        "detail": {
+          "requested": 12,
+          "uniq": 12
+        }
+      },
+      "2b_player_profile_back": {
+        "pass": true
+      },
+      "2c_player_ticks_back": {
+        "pass": true
+      },
+      "6a_player_trash_only_player": {
+        "pass": true,
+        "detail": 9
+      },
+      "6b_playlist_trash_only_playlist": {
+        "pass": true,
+        "detail": 5
+      },
+      "6c_playlist_search_keeps_player": {
+        "pass": true,
+        "detail": 15
+      },
+      "6d_player_still_there": {
+        "pass": true
+      }
+    },
+    "audioBeforeSwitch": [
+      {
+        "src": "https://b.ppy.sh/preview/9000000.mp3",
+        "paused": false
+      }
+    ],
+    "audioAfterSwitch": [
+      {
+        "src": null,
+        "paused": true
+      }
+    ],
+    "row9Checked": null,
+    "console": [],
+    "leaked": []
+  },
+  {
+    "name": "phone",
+    "checks": {
+      "1_playlist_ticks_10": {
+        "pass": true,
+        "detail": 10
+      },
+      "1b_playlist_ticks_9": {
+        "pass": true,
+        "detail": 9
+      },
+      "10_switch_stops_preview": {
+        "pass": true,
+        "detail": [
+          {
+            "src": null,
+            "paused": true
+          }
+        ]
+      },
+      "4_bar_in_empty_player_view": {
+        "pass": true,
+        "detail": 9
+      },
+      "4b_note_in_player_view": {
+        "pass": true,
+        "detail": "Includes 9 ticked in Playlist"
+      },
+      "2a_playlist_rows_hidden": {
+        "pass": true
+      },
+      "5_player_search_keeps_playlist_ticks": {
+        "pass": true,
+        "detail": 9
+      },
+      "3_union_dedup_12": {
+        "pass": true,
+        "detail": 12
+      },
+      "3b_note_player_view": {
+        "pass": true,
+        "detail": "Includes 7 ticked in Playlist"
+      },
+      "1c_playlist_rows_back": {
+        "pass": true,
+        "detail": 10
+      },
+      "1d_title_back": {
+        "pass": true
+      },
+      "3c_union_in_playlist_view": {
+        "pass": true,
+        "detail": 12
+      },
+      "3d_note_playlist_view": {
+        "pass": true,
+        "detail": "Includes 3 ticked in Player"
+      },
+      "3e_batch_fetches_union_once": {
+        "pass": true,
+        "detail": {
+          "requested": 12,
+          "uniq": 12
+        }
+      },
+      "2b_player_profile_back": {
+        "pass": true
+      },
+      "2c_player_ticks_back": {
+        "pass": true
+      },
+      "6a_player_trash_only_player": {
+        "pass": true,
+        "detail": 9
+      },
+      "6b_playlist_trash_only_playlist": {
+        "pass": true,
+        "detail": 5
+      },
+      "6c_playlist_search_keeps_player": {
+        "pass": true,
+        "detail": 15
+      },
+      "6d_player_still_there": {
+        "pass": true
+      }
+    },
+    "audioBeforeSwitch": [
+      {
+        "src": "https://b.ppy.sh/preview/9000000.mp3",
+        "paused": false
+      }
+    ],
+    "audioAfterSwitch": [
+      {
+        "src": null,
+        "paused": true
+      }
+    ],
+    "row9Checked": null,
+    "console": [],
+    "leaked": []
+  }
+]

@@ -32,6 +32,7 @@ import { buildSearchRequest } from '@/lib/searchRequest';
 import { visibleItemsFor } from '@/lib/collection';
 import { truncationMessage } from '@/lib/truncationNotice';
 import { createSearchPacer, pacedRequest } from '@/lib/searchPacer';
+import { selectedBeatmapEntries, matchedBeatmapUnion, soleOwnerSides, zipBaseTitle } from '@/lib/selection';
 
 const REPO_URL = 'https://github.com/sidlikesgrapess/osu-playlist-sync';
 
@@ -134,7 +135,10 @@ export default function Home() {
   // `matchThreshold` whenever the slider has moved but Refetch has not been pressed,
   // and that gap is the only thing that enables the button.
   const [appliedStrictness, setAppliedStrictness] = useState(DEFAULT_STRICTNESS);
-  const [selectedIds, setSelectedIds] = useState(new Set());
+  // The playlist and the osu! player each keep their own rows and their own ticks (todo item
+  // 09), so neither search wipes the other. The download bar reads the union of both.
+  const [playlistSelectedIds, setPlaylistSelectedIds] = useState(new Set());
+  const [playerSelectedIds, setPlayerSelectedIds] = useState(new Set());
   const [downloadingIds, setDownloadingIds] = useState(new Set());
   const [isDownloadingZip, setIsDownloadingZip] = useState(false);
   const [zipProgress, setZipProgress] = useState(0);
@@ -157,6 +161,12 @@ export default function Home() {
   const [playerQuery, setPlayerQuery] = useState('');
   const [playerProfile, setPlayerProfile] = useState(null);
   const [playerSections, setPlayerSections] = useState(createEmptySections);
+  // Every beatmapset the current player's sections have loaded, once each, as songs. The
+  // player side of the download union; `songs` above is the playlist side only.
+  const [playerSongs, setPlayerSongs] = useState([]);
+  // Which view is on screen, the search type toggle in PlaylistInput. Both result sets live
+  // on whichever is hidden, so switching is free.
+  const [searchMode, setSearchMode] = useState('songs');
 
   // The latest songs, for async work that outlives the render it started in (a manual
   // search reads the row as it is now, not as it was when the handler was created).
@@ -177,12 +187,13 @@ export default function Home() {
   const playerFiltersRef = useRef({ mode, status: statusFilter });
   useEffect(() => { playerFiltersRef.current = { mode, status: statusFilter }; }, [mode, statusFilter]);
 
-  // A hidden row can never ride into a bulk download: in player mode the selection is kept to
-  // the ids the sections show under the active tabs (F-12).
+  // A hidden row can never ride into a bulk download: the player's ticks are kept to the ids
+  // the sections show under the active tabs (F-12). The playlist's ticks are its own and are
+  // only ever dropped by the playlist's rematch rule.
   useEffect(() => {
     if (!playerProfile) return;
     const visible = new Set(Object.values(playerSections).flatMap(section => section.allItems.map(s => s.id)));
-    setSelectedIds(prev => {
+    setPlayerSelectedIds(prev => {
       const next = new Set([...prev].filter(id => visible.has(id)));
       return next.size === prev.size ? prev : next;
     });
@@ -196,11 +207,22 @@ export default function Home() {
       .catch(err => console.warn('Could not check system status:', err));
   }, []);
 
-  // Routes a submission to either player search or the playlist/song flow.
+  // Routes a submission to either player search or the playlist/song flow, and shows that
+  // side: a profile link typed under Playlist / Song opens the player view.
   const handleSubmitInput = (value, platform) => {
     const isPlayerInput = platform === 'player' || /osu\.ppy\.sh\/(users|u)\//i.test(value);
+    setSearchMode(isPlayerInput ? 'player' : 'songs');
     if (isPlayerInput) return handlePlayerSearch(value);
-    return handleFetchPlaylist(value, { forceReplace: Boolean(playerProfile) });
+    return handleFetchPlaylist(value);
+  };
+
+  // The toggle only changes which side is shown. Nothing is fetched or dropped: each side
+  // keeps its rows, ticks and page. The hidden list unmounts, so a preview playing in it
+  // stops with it (useAudioPreview releases a key when its last cover unmounts).
+  const handleSearchModeChange = (nextMode) => {
+    if (nextMode === searchMode) return;
+    setSearchMode(nextMode);
+    setErrorMessage('');
   };
 
   const abortSectionLoad = (key) => {
@@ -230,16 +252,9 @@ export default function Home() {
   const handlePlayerSearch = async (query, page = 1) => {
     setIsLoading(true);
     setErrorMessage('');
-    if (page === 1) setPlayerResults([]);
+    // A new search replaces the old player, never the playlist.
+    if (page === 1) dropPlayer();
     setPlayerQuery(query);
-
-    // Switching to player search drops any playlist/song results.
-    if (page === 1) {
-      dropSongList();
-      setSelectedIds(new Set());
-      setPlaylistMeta(null);
-      setCurrentPage(1);
-    }
 
     try {
       const res = await fetch(`/api/osu/player?q=${encodeURIComponent(query)}&page=${page}`);
@@ -279,15 +294,14 @@ export default function Home() {
     handlePlayerSearch(playerQuery, page);
   };
 
-  // Switch the app into player mode for a resolved profile.
+  // Show a resolved profile. The playlist side is left exactly as it is.
   const applyPlayerProfile = (profile) => {
     abortAllSectionLoads();
     setPlayerProfile(profile);
     setPlayerResults([]);
     setPlayerResultsTotal(0);
-    dropSongList();
-    setSelectedIds(new Set());
-    setPlaylistMeta(null);
+    setPlayerSongs([]);
+    setPlayerSelectedIds(new Set());
     setErrorMessage('');
     setIsLoading(false);
 
@@ -326,9 +340,9 @@ export default function Home() {
     }
   };
 
-  // Merge newly loaded beatmaps into the shared song list (deduped by beatmapset).
+  // Merge newly loaded beatmaps into the player's song list (deduped by beatmapset).
   const mergeSongs = (incoming) => {
-    setSongs(prev => {
+    setPlayerSongs(prev => {
       const seen = new Set(prev.map(s => s.id));
       const additions = incoming.filter(s => !seen.has(s.id));
       if (additions.length === 0) return prev;
@@ -372,7 +386,7 @@ export default function Home() {
           loaded: true,
         },
       }));
-      // The shared list holds every loaded set once; the tabs only decide what is shown.
+      // The player list holds every loaded set once; the tabs only decide what is shown.
       mergeSongs(visibleItemsFor(type, entries, 'all', 'any'));
     } catch (err) {
       if (!isCurrent() || isAbortError(err)) return;
@@ -391,9 +405,9 @@ export default function Home() {
     }
   };
 
-  // Selects or deselects a whole section's worth of beatmaps at once.
+  // Selects or deselects a whole section's worth of beatmaps at once. Player ticks only.
   const handleSelectMany = (ids, shouldSelect) => {
-    setSelectedIds(prev => {
+    setPlayerSelectedIds(prev => {
       const next = new Set(prev);
       ids.forEach(id => shouldSelect ? next.add(id) : next.delete(id));
       return next;
@@ -449,28 +463,21 @@ export default function Home() {
     }
   };
 
+  // Clears the player side only; the playlist and its ticks stay.
   const handleClearPlayer = () => {
-    clearPlayerState();
-    dropSongList();
-    setSelectedIds(new Set());
+    dropPlayer();
     setErrorMessage('');
     osuAudio.playClick();
   };
 
   // Handle fetching a YouTube playlist. When songs already exist, new results are
-  // appended instead of replacing the current list.
-  const handleFetchPlaylist = async (url, { forceReplace = false } = {}) => {
-    const isAppending = !forceReplace && songs.length > 0;
+  // appended instead of replacing the current list. The player side is never touched.
+  const handleFetchPlaylist = async (url) => {
+    const isAppending = songs.length > 0;
 
     setIsLoading(true);
     setErrorMessage('');
-    if (!isAppending) {
-      dropSongList();
-      setSelectedIds(new Set());
-      setPlaylistMeta(null);
-      setCurrentPage(1);
-      clearPlayerState();
-    }
+    if (!isAppending) dropPlaylist();
 
     try {
       const fetchUrl = `/api/playlist?url=${encodeURIComponent(url)}`;
@@ -594,7 +601,7 @@ export default function Home() {
     let completedCount = 0;
     const concurrency = 3;
     let currentIndex = 0;
-    // A list dropped since this batch began (a new playlist, a player) no longer holds
+    // A playlist dropped since this batch began (a new playlist, the trash) no longer holds
     // these rows, so their queued requests are skipped instead of spending the budget.
     const generation = songListGenerationRef.current;
     const listDropped = () => songListGenerationRef.current !== generation;
@@ -628,7 +635,7 @@ export default function Home() {
             // never pre-selected: it must not slip into a bulk download just because it was
             // displayed.
             if (isAutoSelectable(matched)) {
-              setSelectedIds(curr => new Set(curr).add(s.id));
+              setPlaylistSelectedIds(curr => new Set(curr).add(s.id));
             }
             return {
               ...s,
@@ -674,7 +681,7 @@ export default function Home() {
   // A search with no answer leaves the row matchless, and a matchless row is never selected.
   const markSearchFailed = (songId, searchError) => {
     setSongs(prev => prev.map(s => s.id === songId ? { ...s, ...failedSearchState(searchError) } : s));
-    setSelectedIds(prev => {
+    setPlaylistSelectedIds(prev => {
       if (!prev.has(songId)) return prev;
       const next = new Set(prev);
       next.delete(songId);
@@ -720,7 +727,7 @@ export default function Home() {
 
     const reset = songs.map(s => ({ ...s, ...blankMatchState() }));
     setSongs(reset);
-    setSelectedIds(new Set());
+    setPlaylistSelectedIds(new Set());
 
     const pageSongs = pageSlice(reset, currentPage, pageSize);
     searchTargetSongs(reset, pageSongs.map(s => s.id), nextMode, nextStatus, nextThreshold);
@@ -734,14 +741,15 @@ export default function Home() {
   // page of osu! API calls and silently clears the user's selection. The controls
   // cannot promise they only fire on a real change -- see the slider below -- so
   // the promise is kept here, once, for all three.
+  //
+  // Both sides follow the tabs whichever view is on screen, because the download bar reads
+  // both: the player's sections refilter for free, and the playlist's matches, searched under
+  // the old tabs, are rematched so a hidden row never rides into a bulk download (F-12).
   const handleModeChange = (newMode) => {
     if (newMode === mode) return;
     setMode(newMode);
 
-    if (playerProfile) {
-      reloadPlayerSections(newMode, statusFilter);
-      return;
-    }
+    reloadPlayerSections(newMode, statusFilter);
     rematchVisiblePage(newMode, statusFilter, matchThreshold);
   };
 
@@ -773,7 +781,7 @@ export default function Home() {
     // Selections survive the narrowing unless what they pointed at did not. A song
     // whose new best candidate is flagged is dropped for the same reason one
     // is never auto-selected: it must not ride along in a bulk download.
-    setSelectedIds(prev => {
+    setPlaylistSelectedIds(prev => {
       const next = new Set(prev);
       for (const song of narrowed) {
         if (!next.has(song.id)) continue;
@@ -791,10 +799,9 @@ export default function Home() {
     if (newStatus === statusFilter) return;
     setStatusFilter(newStatus);
 
-    if (playerProfile) {
-      reloadPlayerSections(mode, newStatus);
-      return;
-    }
+    // The player side refilters for free; the playlist side follows below (see handleModeChange).
+    reloadPlayerSections(mode, newStatus);
+    if (songs.length === 0) return;
 
     // Narrowing costs nothing: the wider search already returned these candidates and
     // every one carries its status. Widening cannot be done locally at all, because
@@ -824,10 +831,10 @@ export default function Home() {
     setMatchThreshold(newThreshold);
   };
 
-  // Spend the calls, now that the user has asked for it. Player sections are excluded
-  // for the same reason they always were: their beatmaps are pre-matched, not scored.
+  // Spend the calls, now that the user has asked for it. Only the playlist is rematched:
+  // player beatmaps are pre-matched, not scored, so the slider has nothing to say to them.
   const handleStrictnessRefetch = () => {
-    if (playerProfile || matchThreshold === appliedStrictness) return;
+    if (songs.length === 0 || matchThreshold === appliedStrictness) return;
     rematchVisiblePage(mode, statusFilter, matchThreshold);
   };
 
@@ -835,7 +842,6 @@ export default function Home() {
   // is something on screen worth rebuilding. Held here rather than in the component
   // because only page.js knows whether a search is already running.
   const canRefetchStrictness =
-    !playerProfile &&
     songs.length > 0 &&
     !isSearching &&
     !isLoading &&
@@ -880,7 +886,7 @@ export default function Home() {
         if (s.id === songId) {
           const matched = result.beatmapsets && result.beatmapsets.length > 0 ? result.beatmapsets[0] : null;
           if (isAutoSelectable(matched)) {
-            setSelectedIds(curr => new Set(curr).add(songId));
+            setPlaylistSelectedIds(curr => new Set(curr).add(songId));
           }
           return {
             ...s,
@@ -903,29 +909,32 @@ export default function Home() {
     }
   };
 
-  // Selection handlers
-  const handleToggleSelect = (songId) => {
-    setSelectedIds(prev => {
+  // Selection handlers. Each side has its own set, so the table's bulk controls below only
+  // ever touch playlist ticks, and a section's only ever touch player ticks.
+  const toggleIn = (setIds) => (songId) => {
+    setIds(prev => {
       const next = new Set(prev);
       if (next.has(songId)) next.delete(songId);
       else next.add(songId);
       return next;
     });
   };
+  const handleToggleSelect = toggleIn(setPlaylistSelectedIds);
+  const handleTogglePlayerSelect = toggleIn(setPlayerSelectedIds);
 
   const handleSelectAll = () => {
     const matchedIds = songs.filter(s => s.matchedBeatmap).map(s => s.id);
-    setSelectedIds(new Set(matchedIds));
+    setPlaylistSelectedIds(new Set(matchedIds));
   };
 
   // The toolbar's "Select Confirmed" preset: replaces the selection with only the matches
   // that pass isAutoSelectable, so flagged rows ticked by the header checkbox drop out.
   const handleSelectConfirmed = () => {
-    setSelectedIds(new Set(confirmedMatchIds(songs)));
+    setPlaylistSelectedIds(new Set(confirmedMatchIds(songs)));
   };
 
   const handleDeselectAll = () => {
-    setSelectedIds(new Set());
+    setPlaylistSelectedIds(new Set());
   };
 
   const pushToast = (title, detail, kind = 'download') => {
@@ -942,6 +951,9 @@ export default function Home() {
   // The state is what the StatsBar buttons key on.
   const batchInFlightRef = useRef(false);
   const batchAbortRef = useRef(null);
+  // The sides the running batch holds a set for that no other side ticked (soleOwnerSides).
+  // Dropping one of those sides cancels the batch; dropping the other leaves it running.
+  const batchSoleSidesRef = useRef(new Set());
   const [isBatchActive, setIsBatchActive] = useState(false);
 
   // One proxy allowance for the whole page session, not a fresh one per batch, so
@@ -965,6 +977,7 @@ export default function Home() {
   const endBatch = (controller) => {
     if (batchAbortRef.current !== controller) return;
     batchAbortRef.current = null;
+    batchSoleSidesRef.current = new Set();
     batchInFlightRef.current = false;
     setIsBatchActive(false);
   };
@@ -975,16 +988,35 @@ export default function Home() {
     batchAbortRef.current?.abort();
   };
 
-  // Every path that throws the song list away comes through here. A running batch is not
-  // left to keep downloading rows the list no longer holds: Cancel does the same abort, and
-  // replacing the list must leave the same clean state.
-  const dropSongList = () => {
-    songListGenerationRef.current += 1;
+  // A running batch is not left to keep downloading rows a dropped side no longer holds:
+  // Cancel does the same abort, and dropping a side must leave the same clean state. A batch
+  // made only of the other side's sets (or of sets both sides ticked) keeps going.
+  const cancelBatchHolding = (side) => {
+    if (!batchSoleSidesRef.current.has(side)) return;
     handleCancelBatch();
     setDownloadingIds(new Set());
     setIsDownloadingZip(false);
     setZipProgress(0);
+  };
+
+  // Every path that throws the playlist away comes through here. The generation bump is what
+  // tells an in-flight playlist search (item 08's pacer) its rows are gone.
+  const dropPlaylist = () => {
+    songListGenerationRef.current += 1;
+    cancelBatchHolding('playlist');
     setSongs([]);
+    setPlaylistSelectedIds(new Set());
+    setPlaylistMeta(null);
+    setCurrentPage(1);
+  };
+
+  // Every path that throws the player away comes through here. It does not bump the playlist
+  // generation, so a playlist search keeps going through a player search.
+  const dropPlayer = () => {
+    clearPlayerState();
+    cancelBatchHolding('player');
+    setPlayerSongs([]);
+    setPlayerSelectedIds(new Set());
   };
 
   // Download a single .osz file. Batch callers pass `silent` so only one toast
@@ -1028,8 +1060,22 @@ export default function Home() {
     }
   };
 
-  // Only ticked beatmaps are ever downloaded.
-  const getSelectedSongs = () => songs.filter(s => selectedIds.has(s.id) && s.matchedBeatmap);
+  // Only ticked beatmaps are ever downloaded: the union of both sides, once per beatmapset,
+  // the playlist's row first (selection.js).
+  const selectedEntries = selectedBeatmapEntries([
+    { name: 'playlist', songs, selectedIds: playlistSelectedIds },
+    { name: 'player', songs: playerSongs, selectedIds: playerSelectedIds },
+  ]);
+
+  // Starts a batch over the current union. Null when nothing is ticked or a batch is running.
+  const beginSelectionBatch = () => {
+    const entries = selectedEntries;
+    if (entries.length === 0) return null;
+    const controller = beginBatch();
+    if (!controller) return null;
+    batchSoleSidesRef.current = soleOwnerSides(entries);
+    return { entries, targetSongs: entries.map(e => e.song), controller };
+  };
 
   const pushCancelledToast = (saved, total) => {
     pushToast('Download cancelled', `${saved} of ${total} saved.`);
@@ -1037,12 +1083,9 @@ export default function Home() {
 
   // Download batch sequentially
   const handleDownloadBatch = async () => {
-    const targetSongs = getSelectedSongs();
-
-    if (targetSongs.length === 0) return;
-
-    const controller = beginBatch();
-    if (!controller) return;
+    const batch = beginSelectionBatch();
+    if (!batch) return;
+    const { targetSongs, controller } = batch;
     const { signal } = controller;
     const budget = sessionProxyBudget();
     // The bytes come from volunteer-run mirrors, so the loop paces itself.
@@ -1077,21 +1120,19 @@ export default function Home() {
   // Bundle as .ZIP, in parts of at most MAX_ZIP_PART_BYTES. JSZip holds a part's
   // inputs and its output at once, so the part cap is the only bound on memory.
   const handleDownloadZipBatch = async () => {
-    const targetSongs = getSelectedSongs();
-
-    if (targetSongs.length === 0) return;
-
-    const controller = beginBatch();
-    if (!controller) return;
+    const batch = beginSelectionBatch();
+    if (!batch) return;
+    const { entries, targetSongs, controller } = batch;
     const { signal } = controller;
 
     setIsDownloadingZip(true);
     setZipProgress(0);
     const budget = sessionProxyBudget();
     const pacer = createPacer();
-    const baseTitle = playerProfile
-      ? `${playerProfile.username}_osu_maps`
-      : playlistMeta?.title || 'osu_playlist_sync';
+    const baseTitle = zipBaseTitle(entries, {
+      playerName: playerProfile?.username,
+      playlistTitle: playlistMeta?.title,
+    });
     let added = 0;
 
     try {
@@ -1181,12 +1222,10 @@ export default function Home() {
     }));
   };
 
+  // Clears the playlist side only; the player and its ticks stay.
   const handleClearList = () => {
-    dropSongList();
-    setPlaylistMeta(null);
-    setSelectedIds(new Set());
+    dropPlaylist();
     setErrorMessage('');
-    setCurrentPage(1);
     osuAudio.playClick();
   };
 
@@ -1197,6 +1236,55 @@ export default function Home() {
   // against the match rate and drop out of Search All.
   const searchedCount = songs.filter(s => s.hasSearched && !s.searchError).length;
   const unsearchedCount = songs.filter(s => !s.hasSearched || s.searchError).length;
+
+  // One download bar for both views (todo item 09). Its metrics describe the side on screen;
+  // its count, Download, ZIP and Export cover every ticked or matched beatmapset on either.
+  const isPlayerView = searchMode === 'player';
+  const viewSide = isPlayerView ? 'player' : 'playlist';
+  const downloadableSongs = matchedBeatmapUnion([songs, playerSongs]);
+  const fromOtherSide = selectedEntries.filter(entry => !entry.sides.has(viewSide)).length;
+  const otherSideNote = fromOtherSide > 0
+    ? `Includes ${fromOtherSide} ticked in ${isPlayerView ? 'Playlist' : 'Player'}`
+    : '';
+  const hasAnyResults = songs.length > 0 || playerSongs.length > 0 || Boolean(playerProfile);
+  const statsBar = hasAnyResults && (
+    <StatsBar
+      {...(isPlayerView
+        ? {
+          totalSongs: playerSongs.length,
+          totalLabel: 'Beatmaps Loaded',
+          // Player beatmaps come pre-matched, so every loaded one is a match.
+          matchedCount: playerSongs.length,
+          searchedCount: playerSongs.length,
+          isSearching: false,
+          searchProgress: 0,
+          unsearchedCount: 0,
+          onClearList: playerProfile || playerResults.length > 0 ? handleClearPlayer : undefined,
+          clearTitle: 'Clear player results',
+        }
+        : {
+          totalSongs: songs.length,
+          matchedCount,
+          searchedCount,
+          isSearching,
+          searchProgress,
+          unsearchedCount,
+          onSearchAllRemaining: handleSearchAllRemaining,
+          onClearList: songs.length > 0 ? handleClearList : undefined,
+        })}
+      selectedCount={selectedEntries.length}
+      downloadableCount={downloadableSongs.length}
+      downloadsLocked={isSearching}
+      otherSideNote={otherSideNote}
+      onDownloadAction={handleDownloadBatch}
+      onDownloadZipAction={handleDownloadZipBatch}
+      isDownloadingZip={isDownloadingZip}
+      zipProgress={zipProgress}
+      isBatchActive={isBatchActive}
+      onCancelBatch={handleCancelBatch}
+      onOpenExport={() => setIsExportOpen(true)}
+    />
+  );
 
   return (
     <div style={{ minHeight: '100vh', display: 'flex', flexDirection: 'column' }}>
@@ -1212,7 +1300,9 @@ export default function Home() {
         <PlaylistInput
           onFetch={handleSubmitInput}
           isLoading={isLoading}
-          hasSongs={!playerProfile && songs.length > 0}
+          hasSongs={!isPlayerView && songs.length > 0}
+          searchMode={searchMode}
+          onSearchModeChange={handleSearchModeChange}
           mode={mode}
           setMode={handleModeChange}
           statusFilter={statusFilter}
@@ -1240,61 +1330,46 @@ export default function Home() {
           </div>
         )}
 
-        {/* osu! Player Search Results */}
-        {!playerProfile && playerResults.length > 0 && (
-          <PlayerResults
-            users={playerResults}
-            total={playerResultsTotal}
-            page={playerResultsPage}
-            onPageChange={handlePlayerResultsPageChange}
-            onSelect={handleSelectPlayer}
-            isLoading={isLoading}
-          />
-        )}
-
-        {/* osu! Player View */}
-        {playerProfile && (
+        {/* osu! Player View. Only the view on screen is mounted; the other side's rows and
+            ticks wait in state, and its previews stop as their covers unmount. */}
+        {isPlayerView && (
           <>
-            <PlayerProfile player={playerProfile} onClear={handleClearPlayer} />
+            {!playerProfile && playerResults.length > 0 && (
+              <PlayerResults
+                users={playerResults}
+                total={playerResultsTotal}
+                page={playerResultsPage}
+                onPageChange={handlePlayerResultsPageChange}
+                onSelect={handleSelectPlayer}
+                isLoading={isLoading}
+              />
+            )}
 
-            <StatsBar
-              totalSongs={songs.length}
-              totalLabel="Beatmaps Loaded"
-              matchedCount={matchedCount}
-              searchedCount={searchedCount}
-              selectedCount={selectedIds.size}
-              onDownloadAction={handleDownloadBatch}
-              onDownloadZipAction={handleDownloadZipBatch}
-              isDownloadingZip={isDownloadingZip}
-              zipProgress={zipProgress}
-              isSearching={false}
-              searchProgress={0}
-              unsearchedCount={0}
-              isBatchActive={isBatchActive}
-              onCancelBatch={handleCancelBatch}
-              onOpenExport={() => setIsExportOpen(true)}
-              onClearList={handleClearPlayer}
-            />
+            {playerProfile && <PlayerProfile player={playerProfile} onClear={handleClearPlayer} />}
 
-            <PlayerSections
-              sections={playerSections}
-              mode={mode}
-              status={statusFilter}
-              selectedIds={selectedIds}
-              onToggleSelect={handleToggleSelect}
-              onSelectMany={handleSelectMany}
-              onToggleSection={handleToggleSection}
-              onDownloadSingle={handleDownloadSingle}
-              downloadingIds={downloadingIds}
-            />
+            {statsBar}
+
+            {playerProfile && (
+              <PlayerSections
+                sections={playerSections}
+                mode={mode}
+                status={statusFilter}
+                selectedIds={playerSelectedIds}
+                onToggleSelect={handleTogglePlayerSelect}
+                onSelectMany={handleSelectMany}
+                onToggleSection={handleToggleSection}
+                onDownloadSingle={handleDownloadSingle}
+                downloadingIds={downloadingIds}
+              />
+            )}
           </>
         )}
 
         {/* Playlist Content View */}
-        {!playerProfile && songs.length > 0 && (
+        {!isPlayerView && (
           <>
             {/* Playlist Title & Meta */}
-            {playlistMeta?.title && (
+            {songs.length > 0 && playlistMeta?.title && (
               <div style={{ maxWidth: '1240px', margin: '0 auto 10px', display: 'flex', alignItems: 'center', gap: '8px', flexWrap: 'wrap' }}>
                 <span style={{ fontSize: '1.05rem', color: '#ff66aa' }}>♪</span>
                 <h2 style={{ fontSize: '1.05rem', fontWeight: 900, color: '#ffffff', margin: 0 }}>
@@ -1333,7 +1408,7 @@ export default function Home() {
 
             {/* REBUILD_PLAN.md 2.1 item 5: "Showing X of Y songs. N are unavailable on
                 YouTube." -- only worth saying when something was actually dropped. */}
-            {playlistMeta?.unavailableCount > 0 && (
+            {songs.length > 0 && playlistMeta?.unavailableCount > 0 && (
               <div style={{
                 maxWidth: '1240px',
                 margin: '0 auto 10px',
@@ -1346,27 +1421,11 @@ export default function Home() {
               </div>
             )}
 
-            {/* Frosted Glass Stats & Action Bar */}
-            <StatsBar
-              totalSongs={songs.length}
-              matchedCount={matchedCount}
-              searchedCount={searchedCount}
-              selectedCount={selectedIds.size}
-              onDownloadAction={handleDownloadBatch}
-              onDownloadZipAction={handleDownloadZipBatch}
-              isDownloadingZip={isDownloadingZip}
-              zipProgress={zipProgress}
-              isSearching={isSearching}
-              searchProgress={searchProgress}
-              unsearchedCount={unsearchedCount}
-              isBatchActive={isBatchActive}
-              onCancelBatch={handleCancelBatch}
-              onSearchAllRemaining={handleSearchAllRemaining}
-              onOpenExport={() => setIsExportOpen(true)}
-              onClearList={handleClearList}
-            />
+            {/* Frosted Glass Stats & Action Bar, shared with the player view */}
+            {statsBar}
 
             {/* Song Table with Intelligent Pagination */}
+            {songs.length > 0 && (
             <SongTable
               songs={songs}
               currentPage={currentPage}
@@ -1376,7 +1435,7 @@ export default function Home() {
               unsearchedCount={unsearchedCount}
               onSearchAllRemaining={handleSearchAllRemaining}
               isSearching={isSearching}
-              selectedIds={selectedIds}
+              selectedIds={playlistSelectedIds}
               onToggleSelect={handleToggleSelect}
               onSelectAll={handleSelectAll}
               onSelectConfirmed={handleSelectConfirmed}
@@ -1386,6 +1445,7 @@ export default function Home() {
               onSelectAlternativeMatch={handleSelectAlternativeMatch}
               onManualSearch={handleManualSearch}
             />
+            )}
           </>
         )}
       </main>
@@ -1427,7 +1487,7 @@ export default function Home() {
       <ExportModal
         isOpen={isExportOpen}
         onClose={() => setIsExportOpen(false)}
-        songs={songs}
+        songs={downloadableSongs}
       />
 
       {/* End-User Guide & System Status Modal */}

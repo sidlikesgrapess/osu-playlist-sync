@@ -21,10 +21,21 @@ export default function StatsBar({
   onSearchAllRemaining,
   onOpenExport,
   onClearList,
+  clearTitle = 'Clear playlist results',
+  // The metrics describe the view on screen, but Download, ZIP, Export and the count cover
+  // both searches at once (todo item 09). `downloadableCount` is every matched beatmapset
+  // across both, `downloadsLocked` holds the buttons while any of it is still being searched,
+  // and `otherSideNote` says how much of the count lives in the view that is not shown.
+  downloadableCount = matchedCount,
+  downloadsLocked = isSearching,
+  otherSideNote = '',
 }) {
   const effectiveTotal = searchedCount !== undefined && searchedCount > 0 ? searchedCount : totalSongs;
   const matchPercentage = effectiveTotal > 0 ? Math.round((matchedCount / effectiveTotal) * 100) : 0;
-  const isEverythingSelected = matchedCount > 0 && selectedCount === matchedCount;
+  const isEverythingSelected = downloadableCount > 0 && selectedCount === downloadableCount;
+  const exportDisabled = downloadableCount === 0 || downloadsLocked;
+  const downloadDisabled = selectedCount === 0 || downloadsLocked || isBatchActive;
+  const zipDisabled = downloadDisabled || isDownloadingZip;
 
   return (
     <div className="osu-glass" style={{
@@ -86,6 +97,12 @@ export default function StatsBar({
 
       {/* Action Buttons */}
       <div style={{ display: 'flex', alignItems: 'center', gap: '6px', flexWrap: 'wrap', width: 'auto' }}>
+        {otherSideNote && (
+          <span data-testid="stats-other-side" style={{ fontSize: '0.7rem', fontWeight: 700, color: '#9a90a6', marginRight: '2px' }}>
+            {otherSideNote}
+          </span>
+        )}
+
         {/* Search All Remaining button */}
         {unsearchedCount > 0 && onSearchAllRemaining && (
           <button
@@ -125,7 +142,7 @@ export default function StatsBar({
             osuAudio.playClick();
             onOpenExport();
           }}
-          disabled={matchedCount === 0 || isSearching}
+          disabled={exportDisabled}
           onMouseEnter={() => osuAudio.playHover()}
           style={{
             borderRadius: '6px',
@@ -133,8 +150,8 @@ export default function StatsBar({
             fontWeight: 800,
             fontSize: '0.75rem',
             padding: '6px 10px',
-            cursor: matchedCount === 0 || isSearching ? 'not-allowed' : 'pointer',
-            opacity: matchedCount === 0 || isSearching ? 0.5 : 1,
+            cursor: exportDisabled ? 'not-allowed' : 'pointer',
+            opacity: exportDisabled ? 0.5 : 1,
             display: 'inline-flex',
             alignItems: 'center',
             gap: '4px',
@@ -151,7 +168,7 @@ export default function StatsBar({
         <button
           className="osu-btn-interactive osu-glass-card"
           onClick={onDownloadAction}
-          disabled={selectedCount === 0 || isSearching || isBatchActive}
+          disabled={downloadDisabled}
           onMouseEnter={() => osuAudio.playHover()}
           style={{
             borderRadius: '6px',
@@ -159,8 +176,8 @@ export default function StatsBar({
             fontWeight: 800,
             fontSize: '0.75rem',
             padding: '6px 12px',
-            cursor: selectedCount === 0 || isSearching || isBatchActive ? 'not-allowed' : 'pointer',
-            opacity: selectedCount === 0 || isSearching || isBatchActive ? 0.5 : 1,
+            cursor: downloadDisabled ? 'not-allowed' : 'pointer',
+            opacity: downloadDisabled ? 0.5 : 1,
             display: 'inline-flex',
             alignItems: 'center',
             gap: '5px',
@@ -178,7 +195,7 @@ export default function StatsBar({
         <button
           className="osu-btn-interactive osu-btn-pink"
           onClick={onDownloadZipAction}
-          disabled={selectedCount === 0 || isDownloadingZip || isSearching || isBatchActive}
+          disabled={zipDisabled}
           onMouseEnter={() => osuAudio.playHover()}
           style={{
             border: 'none',
@@ -186,8 +203,8 @@ export default function StatsBar({
             fontSize: '0.76rem',
             padding: '6px 14px',
             borderRadius: '6px',
-            cursor: selectedCount === 0 || isDownloadingZip || isSearching || isBatchActive ? 'not-allowed' : 'pointer',
-            opacity: selectedCount === 0 || isDownloadingZip || isSearching || isBatchActive ? 0.5 : 1,
+            cursor: zipDisabled ? 'not-allowed' : 'pointer',
+            opacity: zipDisabled ? 0.5 : 1,
             display: 'inline-flex',
             alignItems: 'center',
             gap: '5px',
@@ -231,7 +248,8 @@ export default function StatsBar({
           </button>
         )}
 
-        {/* Clear List */}
+        {/* Clear this view's side. Absent when the view has nothing of its own to clear. */}
+        {onClearList && (
         <button
           className="osu-btn-interactive"
           onClick={() => {
@@ -253,10 +271,12 @@ export default function StatsBar({
             minHeight: '34px',
             minWidth: '34px',
           }}
-          title="Clear playlist results"
+          title={clearTitle}
+          aria-label={clearTitle}
         >
           <Trash2 size={14} />
         </button>
+        )}
       </div>
     </div>
   );

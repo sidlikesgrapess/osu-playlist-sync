@@ -1,0 +1,61 @@
+// One live osu! flow (desktop): Banger Showcase sample, then mrekk sample. Mirrors/previews stubbed.
+const { chromium } = require('playwright');
+const fs = require('fs'); const path = require('path');
+const OUT = __dirname; const BASE = 'http://localhost:3000';
+(async () => {
+  const guard = setTimeout(() => { console.log('HARD TIMEOUT'); process.exit(2); }, 300000);
+  const browser = await chromium.launch({ args: ['--no-sandbox', '--disable-gpu', '--disable-dev-shm-usage'] });
+  const ctx = await browser.newContext({ viewport: { width: 1280, height: 800 } });
+  const page = await ctx.newPage(); const R = { checks: {} }; const api = []; const log = [];
+  const ok = (k, v, d) => { R.checks[k] = { pass: !!v, detail: d }; };
+  page.on('pageerror', (e) => log.push(e.message));
+  await ctx.route('**/*', (r) => {
+    const u = r.request().url();
+    if (u.includes('/api/osu/')) api.push(u.replace(BASE, ''));
+    if (/catboy|nerinyan|\/api\/download|b\.ppy\.sh\/preview/.test(u)) return r.fulfill({ status: 404, body: '' });
+    return r.continue();
+  });
+  const text = () => page.evaluate(() => document.body.innerText);
+  const count = async () => Number((await text()).match(/Download(?: All)? \((\d+)\)/)?.[1] ?? NaN);
+  const clickText = (re, i = 0) => page.evaluate(([s, i]) => { const r = new RegExp(s); const b = [...document.querySelectorAll('button')].filter((e) => e.offsetParent !== null && r.test(e.innerText.trim())); if (!b[i]) throw new Error('no ' + s); b[i].click(); }, [re, i]);
+  await page.goto(BASE, { waitUntil: 'domcontentloaded' });
+  await page.waitForSelector('#playlist-url-input');
+  await page.waitForTimeout(800);
+  await clickText('osu! Banger Showcase');
+  await page.waitForFunction(() => /Ready/.test(document.body.innerText) && /Download(?: All)? \(\d+\)/.test(document.body.innerText), null, { timeout: 120000 });
+  await page.waitForTimeout(2000);
+  const title = (await text()).match(/\n([^\n]+)\n(?:YOUTUBE|SPOTIFY)/)?.[1];
+  // untick the first two visible ticked rows
+  const ticked = await page.evaluate(() => [...document.querySelectorAll('[id^="checkbox-song-"]')].filter((e) => e.offsetParent && e.querySelector('svg')).map((e) => e.id));
+  await page.evaluate((ids) => ids.forEach((id) => document.getElementById(id).click()), ticked.slice(0, 2));
+  await page.waitForTimeout(400);
+  const N = await count(); const sel = (await text()).match(/\d+ of \d+ selected/)?.[0];
+  R.playlist = { title, N, sel, ticked: ticked.length };
+  await page.screenshot({ path: path.join(OUT, 'live_1_playlist.png') });
+  await page.evaluate(() => document.querySelector('#search-mode-player-btn').click());
+  await page.waitForTimeout(400);
+  await clickText('^mrekk$');
+  await page.waitForFunction(() => /Select All \(\d+\)/.test(document.body.innerText), null, { timeout: 60000 });
+  await page.waitForTimeout(1500);
+  // tick 2 player beatmaps via their checkboxes in the best section
+  const pids = await page.evaluate(() => [...document.querySelectorAll('[id^="checkbox-"]')].filter((e) => e.offsetParent && !e.querySelector('svg') && !/song-/.test(e.id)).map((e) => e.id));
+  R.pids = pids.slice(0, 6);
+  await page.evaluate((ids) => ids.forEach((id) => document.getElementById(id).click()), pids.slice(0, 2));
+  await page.waitForTimeout(400);
+  const U = await count(); R.union = U;
+  ok('live_union_N_plus_2', U === N + 2 || U === N + 1, { N, U });
+  await page.screenshot({ path: path.join(OUT, 'live_2_player.png') });
+  await page.evaluate(() => document.querySelector('#search-mode-songs-btn').click());
+  await page.waitForTimeout(800);
+  const t3 = await text();
+  ok('live_back_same', (await count()) === U && t3.includes(sel) && (!title || t3.includes(title)), { c: await count(), sel: t3.match(/\d+ of \d+ selected/)?.[0], title });
+  await page.screenshot({ path: path.join(OUT, 'live_3_playlist_back.png') });
+  await page.evaluate(() => document.querySelector('#search-mode-player-btn').click());
+  await page.waitForTimeout(800);
+  ok('live_player_back', (await text()).includes('mrekk') && (await count()) === U, await count());
+  await page.screenshot({ path: path.join(OUT, 'live_4_player_back.png') });
+  R.apiCalls = api.length; R.apiSample = api.slice(0, 3); R.console = log; R.playlistInfo = R.playlist;
+  fs.writeFileSync(path.join(OUT, 'live-results.json'), JSON.stringify(R, null, 2));
+  console.log(JSON.stringify(R, null, 1));
+  clearTimeout(guard); await browser.close();
+})().catch((e) => { console.log('ERR', e.stack); process.exit(1); });

@@ -1,0 +1,393 @@
+[
+  {
+    "name": "desktop",
+    "checks": {
+      "A1_playlist_ticks_18": {
+        "pass": true,
+        "detail": {
+          "n1": 18,
+          "sel1": "18 of 20 selected"
+        }
+      },
+      "A10_switch_stops_preview": {
+        "pass": true,
+        "detail": {
+          "before": [
+            {
+              "src": "https://b.ppy.sh/preview/8006510.mp3",
+              "paused": false
+            }
+          ],
+          "after": [
+            {
+              "src": null,
+              "paused": true
+            }
+          ]
+        }
+      },
+      "A4_bar_in_player_view_only_playlist_ticks": {
+        "pass": true,
+        "detail": 18
+      },
+      "A5_player_search_keeps_playlist": {
+        "pass": true,
+        "detail": 18
+      },
+      "A3_union_player_view": {
+        "pass": true,
+        "detail": 21
+      },
+      "A1_same_page_rows": {
+        "pass": true,
+        "detail": {
+          "rows1": [
+            "Aone Song 10",
+            "Aone Song 11",
+            "Aone Song 12"
+          ],
+          "rows2": [
+            "Aone Song 10",
+            "Aone Song 11",
+            "Aone Song 12"
+          ]
+        }
+      },
+      "A1_same_ticks": {
+        "pass": true,
+        "detail": {
+          "a12": false,
+          "a14": true
+        }
+      },
+      "A1_same_title": {
+        "pass": true
+      },
+      "A3_union_playlist_view": {
+        "pass": true,
+        "detail": 21
+      },
+      "A7_songtable_counts_playlist_only": {
+        "pass": true,
+        "detail": {
+          "now": "18 of 20 selected",
+          "before": "18 of 20 selected"
+        }
+      },
+      "A7_select_confirmed_playlist_only": {
+        "pass": true,
+        "detail": {
+          "count": 23,
+          "sel": "20 of 20 selected"
+        }
+      },
+      "A7_songtable_deselect_leaves_player": {
+        "pass": true,
+        "detail": 5
+      },
+      "A7_header_checkbox_playlist_only": {
+        "pass": true,
+        "detail": {
+          "count": 23,
+          "sel": "20 of 20 selected"
+        }
+      },
+      "A8_status_prunes_hidden_player_tick_only": {
+        "pass": true,
+        "detail": {
+          "count": 22,
+          "newSearches": 0,
+          "graveShown": false
+        }
+      },
+      "A5_new_player_replaces_old": {
+        "pass": true,
+        "detail": {
+          "count": 10,
+          "alphaGone": true,
+          "bravo": true,
+          "playlistCountBefore": 14
+        }
+      },
+      "A3_union_bravo": {
+        "pass": true,
+        "detail": 15
+      },
+      "A6_append_keeps_player": {
+        "pass": true,
+        "detail": {
+          "count": 15,
+          "sel": "10 of 10 selected"
+        }
+      },
+      "A3_zip_fetches_union_once": {
+        "pass": true,
+        "detail": {
+          "expectedN": 15,
+          "requested": 15,
+          "uniq": 15,
+          "file": "osu_playlist_sync_beatmaps.zip"
+        }
+      },
+      "A6_player_trash_keeps_playlist": {
+        "pass": true,
+        "detail": {
+          "count": 10,
+          "before": 15
+        }
+      }
+    },
+    "audioBefore": [
+      {
+        "src": "https://b.ppy.sh/preview/8006510.mp3",
+        "paused": false
+      }
+    ],
+    "audioAfter": [
+      {
+        "src": null,
+        "paused": true
+      }
+    ],
+    "zipPlayerView": 21,
+    "afterConfirmed": {
+      "count": 23,
+      "sel": "20 of 20 selected"
+    },
+    "afterHeaderSelect": {
+      "count": 23,
+      "sel": "20 of 20 selected"
+    },
+    "statusChange": {
+      "count": 22,
+      "newSearches": 0,
+      "graveShown": false
+    },
+    "statusBack": {
+      "count": 14,
+      "newSearches": 10
+    },
+    "afterBravo": {
+      "count": 10,
+      "alphaGone": true,
+      "bravo": true
+    },
+    "afterAppend": {
+      "count": 15,
+      "sel": "10 of 10 selected"
+    },
+    "zip": {
+      "expectedN": 15,
+      "requested": 15,
+      "uniq": 15,
+      "file": "osu_playlist_sync_beatmaps.zip"
+    },
+    "afterPlayerTrash": {
+      "count": 10,
+      "before": 15
+    },
+    "console": [],
+    "leaked": [],
+    "searchCount": 30
+  },
+  {
+    "name": "phone",
+    "checks": {
+      "A1_playlist_ticks_18": {
+        "pass": true,
+        "detail": {
+          "n1": 18,
+          "sel1": "18 of 20 selected"
+        }
+      },
+      "A10_switch_stops_preview": {
+        "pass": true,
+        "detail": {
+          "before": [
+            {
+              "src": "https://b.ppy.sh/preview/8006510.mp3",
+              "paused": false
+            }
+          ],
+          "after": [
+            {
+              "src": null,
+              "paused": true
+            }
+          ]
+        }
+      },
+      "A4_bar_in_player_view_only_playlist_ticks": {
+        "pass": true,
+        "detail": 18
+      },
+      "A5_player_search_keeps_playlist": {
+        "pass": true,
+        "detail": 18
+      },
+      "A3_union_player_view": {
+        "pass": true,
+        "detail": 21
+      },
+      "A1_same_page_rows": {
+        "pass": true,
+        "detail": {
+          "rows1": [
+            "Aone Song 10",
+            "Aone Song 11",
+            "Aone Song 12"
+          ],
+          "rows2": [
+            "Aone Song 10",
+            "Aone Song 11",
+            "Aone Song 12"
+          ]
+        }
+      },
+      "A1_same_ticks": {
+        "pass": true,
+        "detail": {
+          "a12": false,
+          "a14": true
+        }
+      },
+      "A1_same_title": {
+        "pass": true
+      },
+      "A3_union_playlist_view": {
+        "pass": true,
+        "detail": 21
+      },
+      "A7_songtable_counts_playlist_only": {
+        "pass": true,
+        "detail": {
+          "now": "18 of 20 selected",
+          "before": "18 of 20 selected"
+        }
+      },
+      "A7_select_confirmed_playlist_only": {
+        "pass": true,
+        "detail": {
+          "count": 23,
+          "sel": "20 of 20 selected"
+        }
+      },
+      "A7_songtable_deselect_leaves_player": {
+        "pass": true,
+        "detail": 5
+      },
+      "A8_status_prunes_hidden_player_tick_only": {
+        "pass": true,
+        "detail": {
+          "count": 22,
+          "newSearches": 0,
+          "graveShown": false
+        }
+      },
+      "A5_new_player_replaces_old": {
+        "pass": true,
+        "detail": {
+          "count": 10,
+          "alphaGone": true,
+          "bravo": true,
+          "playlistCountBefore": 14
+        }
+      },
+      "A3_union_bravo": {
+        "pass": true,
+        "detail": 15
+      },
+      "A6_append_keeps_player": {
+        "pass": true,
+        "detail": {
+          "count": 15,
+          "sel": "10 of 10 selected"
+        }
+      },
+      "A3_zip_fetches_union_once": {
+        "pass": true,
+        "detail": {
+          "expectedN": 15,
+          "requested": 15,
+          "uniq": 15,
+          "file": "osu_playlist_sync_beatmaps.zip"
+        }
+      },
+      "A6_player_trash_keeps_playlist": {
+        "pass": true,
+        "detail": {
+          "count": 10,
+          "before": 15
+        }
+      }
+    },
+    "audioBefore": [
+      {
+        "src": "https://b.ppy.sh/preview/8006510.mp3",
+        "paused": false
+      }
+    ],
+    "audioAfter": [
+      {
+        "src": null,
+        "paused": true
+      }
+    ],
+    "zipPlayerView": 21,
+    "afterConfirmed": {
+      "count": 23,
+      "sel": "20 of 20 selected"
+    },
+    "statusChange": {
+      "count": 22,
+      "newSearches": 0,
+      "graveShown": false
+    },
+    "statusBack": {
+      "count": 14,
+      "newSearches": 10
+    },
+    "afterBravo": {
+      "count": 10,
+      "alphaGone": true,
+      "bravo": true
+    },
+    "afterAppend": {
+      "count": 15,
+      "sel": "10 of 10 selected"
+    },
+    "zip": {
+      "expectedN": 15,
+      "requested": 15,
+      "uniq": 15,
+      "file": "osu_playlist_sync_beatmaps.zip"
+    },
+    "afterPlayerTrash": {
+      "count": 10,
+      "before": 15
+    },
+    "console": [],
+    "leaked": [],
+    "searchCount": 30
+  },
+  {
+    "name": "pacer",
+    "checks": {
+      "A9_player_lookup_keeps_search_all_running": {
+        "pass": true,
+        "detail": {
+          "mid": 19,
+          "total": 30,
+          "uniq": 30,
+          "count": "30"
+        }
+      }
+    },
+    "detail": {
+      "mid": 19,
+      "total": 30,
+      "uniq": 30,
+      "count": "30"
+    }
+  }
+]
