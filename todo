@@ -32,6 +32,12 @@
   search bar. The animation should be fluid and similar to the searhbar. Once one card
   ends the next card docks to the top like Functions in an IDE like VSCode.
 - maybe a little bounce on every hover animation? toggleable
+- YouTube playlists stop at 100 songs. Raise the cap to 500: follow the Innertube
+  continuation token (one paced request per extra 100), keep `truncated` structural,
+  and show the popup only past 500. In the same change, pace Search All under the
+  60/min /api/osu/search limit so a 500 song Search All does not end in "osu! is busy"
+  rows. Overrides the F-18 "keep 100" decision in REBUILD_PLAN.md.
+- the Change player button and the trash icon is confusing
 
 ## Long term goals
 
