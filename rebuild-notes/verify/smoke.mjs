@@ -111,9 +111,7 @@ async function captureBoth(page, name) {
   await captureBoth(page, '1_playlist_search');
 
   // --- Flow 2: text search ---
-  await page.click('#platform-dropdown-btn');
-  await page.waitForTimeout(300);
-  await page.click('text=Single Song Search');
+  await page.click('#search-mode-songs-btn');
   await page.fill('#playlist-url-input', 'YOASOBI - Idol');
   await page.press('#playlist-url-input', 'Enter');
   await page.waitForSelector('#select-all-header-checkbox', { timeout: 30000 }).catch(() => {});
@@ -185,9 +183,7 @@ async function captureBoth(page, name) {
   }
 
   // --- Flow 3: player lookup ---
-  await page.click('#platform-dropdown-btn');
-  await page.waitForTimeout(300);
-  await page.click('text=Player Search (osu! profile)');
+  await page.click('#search-mode-player-btn');
   await page.fill('#playlist-url-input', '2');
   await page.press('#playlist-url-input', 'Enter');
   await page.waitForTimeout(3500);

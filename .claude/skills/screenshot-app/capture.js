@@ -21,9 +21,7 @@ async function load(page) {
 const FLOWS = {
   song_search_results: async (page) => {
     await load(page);
-    await page.click('#platform-dropdown-btn');
-    await page.waitForTimeout(300);
-    await page.click('text=Single Song Search');
+    await page.click('#search-mode-songs-btn');
     await page.fill('#playlist-url-input', 'YOASOBI - Idol');
     await page.press('#playlist-url-input', 'Enter');
     await page.waitForSelector('#select-all-header-checkbox', { timeout: 30000 }).catch(() => {});

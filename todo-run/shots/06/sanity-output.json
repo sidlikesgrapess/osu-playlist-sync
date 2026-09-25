@@ -1,0 +1,151 @@
+{
+ "desktop_old_dropdown": 0,
+ "desktop_initial": {
+  "songs": "true",
+  "player": "false"
+ },
+ "desktop_placeholder_songs": "Paste a YouTube, Spotify or Apple Music link, or type a song title...",
+ "desktop_icon_spotify": true,
+ "desktop_icon_youtube": true,
+ "desktop_icon_apple": true,
+ "desktop_icon_query": true,
+ "desktop_icon_auto": true,
+ "desktop_layout": {
+  "overflow": false,
+  "inputW": 916.3125,
+  "rowTops": [
+   331,
+   333,
+   328
+  ]
+ },
+ "desktop_query": {
+  "platform": "query",
+  "isSingleTrack": true
+ },
+ "desktop_badge": true,
+ "desktop_query_hits": [
+  "playlist:YOASOBI - Idol",
+  "search:query"
+ ],
+ "desktop_after_player_click": {
+  "songs": "false",
+  "player": "true"
+ },
+ "desktop_placeholder_player": "Type an osu! player name or paste their profile link...",
+ "desktop_player_hits": [
+  "player"
+ ],
+ "desktop_preset-player-mrekk": {
+  "songs": "false",
+  "player": "true",
+  "hits": [
+   "player"
+  ]
+ },
+ "desktop_preset-single-song": {
+  "songs": "true",
+  "player": "false",
+  "hits": [
+   "playlist:YOASOBI - Idol",
+   "search:query"
+  ]
+ },
+ "desktop_preset-spotify-top": {
+  "songs": "true",
+  "player": "false",
+  "hits": [
+   "playlist:https://open.spotify.com/playlist/37i9dQZF1DXcBWIGoYBM5M"
+  ]
+ },
+ "desktop_preset-youtube-banger": {
+  "songs": "true",
+  "player": "false",
+  "hits": [
+   "playlist:https://www.youtube.com/playlist?list=PLosu_banger_showcase_01"
+  ]
+ },
+ "desktop_profile_link_hits": [
+  "player"
+ ],
+ "desktop_docked": {
+  "visible": true,
+  "songs": "false",
+  "player": "true"
+ },
+ "phone_old_dropdown": 0,
+ "phone_initial": {
+  "songs": "true",
+  "player": "false"
+ },
+ "phone_placeholder_songs": "Paste a YouTube, Spotify or Apple Music link, or type a song title...",
+ "phone_icon_spotify": true,
+ "phone_icon_youtube": true,
+ "phone_icon_apple": true,
+ "phone_icon_query": true,
+ "phone_icon_auto": true,
+ "phone_layout": {
+  "overflow": false,
+  "inputW": 136.96875,
+  "rowTops": [
+   442,
+   444,
+   439
+  ]
+ },
+ "phone_query": {
+  "platform": "query",
+  "isSingleTrack": true
+ },
+ "phone_badge": true,
+ "phone_query_hits": [
+  "playlist:YOASOBI - Idol",
+  "search:query"
+ ],
+ "phone_after_player_click": {
+  "songs": "false",
+  "player": "true"
+ },
+ "phone_placeholder_player": "Type an osu! player name or paste their profile link...",
+ "phone_player_hits": [
+  "player"
+ ],
+ "phone_preset-player-mrekk": {
+  "songs": "false",
+  "player": "true",
+  "hits": [
+   "player"
+  ]
+ },
+ "phone_preset-single-song": {
+  "songs": "true",
+  "player": "false",
+  "hits": [
+   "playlist:YOASOBI - Idol",
+   "search:query"
+  ]
+ },
+ "phone_preset-spotify-top": {
+  "songs": "true",
+  "player": "false",
+  "hits": [
+   "playlist:https://open.spotify.com/playlist/37i9dQZF1DXcBWIGoYBM5M"
+  ]
+ },
+ "phone_preset-youtube-banger": {
+  "songs": "true",
+  "player": "false",
+  "hits": [
+   "playlist:https://www.youtube.com/playlist?list=PLosu_banger_showcase_01"
+  ]
+ },
+ "phone_profile_link_hits": [
+  "player"
+ ],
+ "phone_docked": {
+  "visible": true,
+  "songs": "false",
+  "player": "true"
+ }
+}
+no page errors

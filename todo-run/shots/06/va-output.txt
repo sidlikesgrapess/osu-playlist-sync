@@ -1,0 +1,376 @@
+{
+ "desktop_a_dropdown": {
+  "btn": 0,
+  "menu": 0,
+  "radiogroup": 1,
+  "songsVis": true,
+  "playerVis": true,
+  "songsText": "Playlist / Song",
+  "playerText": "Player"
+ },
+ "desktop_a_initial": {
+  "songs": "true",
+  "player": "false"
+ },
+ "desktop_a_styles_songs_active": [
+  {
+   "bg": "rgb(58, 45, 68)",
+   "color": "rgb(255, 255, 255)",
+   "border": "rgba(255, 102, 170, 0.55)"
+  },
+  {
+   "bg": "rgba(0, 0, 0, 0)",
+   "color": "rgb(157, 144, 168)",
+   "border": "rgba(0, 0, 0, 0)"
+  }
+ ],
+ "desktop_placeholder_songs": "Paste a YouTube, Spotify or Apple Music link, or type a song title...",
+ "desktop_icons": {
+  "https://open.spotify.com/track/abc": {
+   "det": "spotify",
+   "iconDisplay": "flex",
+   "svg": "<svg width=\"14\" height=\"14\" viewBox=\"0 0 24 24\" fill=\"currentColor\" color=\"#1db954\" xmlns="
+  },
+  "https://www.youtube.com/watch?v=x": {
+   "det": "youtube",
+   "iconDisplay": "flex",
+   "svg": "<svg width=\"14\" height=\"14\" viewBox=\"0 0 24 24\" fill=\"currentColor\" color=\"#ff3333\" xmlns="
+  },
+  "https://music.apple.com/us/album/1": {
+   "det": "apple",
+   "iconDisplay": "flex",
+   "svg": "<svg width=\"14\" height=\"14\" viewBox=\"0 0 24 24\" fill=\"currentColor\" color=\"#fc3c44\" xmlns="
+  },
+  "YOASOBI - Idol": {
+   "det": "query",
+   "iconDisplay": "flex",
+   "svg": "<svg width=\"14\" height=\"14\" viewBox=\"0 0 24 24\" fill=\"none\" stroke=\"currentColor\" stroke-w"
+  },
+  "https://example.com/x": {
+   "det": "auto",
+   "iconDisplay": "flex",
+   "svg": "<svg xmlns=\"http://www.w3.org/2000/svg\" width=\"14\" height=\"14\" viewBox=\"0 0 24 24\" fill=\"n"
+  },
+  "EMPTY": {
+   "det": "auto",
+   "iconDisplay": "flex",
+   "svg": "<svg xmlns=\"http://www.w3.org/2000/svg\" width=\"14\" height=\"14\" viewBox=\"0 0 24 24\" fill=\"n"
+  }
+ },
+ "desktop_layout_typed": {
+  "sw": 1280,
+  "cw": 1280,
+  "inputW": 876,
+  "tops": {
+   "songs": 331,
+   "player": 331,
+   "input": 333,
+   "clear": 336,
+   "find": 328
+  },
+  "findRight": 1232
+ },
+ "desktop_b_query": {
+  "resp": [
+   {
+    "status": 200,
+    "platform": "query",
+    "isSingleTrack": true,
+    "n": 0
+   }
+  ],
+  "hits": [
+   "playlist:YOASOBI - Idol",
+   "search:query"
+  ],
+  "badge": true
+ },
+ "desktop_b_placeholder_hasSongs": "Paste another link or type a song to add to the list...",
+ "desktop_d_after_click": {
+  "songs": "false",
+  "player": "true"
+ },
+ "desktop_d_styles_player_active": [
+  {
+   "bg": "rgba(58, 45, 68, 0.886)",
+   "color": "rgb(244, 242, 245)",
+   "border": "rgba(255, 102, 170, 0.486)"
+  },
+  {
+   "bg": "rgba(58, 45, 68, 0.114)",
+   "color": "rgb(168, 157, 178)",
+   "border": "rgba(255, 102, 170, 0.063)"
+  }
+ ],
+ "desktop_d_placeholder": {
+  "got": "Type an osu! player name or paste their profile link...",
+  "eq": true
+ },
+ "desktop_d_back_to_songs": {
+  "songs": "true",
+  "player": "false"
+ },
+ "desktop_d_hits": [
+  "player:?q=mrekk&page=1"
+ ],
+ "desktop_e_preset-youtube-banger": {
+  "songs": "true",
+  "player": "false",
+  "hits": [
+   "playlist:https://www.youtube.com/playlist?list=PLosu_banger_showcase_01",
+   "search:youtube",
+   "search:youtube"
+  ],
+  "resp": [
+   {
+    "status": 200,
+    "platform": "youtube",
+    "isSingleTrack": false,
+    "n": 0
+   }
+  ]
+ },
+ "desktop_e_preset-spotify-top": {
+  "songs": "true",
+  "player": "false",
+  "hits": [
+   "playlist:https://open.spotify.com/playlist/37i9dQZF1DXcBWIGoYBM5M",
+   "search:spotify",
+   "search:spotify"
+  ],
+  "resp": [
+   {
+    "status": 200,
+    "platform": "spotify",
+    "isSingleTrack": false,
+    "n": 0
+   }
+  ]
+ },
+ "desktop_e_preset-single-song": {
+  "songs": "true",
+  "player": "false",
+  "hits": [
+   "playlist:YOASOBI - Idol",
+   "search:query"
+  ],
+  "resp": [
+   {
+    "status": 200,
+    "platform": "query",
+    "isSingleTrack": true,
+    "n": 0
+   }
+  ]
+ },
+ "desktop_e_preset-player-mrekk": {
+  "songs": "false",
+  "player": "true",
+  "hits": [
+   "player:?q=mrekk&page=1"
+  ],
+  "resp": []
+ },
+ "desktop_profile_link": [
+  "player:?q=https%3A%2F%2Fosu.ppy.sh%2Fusers%2F2&page=1"
+ ],
+ "desktop_f_docked": {
+  "top": 148,
+  "inView": true,
+  "scrollY": 400,
+  "songs": "false",
+  "player": "true",
+  "sw": 1280,
+  "placeholder": "Type an osu! player name or paste their profile link..."
+ },
+ "phone_a_dropdown": {
+  "btn": 0,
+  "menu": 0,
+  "radiogroup": 1,
+  "songsVis": true,
+  "playerVis": true,
+  "songsText": "Playlist / Song",
+  "playerText": "Player"
+ },
+ "phone_a_initial": {
+  "songs": "true",
+  "player": "false"
+ },
+ "phone_a_styles_songs_active": [
+  {
+   "bg": "rgb(58, 45, 68)",
+   "color": "rgb(255, 255, 255)",
+   "border": "rgba(255, 102, 170, 0.55)"
+  },
+  {
+   "bg": "rgba(0, 0, 0, 0)",
+   "color": "rgb(157, 144, 168)",
+   "border": "rgba(0, 0, 0, 0)"
+  }
+ ],
+ "phone_placeholder_songs": "Paste a YouTube, Spotify or Apple Music link, or type a song title...",
+ "phone_icons": {
+  "https://open.spotify.com/track/abc": {
+   "det": "spotify",
+   "iconDisplay": "none",
+   "svg": "<svg width=\"14\" height=\"14\" viewBox=\"0 0 24 24\" fill=\"currentColor\" color=\"#1db954\" xmlns="
+  },
+  "https://www.youtube.com/watch?v=x": {
+   "det": "youtube",
+   "iconDisplay": "none",
+   "svg": "<svg width=\"14\" height=\"14\" viewBox=\"0 0 24 24\" fill=\"currentColor\" color=\"#ff3333\" xmlns="
+  },
+  "https://music.apple.com/us/album/1": {
+   "det": "apple",
+   "iconDisplay": "none",
+   "svg": "<svg width=\"14\" height=\"14\" viewBox=\"0 0 24 24\" fill=\"currentColor\" color=\"#fc3c44\" xmlns="
+  },
+  "YOASOBI - Idol": {
+   "det": "query",
+   "iconDisplay": "none",
+   "svg": "<svg width=\"14\" height=\"14\" viewBox=\"0 0 24 24\" fill=\"none\" stroke=\"currentColor\" stroke-w"
+  },
+  "https://example.com/x": {
+   "det": "auto",
+   "iconDisplay": "none",
+   "svg": "<svg xmlns=\"http://www.w3.org/2000/svg\" width=\"14\" height=\"14\" viewBox=\"0 0 24 24\" fill=\"n"
+  },
+  "EMPTY": {
+   "det": "auto",
+   "iconDisplay": "none",
+   "svg": "<svg xmlns=\"http://www.w3.org/2000/svg\" width=\"14\" height=\"14\" viewBox=\"0 0 24 24\" fill=\"n"
+  }
+ },
+ "phone_layout_typed": {
+  "sw": 375,
+  "cw": 375,
+  "inputW": 106,
+  "tops": {
+   "songs": 442,
+   "player": 442,
+   "input": 444,
+   "clear": 447,
+   "find": 439
+  },
+  "findRight": 333
+ },
+ "phone_b_query": {
+  "resp": [
+   {
+    "status": 200,
+    "platform": "query",
+    "isSingleTrack": true,
+    "n": 0
+   }
+  ],
+  "hits": [
+   "playlist:YOASOBI - Idol",
+   "search:query"
+  ],
+  "badge": true
+ },
+ "phone_b_placeholder_hasSongs": "Paste another link or type a song to add to the list...",
+ "phone_d_after_click": {
+  "songs": "false",
+  "player": "true"
+ },
+ "phone_d_styles_player_active": [
+  {
+   "bg": "rgba(58, 45, 68, 0.886)",
+   "color": "rgb(244, 242, 245)",
+   "border": "rgba(255, 102, 170, 0.486)"
+  },
+  {
+   "bg": "rgba(58, 45, 68, 0.114)",
+   "color": "rgb(168, 157, 178)",
+   "border": "rgba(255, 102, 170, 0.063)"
+  }
+ ],
+ "phone_d_placeholder": {
+  "got": "Type an osu! player name or paste their profile link...",
+  "eq": true
+ },
+ "phone_d_back_to_songs": {
+  "songs": "true",
+  "player": "false"
+ },
+ "phone_d_hits": [
+  "player:?q=mrekk&page=1"
+ ],
+ "phone_e_preset-youtube-banger": {
+  "songs": "true",
+  "player": "false",
+  "hits": [
+   "playlist:https://www.youtube.com/playlist?list=PLosu_banger_showcase_01",
+   "search:youtube",
+   "search:youtube"
+  ],
+  "resp": [
+   {
+    "status": 200,
+    "platform": "youtube",
+    "isSingleTrack": false,
+    "n": 0
+   }
+  ]
+ },
+ "phone_e_preset-spotify-top": {
+  "songs": "true",
+  "player": "false",
+  "hits": [
+   "playlist:https://open.spotify.com/playlist/37i9dQZF1DXcBWIGoYBM5M",
+   "search:spotify",
+   "search:spotify"
+  ],
+  "resp": [
+   {
+    "status": 200,
+    "platform": "spotify",
+    "isSingleTrack": false,
+    "n": 0
+   }
+  ]
+ },
+ "phone_e_preset-single-song": {
+  "songs": "true",
+  "player": "false",
+  "hits": [
+   "playlist:YOASOBI - Idol",
+   "search:query"
+  ],
+  "resp": [
+   {
+    "status": 200,
+    "platform": "query",
+    "isSingleTrack": true,
+    "n": 0
+   }
+  ]
+ },
+ "phone_e_preset-player-mrekk": {
+  "songs": "false",
+  "player": "true",
+  "hits": [
+   "player:?q=mrekk&page=1"
+  ],
+  "resp": []
+ },
+ "phone_profile_link": [
+  "player:?q=https%3A%2F%2Fosu.ppy.sh%2Fusers%2F2&page=1"
+ ],
+ "phone_f_docked": {
+  "top": 237,
+  "inView": true,
+  "scrollY": 400,
+  "songs": "false",
+  "player": "true",
+  "sw": 375,
+  "placeholder": "Type an osu! player name or paste their profile link..."
+ }
+}
+[desktop][console] Failed to load resource: the server responded with a status of 404 ()
+[desktop][console] Failed to load resource: the server responded with a status of 404 ()
+[desktop][console] Failed to load resource: the server responded with a status of 404 ()
+[phone][console] Failed to load resource: the server responded with a status of 404 ()
+[phone][console] Failed to load resource: the server responded with a status of 404 ()
+[phone][console] Failed to load resource: the server responded with a status of 404 ()

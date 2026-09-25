@@ -67,8 +67,7 @@ hunt for a better selector.
 | Target | Selector |
 |---|---|
 | Search / URL input | `#playlist-url-input` |
-| Platform dropdown trigger | `#platform-dropdown-btn` |
-| Dropdown options | `text=Single Song Search`, `text=Player Search (osu! profile)` |
+| Search type toggle | `#search-mode-songs-btn` (Playlist / Song, the default), `#search-mode-player-btn` (Player); each has `aria-checked` |
 | Sample chips | `#preset-player-mrekk`, and siblings in `SAMPLES` (PlaylistInput.js) |
 | Online / status popup | `page.getByRole('button', { name: /Online/ })` |
 | Popup is open | `text=Got it!` |

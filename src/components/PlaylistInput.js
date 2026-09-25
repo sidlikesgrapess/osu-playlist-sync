@@ -1,12 +1,11 @@
 'use client';
 
-import { useState, useEffect, useRef } from 'react';
-import { createPortal } from 'react-dom';
-import { Loader2, Sparkles, ArrowRight, ChevronDown, Plus, User } from 'lucide-react';
+import { useState, useEffect } from 'react';
+import { Loader2, Sparkles, ArrowRight, Plus, User } from 'lucide-react';
 import { YouTubeIcon, SpotifyIcon, AppleMusicIcon, MusicNoteIcon } from './Icons';
 import { osuAudio } from '@/lib/soundEffects';
 import { strictnessLabel, strictnessSummary } from '@/lib/matchStrictness';
-import { classifyInput } from '@/lib/platform';
+import { submitPlatform } from '@/lib/platform';
 
 const GAME_MODES = [
   { id: 'all', label: 'All Modes', color: '#3d374a', activeText: '#ffffff', activeBorder: 'rgba(255, 255, 255, 0.2)' },
@@ -21,16 +20,15 @@ const STATUS_FILTERS = [
   { id: 'any', label: 'All (incl. Unranked)', color: '#ff66aa', activeText: '#ffffff' },
 ];
 
-const PLATFORM_OPTIONS = [
-  { id: 'auto', name: 'Auto Detect', label: 'Auto Detect (Any Link)', placeholder: 'Paste YouTube, Spotify, Apple Music link, or type song title...' },
-  { id: 'youtube', name: 'YouTube', label: 'YouTube (Playlist/Track)', placeholder: 'Paste YouTube playlist link or video URL...' },
-  { id: 'spotify', name: 'Spotify', label: 'Spotify (Playlist/Track)', placeholder: 'Paste Spotify playlist, album, or track link...' },
-  { id: 'apple', name: 'Apple Music', label: 'Apple Music (Playlist/Song)', placeholder: 'Paste Apple Music playlist, album, or song link...' },
-  { id: 'query', name: 'Single Song', label: 'Single Song Search', placeholder: 'Type song and artist name (e.g. YOASOBI - Idol)...' },
-  { id: 'player', name: 'Player Search', label: 'Player Search (osu! profile)', placeholder: 'Type an osu! player name or paste their profile link...' },
+// The two segments of the search type toggle. Every link provider and plain text share one
+// mode because the server classifies the text itself (extractors.js), so the old per provider
+// entries only ever changed an icon. Labels and placeholders use no dash as punctuation.
+const SEARCH_MODE_OPTIONS = [
+  { id: 'songs', label: 'Playlist / Song', title: 'Search a playlist link, a track link or a song title', placeholder: 'Paste a YouTube, Spotify or Apple Music link, or type a song title...' },
+  { id: 'player', label: 'Player', title: 'Search an osu! player', placeholder: 'Type an osu! player name or paste their profile link...' },
 ];
 
-const PLATFORM_BY_ID = Object.fromEntries(PLATFORM_OPTIONS.map(o => [o.id, o]));
+const SEARCH_MODE_BY_ID = Object.fromEntries(SEARCH_MODE_OPTIONS.map(o => [o.id, o]));
 
 const SAMPLES = [
   { id: 'preset-youtube-banger', label: 'osu! Banger Showcase', value: 'https://www.youtube.com/playlist?list=PLosu_banger_showcase_01', icon: 'youtube', iconSize: 12 },
@@ -87,25 +85,7 @@ const sampleButtonStyle = {
 export default function PlaylistInput({ onFetch, isLoading, hasSongs, mode, setMode, statusFilter, setStatusFilter, matchThreshold, setMatchThreshold, canRefetchStrictness, onStrictnessRefetch }) {
   const [url, setUrl] = useState('');
   const [isDocked, setIsDocked] = useState(false);
-  const [selectedPlatform, setSelectedPlatform] = useState('auto');
-  const [isPlatformMenuOpen, setIsPlatformMenuOpen] = useState(false);
-  const [menuPos, setMenuPos] = useState({ top: 0, left: 0 });
-  const [mounted, setMounted] = useState(false);
-  const menuRef = useRef(null);
-
-  useEffect(() => {
-    setMounted(true);
-  }, []);
-
-  const updateMenuPos = () => {
-    if (menuRef.current) {
-      const rect = menuRef.current.getBoundingClientRect();
-      const menuWidth = 228;
-      const maxLeft = typeof window !== 'undefined' ? Math.max(8, window.innerWidth - menuWidth - 10) : rect.left;
-      const left = Math.max(8, Math.min(rect.left, maxLeft));
-      setMenuPos({ top: rect.bottom + 6, left });
-    }
-  };
+  const [searchMode, setSearchMode] = useState('songs');
 
   useEffect(() => {
     let ticking = false;
@@ -113,7 +93,6 @@ export default function PlaylistInput({ onFetch, isLoading, hasSongs, mode, setM
       if (!ticking) {
         window.requestAnimationFrame(() => {
           setIsDocked(window.scrollY > 180);
-          if (isPlatformMenuOpen) updateMenuPos();
           ticking = false;
         });
         ticking = true;
@@ -126,35 +105,15 @@ export default function PlaylistInput({ onFetch, isLoading, hasSongs, mode, setM
       window.removeEventListener('scroll', handleScroll);
       window.removeEventListener('resize', handleScroll);
     };
-  }, [isPlatformMenuOpen]);
-
-  // Close dropdown on outside click
-  useEffect(() => {
-    const handleClickOutside = (e) => {
-      const portalEl = document.getElementById('platform-dropdown-portal-menu');
-      if (
-        menuRef.current &&
-        !menuRef.current.contains(e.target) &&
-        (!portalEl || !portalEl.contains(e.target))
-      ) {
-        setIsPlatformMenuOpen(false);
-      }
-    };
-    document.addEventListener('mousedown', handleClickOutside);
-    return () => document.removeEventListener('mousedown', handleClickOutside);
   }, []);
 
-  // Determine active display icon based on user selection or auto-detection
   // The same host classification the server uses (platform.js), so the icon never names a
   // provider the server would refuse: a link is judged by its own host, not by a provider
   // name appearing anywhere in the text.
-  const detectPlatform = () => {
-    if (selectedPlatform !== 'auto') return selectedPlatform;
-    const { kind } = classifyInput(url);
-    return kind === 'invalid' ? 'auto' : kind;
-  };
-
-  const activePlatform = detectPlatform();
+  const activePlatform = submitPlatform(searchMode, url);
+  // What the Playlist / Song segment shows: the provider it detected, or sparkles for nothing
+  // yet. A profile link is detected as the player even in this mode, since page.js routes it.
+  const songsIcon = submitPlatform('songs', url);
 
   const getPlatformIcon = (plat, size = 18) => {
     switch (plat) {
@@ -173,12 +132,16 @@ export default function PlaylistInput({ onFetch, isLoading, hasSongs, mode, setM
     }
   };
 
-  const getPlatformName = (plat) => (PLATFORM_BY_ID[plat] || PLATFORM_BY_ID.auto).name;
-
   const getPlaceholder = () => {
-    if (selectedPlatform === 'player') return PLATFORM_BY_ID.player.placeholder;
+    if (searchMode === 'player') return SEARCH_MODE_BY_ID.player.placeholder;
     if (hasSongs) return 'Paste another link or type a song to add to the list...';
-    return (PLATFORM_BY_ID[selectedPlatform] || PLATFORM_BY_ID.auto).placeholder;
+    return SEARCH_MODE_BY_ID.songs.placeholder;
+  };
+
+  const handleSearchModeChange = (nextMode) => {
+    if (nextMode === searchMode) return;
+    setSearchMode(nextMode);
+    osuAudio.playClick();
   };
 
   const handleSubmit = (e) => {
@@ -192,6 +155,8 @@ export default function PlaylistInput({ onFetch, isLoading, hasSongs, mode, setM
 
   const handleQuickSample = (sampleVal, platform = 'auto') => {
     setUrl(sampleVal);
+    // The toggle follows the sample, so a later typed search goes where the sample went.
+    setSearchMode(platform === 'player' ? 'player' : 'songs');
     osuAudio.playClick();
     onFetch(sampleVal, platform);
   };
@@ -351,8 +316,8 @@ export default function PlaylistInput({ onFetch, isLoading, hasSongs, mode, setM
             </button>
           </div>
 
-          {/* Clean Solid Search Bar with Platform Dropdown */}
-          <div style={{
+          {/* Clean Solid Search Bar with the search type toggle */}
+          <div className="pi-search-bar" style={{
             display: 'flex',
             alignItems: 'center',
             background: '#141318',
@@ -366,95 +331,62 @@ export default function PlaylistInput({ onFetch, isLoading, hasSongs, mode, setM
             maxWidth: '100%',
             boxSizing: 'border-box',
           }}>
-            {/* Platform Dropdown Trigger */}
-            <div ref={menuRef} style={{ position: 'relative', zIndex: 50, flexShrink: 0 }}>
-              <button
-                type="button"
-                id="platform-dropdown-btn"
-                className="osu-btn-interactive"
-                onClick={() => {
-                  osuAudio.playClick();
-                  updateMenuPos();
-                  setIsPlatformMenuOpen(prev => !prev);
-                }}
-                style={{
-                  background: '#23202c',
-                  border: '1px solid rgba(255, 255, 255, 0.08)',
-                  borderRadius: '6px',
-                  padding: '4px 8px',
-                  display: 'flex',
-                  alignItems: 'center',
-                  gap: '5px',
-                  cursor: 'pointer',
-                  color: '#ffffff',
-                  fontSize: '0.74rem',
-                  fontWeight: 800,
-                  fontFamily: 'inherit',
-                  minHeight: '34px',
-                }}
-                title="Select source platform"
-              >
-                {getPlatformIcon(activePlatform, 15)}
-                <span className="pi-label-text" style={{ fontSize: '0.72rem', display: 'inline-block' }}>{getPlatformName(selectedPlatform)}</span>
-                <span className="pi-chevron" style={{ display: 'inline-flex' }}>
-                  <ChevronDown size={11} color="#887c93" />
-                </span>
-              </button>
-
-              {/* Solid Clean Dropdown Menu rendered via Portal */}
-              {isPlatformMenuOpen && mounted && createPortal(
-                <div
-                  id="platform-dropdown-portal-menu"
-                  style={{
-                    position: 'fixed',
-                    top: `${menuPos.top}px`,
-                    left: `${menuPos.left}px`,
-                    width: '228px',
-                    maxWidth: 'calc(100vw - 16px)',
-                    background: '#1d1a26',
-                    border: '1px solid rgba(255, 255, 255, 0.12)',
-                    borderRadius: '8px',
-                    boxShadow: '0 8px 30px rgba(0, 0, 0, 0.65)',
-                    padding: '5px',
-                    zIndex: 999999,
-                    display: 'flex',
-                    flexDirection: 'column',
-                    gap: '2px',
-                  }}
-                >
-                  {PLATFORM_OPTIONS.map((item) => (
-                    <button
-                      key={item.id}
-                      type="button"
-                      className="osu-btn-interactive"
-                      onClick={() => {
-                        setSelectedPlatform(item.id);
-                        setIsPlatformMenuOpen(false);
-                        osuAudio.playClick();
-                      }}
-                      style={{
-                        background: selectedPlatform === item.id ? '#2e2638' : 'transparent',
-                        border: selectedPlatform === item.id ? '1px solid rgba(255, 102, 170, 0.4)' : '1px solid transparent',
-                        borderRadius: '6px',
-                        padding: '6px 10px',
-                        display: 'flex',
-                        alignItems: 'center',
-                        gap: '8px',
-                        cursor: 'pointer',
-                        color: selectedPlatform === item.id ? '#ffffff' : '#c6b8ce',
-                        fontSize: '0.76rem',
-                        fontWeight: 700,
-                        textAlign: 'left',
-                        fontFamily: 'inherit',
-                      }}
-                    >
-                      {getPlatformIcon(item.id, 16)}
-                      <span>{item.label}</span>
-                    </button>
-                  ))}
-                </div>,
-                document.body
-              )}
+            {/* Search type toggle: one click switches, there is no menu to open. */}
+            <div
+              role="radiogroup"
+              aria-label="Search type"
+              className="pi-search-mode"
+              style={{
+                display: 'flex',
+                alignItems: 'stretch',
+                flexShrink: 0,
+                background: '#23202c',
+                border: '1px solid rgba(255, 255, 255, 0.08)',
+                borderRadius: '6px',
+                padding: '2px',
+                gap: '2px',
+                minHeight: '34px',
+                boxSizing: 'border-box',
+              }}
+            >
+              {SEARCH_MODE_OPTIONS.map(({ id, label, title }) => {
+                const isActive = searchMode === id;
+                return (
+                  <button
+                    key={id}
+                    type="button"
+                    id={`search-mode-${id}-btn`}
+                    role="radio"
+                    aria-checked={isActive}
+                    data-detected={id === 'songs' ? songsIcon : undefined}
+                    className="pi-search-mode-btn"
+                    onClick={() => handleSearchModeChange(id)}
+                    onMouseEnter={() => osuAudio.playHover()}
+                    title={title}
+                    style={{
+                      background: isActive ? '#3a2d44' : 'transparent',
+                      border: `1px solid ${isActive ? 'rgba(255, 102, 170, 0.55)' : 'transparent'}`,
+                      borderRadius: '4px',
+                      padding: '3px 8px',
+                      display: 'flex',
+                      alignItems: 'center',
+                      gap: '5px',
+                      cursor: 'pointer',
+                      color: isActive ? '#ffffff' : '#9d90a8',
+                      fontSize: '0.72rem',
+                      fontWeight: 800,
+                      fontFamily: 'inherit',
+                      whiteSpace: 'nowrap',
+                      transition: 'background 0.15s ease, color 0.15s ease, border-color 0.15s ease',
+                    }}
+                  >
+                    <span className="pi-search-mode-icon" style={{ display: 'inline-flex', opacity: isActive ? 1 : 0.6 }}>
+                      {getPlatformIcon(id === 'songs' ? songsIcon : 'player', 14)}
+                    </span>
+                    <span>{label}</span>
+                  </button>
+                );
+              })}
             </div>
 
             {/* URL / Query Input */}
@@ -487,6 +419,7 @@ export default function PlaylistInput({ onFetch, isLoading, hasSongs, mode, setM
             {url && (
               <button
                 type="button"
+                className="pi-clear-btn"
                 onClick={() => setUrl('')}
                 style={{
                   background: 'none',

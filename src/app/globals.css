@@ -270,13 +270,28 @@ button, a, input, select {
 
 /* Compact search bar for narrow (mobile-portrait) viewports */
 @media (max-width: 480px) {
-  .pi-label-text,
-  .pi-chevron,
+  /* The search type toggle keeps its words, which say what the modes are; only its icons go,
+     so the input keeps its room. */
+  .pi-search-mode-icon,
   .pi-submit-label {
     display: none !important;
   }
 
-  #platform-dropdown-btn,
+  .pi-search-mode-btn {
+    padding: 3px 5px !important;
+    font-size: 0.64rem !important;
+  }
+
+  /* Tighter gutters on the one row, so the input keeps about 100px even with Clear shown. */
+  .pi-search-bar {
+    gap: 4px !important;
+    padding: 4px !important;
+  }
+
+  .pi-clear-btn {
+    padding: 2px 1px !important;
+  }
+
   #find-beatmaps-btn {
     padding: 6px !important;
   }

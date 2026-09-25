@@ -3,7 +3,7 @@
  * substring checks that were the F-02 SSRF hole: `extractors.js:177,188,199` decided
  * "this is an Apple Music link" with `trimmed.includes('music.apple.com')`, which also
  * matches `https://example.com/?x=music.apple.com` and `music.apple.com.evil.com`.
- * Client-safe: `PlaylistInput.js`'s `detectPlatform` (`:147-158`) uses this too, so it
+ * Client-safe: `PlaylistInput.js` uses `submitPlatform` for its live icon and submit, so it
  * must never import a Node-only module.
  */
 
@@ -103,4 +103,23 @@ export function buildProviderUrl(kind, id) {
     default:
       throw new Error(`buildProviderUrl: unknown platform kind ${JSON.stringify(kind)}`);
   }
+}
+
+/**
+ * The two search modes of the search bar toggle (`PlaylistInput.js`). "songs" covers every
+ * link provider and plain text alike, because the server classifies the text itself
+ * (`extractors.js` runs `classifyInput` again), so a per provider mode only ever changed an
+ * icon. "player" is the one mode that changes where the text goes.
+ */
+export const SEARCH_MODES = ['songs', 'player'];
+
+/**
+ * The platform id sent up with a submission: `'player'` in player mode, otherwise the kind
+ * `classifyInput` detects for the text (`'query'` for plain text, the provider for a link,
+ * `'player'` for an osu! profile link), and `'auto'` when it detects nothing usable.
+ */
+export function submitPlatform(mode, raw) {
+  if (mode === 'player') return 'player';
+  const { kind } = classifyInput(raw);
+  return kind === 'invalid' ? 'auto' : kind;
 }
