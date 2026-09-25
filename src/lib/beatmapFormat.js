@@ -25,18 +25,53 @@ export function formatCompactNumber(num) {
 }
 
 /**
- * What the "Ranked & Loved" filter accepts.
+ * What the "Ranked & Loved" filter accepts, on every path: the search pool (osu.js), the
+ * player collections (collection.js) and the local narrowing in page.js. One set, so
+ * narrowing locally keeps exactly what refetching would.
  *
- * Lives here, client-safe, because page.js narrows an already-fetched candidate list
- * with it while osu.js filters the search pool with it. If those two ever disagreed,
- * narrowing the filter locally would keep a different set of beatmaps than refetching
- * with it would, which is the one thing the local path has to get exactly right.
+ * No `qualified` (REBUILD_PLAN.md U-8): a qualified set has no leaderboard yet and can still
+ * be disqualified, so it is not "ranked" in the sense the label promises.
  */
-const RANKED_AND_LOVED = ['ranked', 'loved', 'qualified'];
+export const RANKED_LOVED_STATUSES = ['ranked', 'approved', 'loved'];
 
 /** Whether a beatmapset status passes the "Ranked & Loved" filter. */
 export function isRankedStatus(status) {
-  return RANKED_AND_LOVED.includes(String(status).toLowerCase());
+  return RANKED_LOVED_STATUSES.includes(String(status).toLowerCase());
+}
+
+/**
+ * The upstream osu! API search `s=` parameter for a UI status filter value. `leaderboard`
+ * (ranked, approved, qualified, loved) is only a pool hint: `isRankedStatus` is what
+ * decides, so the upstream bucket never has to match the label exactly.
+ */
+export function upstreamStatusFor(filter) {
+  return String(filter).toLowerCase() === 'ranked' ? 'leaderboard' : 'any';
+}
+
+/** Whether a beatmapset can be auto-selected, rather than requiring the user to tick it. */
+export function isAutoSelectable(beatmapset) {
+  return !!beatmapset && !beatmapset.artistOverride && !beatmapset.titleOnly;
+}
+
+/**
+ * The notice `MatchNotice.js` renders over a flagged beatmapset, or `null` for an ordinary
+ * one. `song` supplies the target artist for the `artist` case -- the artist the search was
+ * for, never the beatmapset's own artist (see `describeRejection` above for why that
+ * distinction matters).
+ */
+export function overrideNoticeFor(beatmapset, song) {
+  if (!beatmapset) return null;
+
+  if (beatmapset.artistOverride) {
+    const artist = String(song?.extractedArtist || '').trim();
+    return artist ? { kind: 'artist', artist } : { kind: 'closest' };
+  }
+
+  if (beatmapset.titleOnly) {
+    return { kind: 'title' };
+  }
+
+  return null;
 }
 
 const STATUS_BADGE_STYLES = {

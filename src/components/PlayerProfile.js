@@ -56,6 +56,10 @@ export default function PlayerProfile({ player, onClear }) {
               <img
                 src={player.avatarUrl}
                 alt={player.username}
+                loading="lazy"
+                decoding="async"
+                width={68}
+                height={68}
                 onError={() => setAvatarError(true)}
                 style={{ width: '100%', height: '100%', objectFit: 'cover' }}
               />

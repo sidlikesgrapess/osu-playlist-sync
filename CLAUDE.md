@@ -35,7 +35,8 @@ is restarted. Stop dev first.
 ## Environment
 
 `OSU_CLIENT_ID` / `OSU_CLIENT_SECRET` (osu! OAuth, **Client Credentials** grant) in
-`.env.local`. `DEFAULT_MIRROR` is optional.
+`.env.local`. There is no mirror setting: the download mirror order is set only in
+`src/lib/mirrors.js` (an old `DEFAULT_MIRROR` in `.env.local` is simply ignored).
 
 Without credentials the app degrades rather than crashes: `getOsuAccessToken` returns
 `null` and callers return `{ isDemo: true }` with empty results. When touching osu!
@@ -52,18 +53,21 @@ Understanding it explains most of the codebase:
 
 ```
 { id, index, title, channelTitle, thumbnail, duration,   // from the extractor
-  source,                                                // 'spotify' | 'apple' | 'youtube' | 'query'
+  source,                                                // 'spotify' | 'apple' | 'youtube' | 'query' | 'osu-player'
   cleanQuery, extractedTitle, extractedArtist,           // from titleCleaner
   fallbacks, queries,                                    // alternate search queries
   hasSearched, isSearching,                              // UI state, mutated in page.js
   matchedBeatmap, allMatches,                            // filled by /api/osu/search
-  rejection }                                            // why the gate refused, when it did
+  rejection, searchError }                               // why the gate refused / why no answer came ('rate-limited')
+  (also artistFromTitle, beside extractedArtist)         // artist was split from the title, so never provider trust
+  (also manualQuery)                                     // a query the user typed; sent as-is from then on
+  (also playerMeta, playerSection)                       // osu! player path only: pp/playcount, which section
 ```
 
 `source` is load-bearing, not decoration: it decides whether the artist is trusted enough to
 *reject* a candidate (see the matching section below), so keep it populated on every path.
-`artistOverride` sits on the *beatmapset*, not the song — a song can hold a mix of gated and
-ungated matches in `allMatches`.
+`artistOverride` and `titleOnly` sit on the *beatmapset*, not the song — a song can hold a
+mix of gated and ungated matches in `allMatches`.
 
 `src/app/page.js` owns the `songs` array and is the only place this shape mutates.
 Components receive songs and call back up; they never fetch.
@@ -77,8 +81,9 @@ Components receive songs and call back up; they never fetch.
 2. **osu! player** — `/api/osu/player` resolves a profile, `/api/osu/player/beatmaps`
    fetches best / most-played / favourites.
 
-Path 2 reuses path 1's machinery via `beatmapToSong` in `page.js`, which adapts a beatmapset
-into the song shape **pre-matched** (`hasSearched: true`, `matchedBeatmap` already set). That
+Path 2 reuses path 1's machinery via `beatmapToSong` in `src/lib/collection.js`, which builds
+the song through `makeSong` (`src/lib/song.js`) with `source: 'osu-player'` and adapts a
+beatmapset into the song shape **pre-matched** (`hasSearched: true`, `matchedBeatmap` already set). That
 adapter is why selection, export and download work identically for both paths — keep it in
 sync when the song shape changes.
 
@@ -93,8 +98,13 @@ either end of the range — it can only filter what the scorer already chose to 
 could not reach past the hard title floor and 100 was reachable by a non-exact match. Change
 the curve there, never in `osu.js`, and remember 50 must keep reproducing floor 0.50 /
 cutoff 70 because that is what every `npm run bench` number was measured against.
-It early-exits at score ≥ 150. The osu! API's own `relevance_desc` order is deliberately
-ignored.
+It early-exits at score ≥ 150, but only once the leader's artist is settled: trust is `high`,
+or the leader's `artistVerdict` is `SAME` (F-29). Under lower trust a well-credited set by
+someone else could otherwise end the loop before the artist's own set is fetched. At most
+four query variants run per search (`MAX_QUERY_VARIANTS`), and the bare title is always one
+of them. An upstream 429 is thrown, never returned as an empty success; the route answers
+429 with Retry-After and the row is marked `searchError: 'rate-limited'` so it can be
+retried. The osu! API's own `relevance_desc` order is deliberately ignored.
 
 **The artist is a gate, not a weight — do not turn it back into a number.** A confident
 `DIFFERENT` verdict returns `-Infinity`, so a wrong artist can never be outscored by a good
@@ -103,7 +113,9 @@ title. This is the whole point: before it, two different songs sharing a title b
 evidence where the first rung wins, deliberately not a blend.
 
 How far the artist is trusted depends on where it came from (`source` on the song object).
-Spotify/Apple hand us a real artist field and are trusted on arrival. Anything else is
+Spotify/Apple hand us a real artist field and are trusted on arrival, and so is an osu!
+player's own beatmapset (`osu-player`), unless the artist was split from the title
+(`artistFromTitle`). Anything else is
 settled by `resolveArtistTrust` against the corpus, and **the test is the alias set, never a
 row count**: aliases are only recorded for sets whose own artist links back to the target,
 so "Kaneko Lumi" (3 sets, all hers) verifies while "Nightcore Gaming" (4 loosely-related
@@ -121,7 +133,13 @@ where a title collision is most likely. Outcomes:
 | probe failed (429) | `low` | doubt only, never refuse |
 
 The pool is checked before the probe, so a correctly extracted artist costs no call at all;
-probes stay at ~0.2 per track.
+probes stay at ~0.2 per track. Probe results are memoized in a bounded LRU
+(`ARTIST_PROBE_CACHE`: 200 entries, 30 minutes, 60 s for a failed probe).
+
+Under `none` trust the title matches are still salvaged, flagged `titleOnly` rather than
+`artistOverride`, since "Could not find one by X" would claim X is an artist.
+`isAutoSelectable` (`src/lib/beatmapFormat.js`) refuses either flag, and every auto-select
+site goes through it.
 
 When nothing passes, the result carries a `rejection` (`wrong-artist`, `artist-absent`,
 `artist-unknown`, `no-match`) so the UI can say *why*. Gated-out candidates are kept in
@@ -160,12 +178,31 @@ local regression.
 
 ### Downloads
 
-`/api/download` proxies four mirrors in order with a 6s timeout each. If **all** fail it
-generates a synthetic `.osz` (`generateFallbackOsz`) containing a placeholder map and 8
-bytes of fake mp3. This means a successful download response does not guarantee a real
-beatmap — check the `X-Selected-Mirror` header, which is `fallback-generator` in that case.
+Two tiers, both listed in `src/lib/mirrors.js`, which is the only place mirror order is set.
 
-ZIP bundling is client-side (JSZip in `page.js`), not server-side.
+1. **Browser tier, `BROWSER_MIRRORS`** (catboy.best, then nerinyan.moe). These send
+   `Access-Control-Allow-Origin: *`, so `fetchBeatmapArchive` (`src/lib/beatmapDownload.js`)
+   fetches the archive in the page and the bytes never pass through Vercel.
+2. **Proxy tier, `PROXY_MIRRORS`** (beatconnect, then sayobot), reached only through
+   `/api/download`, and only when the browser tier failed. The route walks the proxy
+   mirrors alone, never the browser ones a second time. Batches share one proxy allowance
+   per page session (`PROXY_FALLBACK_BUDGET`); a single click may always proxy.
+
+The route is bounded by **one overall deadline** derived from `maxDuration`, covering the
+body as well as the headers; each mirror waits for headers at most `min(remaining, 6 s)`.
+It relays at most `MAX_PROXY_ARCHIVE_BYTES`, and when the cap or the deadline cuts it off
+the stream is errored, never closed, so a truncated file never looks complete. The first
+bytes must be `PK\x03\x04`. It validates `beatmapsetId` and rate limits before any mirror
+is contacted.
+
+**Nothing is ever made up.** There is no synthetic `.osz`: when every proxy mirror fails
+the route answers **502** `{ error }`. Both tiers run the same `isValidArchiveBlob`
+(`src/lib/archive.js`: size, ZIP head, and an EOCD record in the tail), so an error page or
+a half-sent archive is never saved as a beatmap.
+
+ZIP bundling is client-side (JSZip, loaded on demand in `page.js`), in parts of at most
+`MAX_ZIP_PART_BYTES` because JSZip holds a part's inputs and output in memory at once.
+Batches are paced (200 ms, doubling after a mirror 429 up to 5 s) and cancellable.
 
 ### API call budget
 
@@ -175,8 +212,12 @@ The osu! API rate-limits aggressively, and two conventions exist to stay under i
   in a warm serverless instance; it refreshes 60s before expiry.
 - **Fetch one window, paginate locally** — `getUserBeatmapCollection` pulls up to 100 items
   in a single call and the client paginates in memory (`pageSlice` in `page.js`). Do not add
-  per-page fetches. Mode/status filters for collections are applied **after** the fetch, in
-  `matchesCollectionFilters`, because the osu! collection endpoints don't support them.
+  per-page fetches. The route returns the window unfiltered and undeduped (`items`, plus
+  `fetched` and `total`, the distinct beatmapset count). Mode/status filters are applied on
+  the client, in `visibleItemsFor` (`src/lib/collection.js`), which filters first and dedupes
+  by `beatmapsetKey` second, so a tab change costs no call. The one exception is a mode
+  change on `best`, whose upstream endpoint filters by ruleset: it refetches, debounced
+  300 ms. Each section load is keyed by player and type, with its own AbortController.
 
 ## Conventions
 

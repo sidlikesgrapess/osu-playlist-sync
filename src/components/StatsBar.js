@@ -1,6 +1,6 @@
 'use client';
 
-import { Download, Archive, CheckCircle2, Share2, Trash2 } from 'lucide-react';
+import { Download, Archive, CheckCircle2, Share2, Trash2, X } from 'lucide-react';
 import { osuAudio } from '@/lib/soundEffects';
 
 export default function StatsBar({
@@ -13,6 +13,8 @@ export default function StatsBar({
   onDownloadZipAction,
   isDownloadingZip,
   zipProgress,
+  isBatchActive = false,
+  onCancelBatch,
   isSearching,
   searchProgress,
   unsearchedCount = 0,
@@ -149,7 +151,7 @@ export default function StatsBar({
         <button
           className="osu-btn-interactive osu-glass-card"
           onClick={onDownloadAction}
-          disabled={selectedCount === 0 || isSearching}
+          disabled={selectedCount === 0 || isSearching || isBatchActive}
           onMouseEnter={() => osuAudio.playHover()}
           style={{
             borderRadius: '6px',
@@ -157,8 +159,8 @@ export default function StatsBar({
             fontWeight: 800,
             fontSize: '0.75rem',
             padding: '6px 12px',
-            cursor: selectedCount === 0 || isSearching ? 'not-allowed' : 'pointer',
-            opacity: selectedCount === 0 || isSearching ? 0.5 : 1,
+            cursor: selectedCount === 0 || isSearching || isBatchActive ? 'not-allowed' : 'pointer',
+            opacity: selectedCount === 0 || isSearching || isBatchActive ? 0.5 : 1,
             display: 'inline-flex',
             alignItems: 'center',
             gap: '5px',
@@ -176,7 +178,7 @@ export default function StatsBar({
         <button
           className="osu-btn-interactive osu-btn-pink"
           onClick={onDownloadZipAction}
-          disabled={selectedCount === 0 || isDownloadingZip || isSearching}
+          disabled={selectedCount === 0 || isDownloadingZip || isSearching || isBatchActive}
           onMouseEnter={() => osuAudio.playHover()}
           style={{
             border: 'none',
@@ -184,8 +186,8 @@ export default function StatsBar({
             fontSize: '0.76rem',
             padding: '6px 14px',
             borderRadius: '6px',
-            cursor: selectedCount === 0 || isDownloadingZip || isSearching ? 'not-allowed' : 'pointer',
-            opacity: selectedCount === 0 || isDownloadingZip || isSearching ? 0.5 : 1,
+            cursor: selectedCount === 0 || isDownloadingZip || isSearching || isBatchActive ? 'not-allowed' : 'pointer',
+            opacity: selectedCount === 0 || isDownloadingZip || isSearching || isBatchActive ? 0.5 : 1,
             display: 'inline-flex',
             alignItems: 'center',
             gap: '5px',
@@ -202,6 +204,32 @@ export default function StatsBar({
               : `ZIP (${selectedCount})`}
           </span>
         </button>
+
+        {/* Cancel the running batch. Same card style as Download, shown only while one runs. */}
+        {isBatchActive && onCancelBatch && (
+          <button
+            className="osu-btn-interactive osu-glass-card"
+            onClick={onCancelBatch}
+            onMouseEnter={() => osuAudio.playHover()}
+            style={{
+              borderRadius: '6px',
+              color: '#ffffff',
+              fontWeight: 800,
+              fontSize: '0.75rem',
+              padding: '6px 12px',
+              cursor: 'pointer',
+              display: 'inline-flex',
+              alignItems: 'center',
+              gap: '5px',
+              fontFamily: 'inherit',
+              minHeight: '34px',
+            }}
+            title="Stop the running download"
+          >
+            <X size={13} />
+            <span>Cancel</span>
+          </button>
+        )}
 
         {/* Clear List */}
         <button

@@ -1,0 +1,78 @@
+200 document http://localhost:3108/ len=
+200 image http://localhost:3108/osuLogo.png len=633745
+200 stylesheet http://localhost:3108/_next/static/css/307bc53021ab1162.css len=
+200 script http://localhost:3108/_next/static/chunks/main-app-f5957de0ba7efbe6.js len=557
+200 script http://localhost:3108/_next/static/chunks/webpack-cbed2e66994c93aa.js len=
+200 script http://localhost:3108/_next/static/chunks/763-b6e2d08544e7a761.js len=
+200 script http://localhost:3108/_next/static/chunks/255-2dbbf79f36f0dfa2.js len=
+200 script http://localhost:3108/_next/static/chunks/4bd1b696-c023c6e3521b1417.js len=
+200 script http://localhost:3108/_next/static/chunks/app/page-e4a8f24c2d051b14.js len=
+200 stylesheet https://fonts.googleapis.com/css2?family=Nunito:wght@400;600;700;800;900&family=JetBrains+Mono:wght@400;600;700&display=swap len=
+200 fetch http://localhost:3108/api/status len=
+200 font https://fonts.gstatic.com/s/nunito/v32/XRXV3I6Li01BKofINeaB.woff2 len=39128
+200 fetch http://localhost:3108/api/playlist?url=https%3A%2F%2Fwww.youtube.com%2Fwatch%3Fv%3DdQw4w9WgXcQ len=
+200 font https://fonts.gstatic.com/s/jetbrainsmono/v24/tDbv2o-flEEny0FZhsfKu5WU4zr3E_BX0PnT8RD8yKwBNntkaToggR7BYRbKPxDcwg.woff2 len=31432
+200 image https://i.ytimg.com/vi/dQw4w9WgXcQ/hqdefault.jpg len=21011
+200 fetch http://localhost:3108/api/osu/search?q=Rick+Astley+Never+Gonna+Give+You+Up&title=Never+Gonna+Give+You+Up&artist=Rick+Astley&source=youtube&artistFromTitle=1&fallbacks=%5B%22Never+Gonna+Give+You+Up%22%2C%22Never+Gonna+Give+You+Up+Rick+Astley%22%2C%22Rick+Astley+Never+Gonna+Give+You+Up%22%5D&mode=all&status=any&strictness=50 len=
+200 image https://assets.ppy.sh/beatmaps/1607429/covers/list.jpg?1660342437 len=6989
+200 fetch http://localhost:3108/api/playlist?url=YOASOBI%20-%20Idol len=
+200 fetch http://localhost:3108/api/osu/search?q=YOASOBI+Idol&title=Idol&artist=YOASOBI&source=query&artistFromTitle=1&fallbacks=%5B%22Idol%22%2C%22Idol+YOASOBI%22%2C%22YOASOBI+Idol%22%5D&mode=all&status=any&strictness=50 len=
+200 image https://assets.ppy.sh/beatmaps/1974878/covers/list.jpg?1682362763 len=10605
+200 fetch https://catboy.best/d/1607429 len=5280500
+200 fetch https://catboy.best/d/1607429 len=5280500
+200 fetch https://catboy.best/d/1974878 len=26100665
+200 script http://localhost:3108/_next/static/chunks/496.6561c8ff55fb0785.js len=
+200 fetch https://catboy.best/d/1607429 len=5280500
+200 fetch https://catboy.best/d/1974878 len=26100665
+200 fetch http://localhost:3108/api/osu/player?q=2&page=1 len=
+200 image https://assets.ppy.sh/user-profile-covers/2/baba245ef60834b769694178f8f6d4f6166c5188c740de084656ad2b80f1eea7.jpeg len=184060
+200 fetch http://localhost:3108/api/osu/player/beatmaps?userId=2&type=best&mode=all len=
+200 image https://a.ppy.sh/2?1657169614.png len=16752
+200 image http://localhost:3108/grades/X.svg len=
+200 image http://localhost:3108/grades/S.svg len=
+200 image http://localhost:3108/grades/A.svg len=
+200 image http://localhost:3108/grades/B.svg len=
+200 image https://assets.ppy.sh/beatmaps/3720/covers/list.jpg?1622021201 len=13496
+200 image https://assets.ppy.sh/beatmaps/96422/covers/list.jpg?1622064950 len=10886
+200 image https://assets.ppy.sh/beatmaps/667/covers/list.jpg?1631328776 len=5459
+200 image https://assets.ppy.sh/beatmaps/632128/covers/list.jpg?1650654503 len=8673
+200 image https://assets.ppy.sh/beatmaps/1559/covers/list.jpg?1650601414 len=7343
+200 image https://assets.ppy.sh/beatmaps/100610/covers/list.jpg?1622065496 len=4643
+200 image https://assets.ppy.sh/beatmaps/172907/covers/list.jpg?1650622203 len=12521
+200 image https://assets.ppy.sh/beatmaps/93659/covers/list.jpg?1622064486 len=11033
+200 image https://assets.ppy.sh/beatmaps/56589/covers/list.jpg?1650613138 len=3959
+200 image https://assets.ppy.sh/beatmaps/184/covers/list.jpg?1622018243 len=11707
+200 image https://assets.ppy.sh/beatmaps/8328/covers/list.jpg?1622026507 len=12418
+200 image https://assets.ppy.sh/beatmaps/1211/covers/list.jpg?1622019193 len=11447
+200 image https://assets.ppy.sh/beatmaps/95331/covers/list.jpg?1622064719 len=8385
+200 image https://assets.ppy.sh/beatmaps/3074/covers/list.jpg?1622020525 len=16112
+200 image https://assets.ppy.sh/beatmaps/123593/covers/list.jpg?1622068626 len=5746
+200 image https://assets.ppy.sh/beatmaps/668/covers/list.jpg?1622018684 len=8150
+200 image https://assets.ppy.sh/beatmaps/42116/covers/list.jpg?1622052272 len=11165
+200 image https://assets.ppy.sh/beatmaps/68103/covers/list.jpg?1650615223 len=16352
+200 image https://assets.ppy.sh/beatmaps/32179/covers/list.jpg?1622047930 len=13240
+REQFAILED GET https://assets.ppy.sh/beatmaps/301/covers/list.jpg?1622018375 :: net::ERR_BLOCKED_BY_ORB
+200 image https://assets.ppy.sh/beatmaps/65146/covers/list.jpg?1622060119 len=8247
+200 image https://assets.ppy.sh/beatmaps/37090/covers/list.jpg?1650611941 len=15977
+REQFAILED GET https://assets.ppy.sh/beatmaps/1208/covers/list.jpg?1622019187 :: net::ERR_BLOCKED_BY_ORB
+REQFAILED GET https://assets.ppy.sh/beatmaps/314/covers/list.jpg?1622018397 :: net::ERR_BLOCKED_BY_ORB
+200 image https://assets.ppy.sh/beatmaps/5326/covers/list.jpg?1622022868 len=3083
+200 fetch http://localhost:3108/api/osu/player/beatmaps?userId=2&type=most_played&mode=all len=
+200 image https://assets.ppy.sh/beatmaps/1/covers/list.jpg?1732202342 len=10309
+REQFAILED GET https://assets.ppy.sh/beatmaps/118/covers/list.jpg?1622018064 :: net::ERR_BLOCKED_BY_ORB
+200 image https://assets.ppy.sh/beatmaps/4171/covers/list.jpg?1622021721 len=14985
+REQFAILED GET https://assets.ppy.sh/beatmaps/80/covers/list.jpg?1622017992 :: net::ERR_BLOCKED_BY_ORB
+REQFAILED GET https://assets.ppy.sh/beatmaps/418/covers/list.jpg?1622018489 :: net::ERR_BLOCKED_BY_ORB
+REQFAILED GET https://assets.ppy.sh/beatmaps/301/covers/list.jpg?1622018375 :: net::ERR_BLOCKED_BY_ORB
+200 image https://assets.ppy.sh/beatmaps/797/covers/list.jpg?1622018833 len=6544
+200 image https://assets.ppy.sh/beatmaps/58745/covers/list.jpg?1650613743 len=12330
+REQFAILED GET https://assets.ppy.sh/beatmaps/18/covers/list.jpg?1622017888 :: net::ERR_BLOCKED_BY_ORB
+REQFAILED GET https://assets.ppy.sh/beatmaps/145/covers/list.jpg?1622018161 :: net::ERR_BLOCKED_BY_ORB
+200 image https://assets.ppy.sh/beatmaps/897/covers/list.jpg?1622018905 len=12423
+200 image https://assets.ppy.sh/beatmaps/64967/covers/list.jpg?1650614396 len=8556
+REQFAILED GET https://assets.ppy.sh/beatmaps/1599/covers/list.jpg?1650601398 :: net::ERR_BLOCKED_BY_ORB
+200 image https://assets.ppy.sh/beatmaps/903/covers/list.jpg?1622018918 len=3989
+200 image https://assets.ppy.sh/beatmaps/2459/covers/list.jpg?1622020081 len=6815
+REQFAILED GET https://assets.ppy.sh/beatmaps/1892/covers/list.jpg?1622019710 :: net::ERR_BLOCKED_BY_ORB
+REQFAILED GET https://assets.ppy.sh/beatmaps/1208/covers/list.jpg?1622019187 :: net::ERR_BLOCKED_BY_ORB
+REQFAILED GET https://assets.ppy.sh/beatmaps/25/covers/list.jpg?1622017893 :: net::ERR_BLOCKED_BY_ORB

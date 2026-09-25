@@ -1,27 +1,41 @@
-import { NextResponse } from 'next/server';
-import { extractMusicData } from '@/lib/extractors';
+import { extractMusicData, ExtractionError } from '@/lib/extractors';
+import { checkRateLimit, rateLimitResponse } from '@/lib/rateLimit';
+import { boundedString, ValidationError } from '@/lib/validate';
 
 export const dynamic = 'force-dynamic';
 
+// Per client, per warm instance (rateLimit.js). Checked before anything else, so a flood of
+// bad input is refused as cheaply as a flood of good input.
+const RATE_LIMIT = { bucket: 'playlist', limit: 10, windowMs: 60_000 };
+
 export async function GET(request) {
+  const limited = checkRateLimit(request, RATE_LIMIT);
+  if (!limited.ok) return rateLimitResponse(limited.retryAfterSec);
+
   try {
     const { searchParams } = new URL(request.url);
-    const queryOrUrl = searchParams.get('url') || searchParams.get('playlistId') || searchParams.get('q');
+    const input = boundedString(
+      searchParams.get('url') || searchParams.get('playlistId') || searchParams.get('q'),
+      { name: 'A playlist link, track link or song title' },
+    );
 
-    if (!queryOrUrl) {
-      return NextResponse.json(
-        { error: 'Please enter a playlist link, track URL, or song title' },
-        { status: 400 }
-      );
-    }
-
-    const musicData = await extractMusicData(queryOrUrl);
-    return NextResponse.json(musicData);
+    const musicData = await extractMusicData(input);
+    return Response.json(musicData);
   } catch (error) {
-    console.error('[Music Extractor Error]:', error);
-    return NextResponse.json(
-      { error: error.message || 'Failed to extract playlist or track data' },
-      { status: 500 }
+    // The caller's own mistake: safe to say exactly what was wrong.
+    if (error instanceof ValidationError) {
+      return Response.json({ error: error.message }, { status: 400 });
+    }
+    // A provider that could not be read. The message is ours, never the upstream's, and
+    // extractionFailed is its own flag so it is never mistaken for demo data.
+    if (error instanceof ExtractionError) {
+      console.warn('[playlist] extraction failed:', error.cause?.message || error.message);
+      return Response.json({ extractionFailed: true, error: error.message }, { status: 502 });
+    }
+    console.error('[playlist] unexpected error:', error);
+    return Response.json(
+      { extractionFailed: true, error: 'Could not read that link right now. Try again in a moment.' },
+      { status: 502 },
     );
   }
 }

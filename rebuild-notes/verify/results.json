@@ -1,0 +1,105 @@
+{
+  "scrollChecks": {
+    "desktop_1_playlist_search": {
+      "scrollWidth": 1280,
+      "clientWidth": 1280,
+      "ok": true
+    },
+    "phone_1_playlist_search": {
+      "scrollWidth": 375,
+      "clientWidth": 375,
+      "ok": true
+    },
+    "desktop_2_text_search": {
+      "scrollWidth": 1280,
+      "clientWidth": 1280,
+      "ok": true
+    },
+    "phone_2_text_search": {
+      "scrollWidth": 375,
+      "clientWidth": 375,
+      "ok": true
+    },
+    "desktop_4_single_download": {
+      "scrollWidth": 1280,
+      "clientWidth": 1280,
+      "ok": true
+    },
+    "phone_4_single_download": {
+      "scrollWidth": 375,
+      "clientWidth": 375,
+      "ok": true
+    },
+    "desktop_5_batch_download": {
+      "scrollWidth": 1280,
+      "clientWidth": 1280,
+      "ok": true
+    },
+    "phone_5_batch_download": {
+      "scrollWidth": 375,
+      "clientWidth": 375,
+      "ok": true
+    },
+    "desktop_6_zip_download": {
+      "scrollWidth": 1280,
+      "clientWidth": 1280,
+      "ok": true
+    },
+    "phone_6_zip_download": {
+      "scrollWidth": 375,
+      "clientWidth": 375,
+      "ok": true
+    },
+    "desktop_3_player_lookup": {
+      "scrollWidth": 1280,
+      "clientWidth": 1280,
+      "ok": true
+    },
+    "phone_3_player_lookup": {
+      "scrollWidth": 375,
+      "clientWidth": 375,
+      "ok": true
+    }
+  },
+  "cspViolations": {
+    "desktop_1_playlist_search": [],
+    "phone_1_playlist_search": [],
+    "desktop_2_text_search": [],
+    "phone_2_text_search": [],
+    "desktop_4_single_download": [],
+    "phone_4_single_download": [],
+    "desktop_5_batch_download": [],
+    "phone_5_batch_download": [],
+    "desktop_6_zip_download": [],
+    "phone_6_zip_download": [],
+    "desktop_3_player_lookup": [],
+    "phone_3_player_lookup": []
+  },
+  "downloads": [
+    {
+      "flow": "single",
+      "path": "C:\\Users\\Siddartha\\Desktop\\study(fr)\\Antigravity\\osuplaylist\\rebuild-notes\\verify\\single-download.osz",
+      "suggestedFilename": "1607429 Rick Astley - Never Gonna Give You Up.osz",
+      "url": "blob:http://localhost:3108/1ed6018b-4ad9-4264-9aae-38a67b60eede"
+    },
+    {
+      "flow": "batch_select_count",
+      "rowCount": 2,
+      "toSelect": 2,
+      "initiallyDisabled": false
+    },
+    {
+      "flow": "batch",
+      "index": 0,
+      "path": "C:\\Users\\Siddartha\\Desktop\\study(fr)\\Antigravity\\osuplaylist\\rebuild-notes\\verify\\batch-download-1.osz",
+      "url": "blob:http://localhost:3108/34083a86-3faf-4b86-91f7-fda1b9c10017"
+    },
+    {
+      "flow": "zip",
+      "path": "C:\\Users\\Siddartha\\Desktop\\study(fr)\\Antigravity\\osuplaylist\\rebuild-notes\\verify\\zip-download.zip",
+      "url": "blob:http://localhost:3108/8ef60115-74ed-403d-b93b-22ea710bccc7"
+    }
+  ],
+  "consoleErrorCount": 0,
+  "pageErrorCount": 0
+}

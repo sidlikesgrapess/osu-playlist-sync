@@ -1,17 +1,23 @@
 'use client';
 
-import { useState } from 'react';
-import { Play, Download, ExternalLink, Loader2, Music, Layers, Edit3, Check, X } from 'lucide-react';
+import { useState, memo } from 'react';
+import { Download, ExternalLink, Loader2, Music, Layers, Edit3, Check, X } from 'lucide-react';
 import { osuAudio } from '@/lib/soundEffects';
 import { getStarColor, getStatusBadgeStyle, describeRejection } from '@/lib/beatmapFormat';
 import OsuCheckbox from './OsuCheckbox';
+import BeatmapCover from './BeatmapCover';
+import { OverrideMark, OverrideNotice } from './MatchNotice';
 
-export default function SongRow({
+// Memoized per F-19: the JSX call site (SongTable.js) wraps `onToggleSelect`,
+// `onDownloadSingle`, `onOpenAltPicker` and `onManualSearch` with `useStableCallback` so their
+// identity does not churn every render, which is what makes this memo actually skip work.
+function SongRow({
   song,
   isSelected,
   onToggleSelect,
-  activeAudio,
-  onToggleAudio,
+  isPlaying,
+  isPreviewLoading,
+  onTogglePreview,
   onDownloadSingle,
   isDownloading,
   onOpenAltPicker,
@@ -19,10 +25,9 @@ export default function SongRow({
 }) {
   const [isEditingQuery, setIsEditingQuery] = useState(false);
   const [customQuery, setCustomQuery] = useState(song.cleanQuery || song.title || '');
-  const [imgError, setImgError] = useState(false);
   const [thumbError, setThumbError] = useState(false);
+  const [previewError, setPreviewError] = useState(false);
 
-  const isPlaying = activeAudio === song.id;
   const match = song.matchedBeatmap;
   const hasMatch = Boolean(match);
   const statusStyle = getStatusBadgeStyle(match?.status);
@@ -52,23 +57,16 @@ export default function SongRow({
             id={`checkbox-song-${song.id}`}
             checked={isSelected && hasMatch}
             disabled={!hasMatch}
-            unavailable={song.hasSearched && !hasMatch}
+            unavailable={song.hasSearched && !hasMatch && !song.searchError}
             onChange={() => {
               if (hasMatch) {
                 osuAudio.playClick();
                 onToggleSelect(song.id);
               }
             }}
-            title={hasMatch ? 'Select beatmap' : 'No beatmap found for this song'}
+            title={hasMatch ? 'Select beatmap' : song.searchError ? 'The search did not finish' : 'No beatmap found for this song'}
           />
-          {match?.artistOverride && (
-            <span
-              title="Artist does not match. Check before downloading"
-              style={{ color: '#ff5555', fontSize: '0.82rem', fontWeight: 900, lineHeight: 1, flexShrink: 0 }}
-            >
-              !
-            </span>
-          )}
+          <OverrideMark match={match} song={song} />
         </div>
       </td>
 
@@ -85,6 +83,10 @@ export default function SongRow({
               <img
                 src={song.thumbnail}
                 alt={song.title}
+                loading="lazy"
+                decoding="async"
+                width={52}
+                height={34}
                 onError={() => setThumbError(true)}
                 style={{
                   width: '100%',
@@ -225,80 +227,34 @@ export default function SongRow({
           <div>
             {/* No beatmap by the target artist exists, so what follows is the nearest thing
                 found. Said as a sentence introducing the result, not a label on it. */}
-            {match.artistOverride && song.extractedArtist && (
-              <div style={{
-                fontSize: '0.72rem',
-                fontWeight: 700,
-                color: '#ff3d5e',
-                marginBottom: '5px',
-              }}>
-                Could not find one by {song.extractedArtist}. Closest match:
+            <OverrideNotice match={match} song={song} />
+            {previewError && (
+              <div style={{ fontSize: '0.68rem', fontWeight: 700, color: '#ff8888', marginBottom: '4px' }}>
+                Preview unavailable
               </div>
             )}
             <div style={{ display: 'flex', gap: '10px', alignItems: 'center' }}>
             {/* Beatmap Cover with Play Preview Overlay */}
-            <div
-              className="osu-thumb-container"
-              style={{
-                width: '68px',
-                height: '42px',
-                borderRadius: '5px',
-                flexShrink: 0,
-                background: '#343040',
-                boxShadow: '0 2px 8px rgba(0,0,0,0.3)',
+            <BeatmapCover
+              key={match.covers?.list || match.id}
+              coverUrl={match.covers?.list || match.covers?.cover}
+              fallbackId={match.id}
+              alt={match.title}
+              width={68}
+              height={42}
+              fallbackIconSize={16}
+              playIconSize={15}
+              waveBarCount={5}
+              playButtonClassName="osu-play-btn"
+              previewUrl={match.previewUrl}
+              isPlaying={isPlaying}
+              isPreviewLoading={isPreviewLoading}
+              onPreviewErrorChange={setPreviewError}
+              onTogglePreview={() => {
+                osuAudio.playClick();
+                return onTogglePreview(match.previewUrl);
               }}
-            >
-              {!imgError ? (
-                <img
-                  src={match.covers?.list || match.covers?.cover || `https://assets.ppy.sh/beatmaps/${match.id}/covers/list.jpg`}
-                  alt={match.title}
-                  onError={() => setImgError(true)}
-                  style={{ width: '100%', height: '100%', objectFit: 'cover' }}
-                />
-              ) : (
-                <div style={{
-                  width: '100%',
-                  height: '100%',
-                  background: 'linear-gradient(135deg, #343040 0%, #282532 100%)',
-                  display: 'flex',
-                  alignItems: 'center',
-                  justifyContent: 'center',
-                }}>
-                  <Music size={16} color="#ff66aa" />
-                </div>
-              )}
-              <button
-                className="osu-play-btn"
-                onClick={() => {
-                  osuAudio.playClick();
-                  onToggleAudio(song.id, match.previewUrl);
-                }}
-                style={{
-                  position: 'absolute',
-                  inset: 0,
-                  background: isPlaying ? 'rgba(16, 14, 22, 0.85)' : 'rgba(0, 0, 0, 0.4)',
-                  border: 'none',
-                  display: 'flex',
-                  alignItems: 'center',
-                  justifyContent: 'center',
-                  cursor: 'pointer',
-                  transition: 'background 0.15s ease',
-                }}
-                title={isPlaying ? 'Pause audio preview' : 'Play audio preview'}
-              >
-                {isPlaying ? (
-                  <div style={{ display: 'flex', alignItems: 'center', gap: '3px' }}>
-                    <div className="osu-wave-bar" />
-                    <div className="osu-wave-bar" />
-                    <div className="osu-wave-bar" />
-                    <div className="osu-wave-bar" />
-                    <div className="osu-wave-bar" />
-                  </div>
-                ) : (
-                  <Play size={15} color="#ffffff" />
-                )}
-              </button>
-            </div>
+            />
 
             {/* Beatmap details */}
             <div style={{ minWidth: 0, flex: 1 }}>
@@ -384,6 +340,27 @@ export default function SongRow({
               )}
             </div>
             </div>
+          </div>
+        ) : song.searchError ? (
+          <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
+            <span style={{ color: '#8b7d95', fontSize: '0.76rem', fontWeight: 600 }}>
+              {song.searchError === 'rate-limited' ? 'osu! is busy. Try again in a minute.' : 'The search failed. Try again.'}
+            </span>
+            <button
+              onClick={() => onManualSearch(song.id, song.cleanQuery || song.title)}
+              className="osu-btn-interactive osu-glass-card"
+              style={{
+                color: '#ff66aa',
+                fontSize: '0.72rem',
+                fontWeight: 700,
+                padding: '2px 8px',
+                borderRadius: '4px',
+                cursor: 'pointer',
+                fontFamily: 'inherit',
+              }}
+            >
+              Retry
+            </button>
           </div>
         ) : song.hasSearched === false ? (
           <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
@@ -496,3 +473,5 @@ export default function SongRow({
     </tr>
   );
 }
+
+export default memo(SongRow);

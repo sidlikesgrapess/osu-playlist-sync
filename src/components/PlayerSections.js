@@ -1,13 +1,16 @@
 'use client';
 
-import { useState, useRef, useEffect } from 'react';
+import { useState, useEffect, memo } from 'react';
 import {
   Trophy, Play, Heart, ChevronDown,
-  Loader2, Download, ExternalLink, Music,
+  Loader2, Download, ExternalLink,
 } from 'lucide-react';
 import OsuCheckbox from './OsuCheckbox';
+import BeatmapCover from './BeatmapCover';
+import { OverrideMark, OverrideNotice } from './MatchNotice';
 import { osuAudio } from '@/lib/soundEffects';
 import { getStarColor, formatCompactNumber, getStatusBadgeStyle } from '@/lib/beatmapFormat';
+import { useAudioPreview } from '@/lib/useAudioPreview';
 
 const SECTION_META = {
   best: { label: 'Best Performances', icon: Trophy, color: '#ffbb22' },
@@ -20,6 +23,11 @@ const GRADES = ['XH', 'X', 'SH', 'S', 'A', 'B', 'C', 'D', 'F'];
 // ~6 rows before the list starts scrolling instead of growing the page.
 const LIST_MAX_HEIGHT = 400;
 
+// F-20: a section shows this many rows before "Show more" reveals the rest. The data is
+// already in memory (`allItems`), so revealing more is never a new fetch.
+const INITIAL_REVEAL_COUNT = 25;
+const REVEAL_STEP = 25;
+
 function GradeIcon({ rank }) {
   if (!rank || !GRADES.includes(rank)) return null;
 
@@ -28,6 +36,10 @@ function GradeIcon({ rank }) {
       src={`/grades/${rank}.svg`}
       alt={`${rank} rank`}
       title={`${rank} rank`}
+      loading="lazy"
+      decoding="async"
+      width={36}
+      height={18}
       style={{ width: '36px', height: '18px', flexShrink: 0, display: 'block' }}
     />
   );
@@ -80,11 +92,16 @@ function MetaBadge({ song }) {
   return null;
 }
 
-function BeatmapRow({ song, rowKey, isSelected, onToggleSelect, onDownloadSingle, isDownloading, activeAudio, onToggleAudio }) {
-  const [imgError, setImgError] = useState(false);
+// Memoized per F-19: with `isPlaying`/`isPreviewLoading` collapsed to booleans and
+// `onTogglePreview` a stable reference (see `PlayerSections` below), a row whose own props
+// are unchanged skips re-rendering when some other row's preview state changes.
+const BeatmapRow = memo(function BeatmapRow({
+  song, rowKey, isSelected, onToggleSelect, onDownloadSingle, isDownloading,
+  isPlaying, isPreviewLoading, onTogglePreview,
+}) {
   const [isHovered, setIsHovered] = useState(false);
+  const [previewError, setPreviewError] = useState(false);
   const match = song.matchedBeatmap;
-  const isPlaying = activeAudio === song.id;
   const statusStyle = getStatusBadgeStyle(match.status || '');
   const minStars = match.starRange?.min;
   const maxStars = match.starRange?.max;
@@ -120,75 +137,44 @@ function BeatmapRow({ song, rowKey, isSelected, onToggleSelect, onDownloadSingle
           }}
           title="Select beatmap for batch download"
         />
-        {match.artistOverride && (
-          <span
-            title="Artist does not match. Check before downloading"
-            style={{ color: '#ff5555', fontSize: '0.82rem', fontWeight: 900, lineHeight: 1, flexShrink: 0 }}
-          >
-            !
-          </span>
-        )}
+        <OverrideMark match={match} song={song} />
       </div>
 
       {/* Cover + preview */}
-      <div className="osu-thumb-container" style={{
-        width: '62px',
-        height: '40px',
-        borderRadius: '5px',
-        flexShrink: 0,
-        background: '#343040',
-        position: 'relative',
-        overflow: 'hidden',
-      }}>
-        {!imgError ? (
-          <img
-            src={match.covers?.list || `https://assets.ppy.sh/beatmaps/${match.id}/covers/list.jpg`}
-            alt={match.title}
-            onError={() => setImgError(true)}
-            style={{
-              width: '100%',
-              height: '100%',
-              objectFit: 'cover',
-              transform: isHovered ? 'scale(1.06)' : 'scale(1)',
-              transition: 'transform 0.2s ease',
-            }}
-          />
-        ) : (
-          <div style={{ width: '100%', height: '100%', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
-            <Music size={14} color="#ff66aa" />
-          </div>
-        )}
-        <button
-          onClick={() => {
-            osuAudio.playClick();
-            onToggleAudio(song.id, match.previewUrl);
-          }}
-          title={isPlaying ? 'Pause preview' : 'Play preview'}
-          style={{
-            position: 'absolute',
-            inset: 0,
-            background: isPlaying ? 'rgba(16, 14, 22, 0.82)' : 'rgba(0, 0, 0, 0.38)',
-            border: 'none',
-            display: 'flex',
-            alignItems: 'center',
-            justifyContent: 'center',
-            cursor: 'pointer',
-          }}
-        >
-          {isPlaying ? (
-            <div style={{ display: 'flex', alignItems: 'center', gap: '2px' }}>
-              <div className="osu-wave-bar" style={{ width: '2.5px' }} />
-              <div className="osu-wave-bar" style={{ width: '2.5px' }} />
-              <div className="osu-wave-bar" style={{ width: '2.5px' }} />
-            </div>
-          ) : (
-            <Play size={13} color="#ffffff" style={{ fill: '#ffffff' }} />
-          )}
-        </button>
-      </div>
+      <BeatmapCover
+        key={match.covers?.list || match.id}
+        coverUrl={match.covers?.list}
+        fallbackId={match.id}
+        alt={match.title}
+        width={62}
+        height={40}
+        fallbackIconSize={14}
+        playIconSize={13}
+        playIconFill
+        waveBarCount={3}
+        waveBarWidth={2.5}
+        activeOverlayBg="rgba(16, 14, 22, 0.82)"
+        idleOverlayBg="rgba(0, 0, 0, 0.38)"
+        hoverScale
+        isHovered={isHovered}
+        previewUrl={match.previewUrl}
+        isPlaying={isPlaying}
+        isPreviewLoading={isPreviewLoading}
+        onPreviewErrorChange={setPreviewError}
+        onTogglePreview={() => {
+          osuAudio.playClick();
+          return onTogglePreview(match.previewUrl);
+        }}
+      />
 
       {/* Details */}
       <div style={{ flex: 1, minWidth: '160px' }}>
+        <OverrideNotice match={match} song={song} style={{ marginBottom: '4px' }} />
+        {previewError && (
+          <div style={{ fontSize: '0.68rem', fontWeight: 700, color: '#ff8888', marginBottom: '4px' }}>
+            Preview unavailable
+          </div>
+        )}
         <div style={{ display: 'flex', alignItems: 'center', gap: '6px', flexWrap: 'wrap' }}>
           <span style={{
             fontSize: '0.84rem',
@@ -299,7 +285,7 @@ function BeatmapRow({ song, rowKey, isSelected, onToggleSelect, onDownloadSingle
       </div>
     </div>
   );
-}
+});
 
 export default function PlayerSections({
   sections,
@@ -309,28 +295,20 @@ export default function PlayerSections({
   onToggleSection,
   onDownloadSingle,
   downloadingIds,
+  mode,
+  status,
 }) {
-  const [activeAudio, setActiveAudio] = useState(null);
-  const audioRef = useRef(null);
+  // Single source of truth for preview play state (item 2): rows below get plain
+  // `isPlaying`/`isPreviewLoading` booleans and the stable `toggle` reference, they never
+  // subscribe themselves.
+  const { isPlaying, isLoading: isPreviewLoading, toggle } = useAudioPreview();
 
-  const handleToggleAudio = (songId, previewUrl) => {
-    if (audioRef.current) audioRef.current.pause();
-
-    if (activeAudio === songId) {
-      setActiveAudio(null);
-      return;
-    }
-
-    audioRef.current = new Audio(previewUrl);
-    audioRef.current.volume = 0.5;
-    audioRef.current.play().catch(() => setActiveAudio(null));
-    audioRef.current.onended = () => setActiveAudio(null);
-    setActiveAudio(songId);
-  };
-
-  useEffect(() => () => {
-    if (audioRef.current) audioRef.current.pause();
-  }, []);
+  // F-20's local reveal, one counter per section. Reset when the active mode/status filters
+  // change, since `allItems` becomes a different list underneath the same section type.
+  const [revealCounts, setRevealCounts] = useState({});
+  useEffect(() => {
+    setRevealCounts({});
+  }, [mode, status]);
 
   return (
     <div style={{ maxWidth: '1240px', margin: '0 auto 40px', display: 'flex', flexDirection: 'column', gap: '10px' }}>
@@ -338,6 +316,15 @@ export default function PlayerSections({
         const section = sections[type];
         const Icon = meta.icon;
         const allItems = section.allItems || [];
+        const revealCount = revealCounts[type] ?? INITIAL_REVEAL_COUNT;
+        const visibleRows = allItems.slice(0, revealCount);
+        const hasMore = allItems.length > visibleRows.length;
+        // The profile's own count is the real total. When the loaded window, filtered and
+        // deduped, shows fewer, say so ("88 of 469") instead of passing one off as the other.
+        const total = section.total || 0;
+        const countLabel = section.loaded && allItems.length < total
+          ? `${allItems.length.toLocaleString()} of ${total.toLocaleString()}`
+          : total.toLocaleString();
 
         return (
           <div
@@ -385,7 +372,7 @@ export default function PlayerSections({
                 padding: '2px 7px',
                 borderRadius: '4px',
               }}>
-                {(section.total || 0).toLocaleString()}
+                {countLabel}
               </span>
 
               <span style={{ flex: 1 }} />
@@ -467,10 +454,9 @@ export default function PlayerSections({
                   );
                 })()}
 
-                {/* The whole window is rendered at once and scrolls in place —
-                    roughly six rows tall, so an open section never pushes the
-                    ones below it off the screen. */}
-                {allItems.length > 0 && (
+                {/* The revealed window scrolls in place -- roughly six rows tall, so an open
+                    section never pushes the ones below it off the screen. */}
+                {visibleRows.length > 0 && (
                   <div style={{
                     maxHeight: `${LIST_MAX_HEIGHT}px`,
                     overflowY: 'auto',
@@ -483,10 +469,11 @@ export default function PlayerSections({
                     marginRight: '-12px',
                     paddingRight: '9px',
                   }}>
-                    {allItems.map((song, idx) => {
+                    {visibleRows.map((song, idx) => {
                       // Position is part of the row key: a duplicate id would
                       // otherwise collide and make React duplicate or drop rows.
                       const rowKey = `${type}-${idx}-${song.id}`;
+                      const previewUrl = song.matchedBeatmap?.previewUrl;
 
                       return (
                         <BeatmapRow
@@ -497,12 +484,37 @@ export default function PlayerSections({
                           onToggleSelect={onToggleSelect}
                           onDownloadSingle={onDownloadSingle}
                           isDownloading={downloadingIds.has(song.id)}
-                          activeAudio={activeAudio}
-                          onToggleAudio={handleToggleAudio}
+                          isPlaying={isPlaying(previewUrl)}
+                          isPreviewLoading={isPreviewLoading(previewUrl)}
+                          onTogglePreview={toggle}
                         />
                       );
                     })}
                   </div>
+                )}
+
+                {hasMore && (
+                  <button
+                    className="osu-btn-interactive"
+                    onClick={() => {
+                      osuAudio.playClick();
+                      setRevealCounts(prev => ({ ...prev, [type]: revealCount + REVEAL_STEP }));
+                    }}
+                    style={{
+                      alignSelf: 'flex-start',
+                      background: '#262232',
+                      border: '1px solid rgba(255, 255, 255, 0.08)',
+                      color: '#c0b4c8',
+                      fontSize: '0.72rem',
+                      fontWeight: 800,
+                      padding: '4px 10px',
+                      borderRadius: '5px',
+                      cursor: 'pointer',
+                      fontFamily: 'inherit',
+                    }}
+                  >
+                    Show more ({allItems.length - visibleRows.length} left)
+                  </button>
                 )}
               </div>
             )}

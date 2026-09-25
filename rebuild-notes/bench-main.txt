@@ -1,0 +1,107 @@
+# npm run bench on main (444f056; src identical on rebuild d9b6008)
+
+> osu-playlist-sync@1.0.0 bench
+> node bench/run.mjs
+
+37 fixtures | threshold 70 | labels: 109
+
+── baseline ─────────────────────────────
+  hit              29  78.4%   correct beatmap, artist confirmed
+  correctAbstain    6  16.2%   returned nothing, and nothing was right
+  WRONG ARTIST      1  2.7%   <- the failure that matters
+  miss              1  2.7%   right answer was in the pool, we returned nothing
+  unreachable       0  0.0%   right answer never came back from the API
+  unlabelled        0  0.0%   needs a verdict in labels.json
+  ---
+  correct maps offered   790   confirmed-artist mapsets the user can actually pick
+  hard-rejected correct   62   confirmed-artist mapsets made invisible by the gate
+
+── ladder+lazyprobe ─────────────────────────────
+  hit              30  81.1%   correct beatmap, artist confirmed
+  correctAbstain    3  8.1%   returned nothing, and nothing was right
+  WRONG ARTIST      4  10.8%   <- the failure that matters
+  miss              0  0.0%   right answer was in the pool, we returned nothing
+  unreachable       0  0.0%   right answer never came back from the API
+  unlabelled        0  0.0%   needs a verdict in labels.json
+  ---
+  correct maps offered   793   confirmed-artist mapsets the user can actually pick
+  hard-rejected correct   16   confirmed-artist mapsets made invisible by the gate
+
+── ladder+probe ─────────────────────────────
+  hit              30  81.1%   correct beatmap, artist confirmed
+  correctAbstain    3  8.1%   returned nothing, and nothing was right
+  WRONG ARTIST      4  10.8%   <- the failure that matters
+  miss              0  0.0%   right answer was in the pool, we returned nothing
+  unreachable       0  0.0%   right answer never came back from the API
+  unlabelled        0  0.0%   needs a verdict in labels.json
+  ---
+  correct maps offered   293   confirmed-artist mapsets the user can actually pick
+  hard-rejected correct    4   confirmed-artist mapsets made invisible by the gate
+
+── ladder ─────────────────────────────
+  hit              30  81.1%   correct beatmap, artist confirmed
+  correctAbstain    3  8.1%   returned nothing, and nothing was right
+  WRONG ARTIST      4  10.8%   <- the failure that matters
+  miss              0  0.0%   right answer was in the pool, we returned nothing
+  unreachable       0  0.0%   right answer never came back from the API
+  unlabelled        0  0.0%   needs a verdict in labels.json
+  ---
+  correct maps offered   793   confirmed-artist mapsets the user can actually pick
+  hard-rejected correct   16   confirmed-artist mapsets made invisible by the gate
+
+── matrix ─────────────────────────────
+  hit              31  83.8%   correct beatmap, artist confirmed
+  correctAbstain    3  8.1%   returned nothing, and nothing was right
+  WRONG ARTIST      3  8.1%   <- the failure that matters
+  miss              0  0.0%   right answer was in the pool, we returned nothing
+  unreachable       0  0.0%   right answer never came back from the API
+  unlabelled        0  0.0%   needs a verdict in labels.json
+  ---
+  correct maps offered   752   confirmed-artist mapsets the user can actually pick
+  hard-rejected correct   16   confirmed-artist mapsets made invisible by the gate
+
+── SHIPPED (src) ─────────────────────────────
+  hit              31  83.8%   correct beatmap, artist confirmed
+  correctAbstain    6  16.2%   returned nothing, and nothing was right
+  WRONG ARTIST      0  0.0%   <- the failure that matters
+  miss              0  0.0%   right answer was in the pool, we returned nothing
+  unreachable       0  0.0%   right answer never came back from the API
+  unlabelled        0  0.0%   needs a verdict in labels.json
+  ---
+  correct maps offered   752   confirmed-artist mapsets the user can actually pick
+  hard-rejected correct   22   confirmed-artist mapsets made invisible by the gate
+
+(node:21988) [MODULE_TYPELESS_PACKAGE_JSON] Warning: Module type of file:///C:/Users/Siddartha/Desktop/study(fr)/Antigravity/osuplaylist/src/lib/osu.js is not specified and it doesn't parse as CommonJS.
+Reparsing as ES module because module syntax was detected. This incurs a performance overhead.
+To eliminate this warning, add "type": "module" to \\?\C:\Users\Siddartha\Desktop\study(fr)\Antigravity\osuplaylist\package.json.
+(Use `node --trace-warnings ...` to show where the warning was created)
+
+# npm run bench:cost
+
+> osu-playlist-sync@1.0.0 bench:cost
+> node bench/cost.mjs
+
+37 tracks, 28 distinct artists
+(1.32 tracks per artist)
+
+scorer                title q  probes   total  per track
+baseline                   50       0      50       1.35
+ladder+lazyprobe           48       7      55       1.49
+ladder+probe               29      26      55       1.49
+ladder                     48       0      48       1.30
+matrix                     47       8      55       1.49
+SHIPPED (src)              47       8      55       1.49
+(node:14712) [MODULE_TYPELESS_PACKAGE_JSON] Warning: Module type of file:///C:/Users/Siddartha/Desktop/study(fr)/Antigravity/osuplaylist/src/lib/osu.js is not specified and it doesn't parse as CommonJS.
+Reparsing as ES module because module syntax was detected. This incurs a performance overhead.
+To eliminate this warning, add "type": "module" to \\?\C:\Users\Siddartha\Desktop\study(fr)\Antigravity\osuplaylist\package.json.
+(Use `node --trace-warnings ...` to show where the warning was created)
+
+# check-r-replay spike, app mode
+tally { hit: 30, missOrUnreachable: 1, correctAbstain: 6 }
+calls 58 probes 8 per track 1.57
+coverage misses 0
+   colon-title missOrUnreachable rejection=wrong-artist
+(node:13712) [MODULE_TYPELESS_PACKAGE_JSON] Warning: Module type of file:///C:/Users/Siddartha/Desktop/study(fr)/Antigravity/osuplaylist/src/lib/osu.js is not specified and it doesn't parse as CommonJS.
+Reparsing as ES module because module syntax was detected. This incurs a performance overhead.
+To eliminate this warning, add "type": "module" to \\?\C:\Users\Siddartha\Desktop\study(fr)\Antigravity\osuplaylist\package.json.
+(Use `node --trace-warnings ...` to show where the warning was created)

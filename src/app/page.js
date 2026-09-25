@@ -12,38 +12,41 @@ import PlayerProfile from '@/components/PlayerProfile';
 import PlayerResults from '@/components/PlayerResults';
 import PlayerSections from '@/components/PlayerSections';
 import DownloadToast from '@/components/DownloadToast';
+import TruncationDialog from '@/components/TruncationDialog';
 import { GitHubIcon } from '@/components/Icons';
 import { Star } from 'lucide-react';
 import { osuAudio } from '@/lib/soundEffects';
 import { DEFAULT_STRICTNESS } from '@/lib/matchStrictness';
-import { isRankedStatus } from '@/lib/beatmapFormat';
-import { fetchBeatmapArchive, createProxyBudget } from '@/lib/beatmapDownload';
-import JSZip from 'jszip';
+import { isRankedStatus, isAutoSelectable } from '@/lib/beatmapFormat';
+import {
+  fetchBeatmapArchive,
+  createProxyBudget,
+  createPacer,
+  isAbortError,
+  shouldStartNewPart,
+} from '@/lib/beatmapDownload';
+import { osuFilename, sanitizeStem } from '@/lib/filename';
+import { beatmapsetPage } from '@/lib/mirrors';
+import { mergeSongs as mergeSongLists } from '@/lib/song';
+import { buildSearchRequest } from '@/lib/searchRequest';
+import { visibleItemsFor } from '@/lib/collection';
 
 const REPO_URL = 'https://github.com/sidlikesgrapess/osu-playlist-sync';
 
 
+// `entries` is the section's raw window as the server sent it (normalized, undeduped).
+// `allItems` is what the active mode/status tabs show of it, as songs, from visibleItemsFor
+// (collection.js, which also holds beatmapToSong). `total` is the profile's own count.
+const createEmptySection = () => ({ isOpen: false, entries: [], allItems: [], total: 0, isLoading: false, error: '', loaded: false });
 const createEmptySections = () => ({
-  best: { isOpen: false, allItems: [], total: 0, isLoading: false, error: '', loaded: false },
-  most_played: { isOpen: false, allItems: [], total: 0, isLoading: false, error: '', loaded: false },
-  favourite: { isOpen: false, allItems: [], total: 0, isLoading: false, error: '', loaded: false },
+  best: createEmptySection(),
+  most_played: createEmptySection(),
+  favourite: createEmptySection(),
 });
 
-// osu! collections are already beatmapsets, so they slot straight into the
-// song shape the table/download machinery expects — pre-matched.
-const beatmapToSong = (item, section) => ({
-  id: `osu_${item.beatmapset.id}`,
-  title: `${item.beatmapset.artist} - ${item.beatmapset.title}`,
-  channelTitle: `mapped by ${item.beatmapset.creator}`,
-  cleanQuery: item.beatmapset.title,
-  thumbnail: item.beatmapset.covers?.list,
-  hasSearched: true,
-  isSearching: false,
-  matchedBeatmap: item.beatmapset,
-  allMatches: [item.beatmapset],
-  playerMeta: item.meta,
-  playerSection: section,
-});
+// A mode change on `best` refetches (osu! filters scores by ruleset upstream); it waits this
+// long so clicking through the mode tabs costs one call, not one per tab.
+const BEST_MODE_REFETCH_DEBOUNCE_MS = 300;
 
 // `pageSize` may be the string 'all', so every slice goes through here.
 const pageSlice = (list, page, pageSize) => {
@@ -53,7 +56,23 @@ const pageSlice = (list, page, pageSize) => {
 };
 
 // Fresh object per call — each song needs its own `allMatches` array.
-const blankMatchState = () => ({ hasSearched: false, isSearching: false, matchedBeatmap: null, allMatches: [], rejection: null });
+const blankMatchState = () => ({ hasSearched: false, isSearching: false, matchedBeatmap: null, allMatches: [], rejection: null, searchError: null });
+
+// A search that never got an answer: osu! said slow down ('rate-limited'), or the request
+// failed outright ('failed'). Neither is "no beatmap exists", so `rejection` stays null and
+// the row offers a retry instead of a verdict.
+const failedSearchState = (searchError) => ({
+  hasSearched: true, isSearching: false, matchedBeatmap: null, allMatches: [], rejection: null, searchError,
+});
+
+// A row still owed an answer: never searched, or searched without one (a 429 or a failed
+// request). Only what the user explicitly asks for (Search All) reaches for the failed
+// rows; paging only fills in rows that were never tried, so it cannot hammer a busy osu!.
+const awaitsAnswer = (s) => !s.isSearching && (!s.hasSearched || Boolean(s.searchError));
+
+// How long the one automatic retry of rate-limited rows waits, at most, for the
+// Retry-After osu! (or our own limiter) asked for. Past this the row keeps its Retry button.
+const RATE_LIMIT_RETRY_WAIT_CAP_S = 15;
 
 const PLATFORM_BADGE = {
   spotify: { color: '#1db954', bg: 'rgba(29, 185, 84, 0.15)', border: 'rgba(29, 185, 84, 0.35)' },
@@ -61,6 +80,20 @@ const PLATFORM_BADGE = {
   youtube: { color: '#ff4444', bg: 'rgba(255, 51, 51, 0.15)', border: 'rgba(255, 51, 51, 0.35)' },
   query: { color: '#ff66aa', bg: 'rgba(255, 102, 170, 0.15)', border: 'rgba(255, 102, 170, 0.35)' },
 };
+
+// How long an object URL outlives its click. Revoking it synchronously can cancel
+// the save before the browser has started reading the blob (Safari and Firefox do).
+const REVOKE_DELAY_MS = 10_000;
+
+// REBUILD_PLAN.md 2.1 item 5: `truncated` is structural (a continuation, or the maxVideos
+// cap), so the message only distinguishes whether the real length was readable at all.
+// No dash in either string.
+function truncationMessage({ playlistLength, loadedCount }) {
+  if (playlistLength && playlistLength > loadedCount) {
+    return `This playlist has ${playlistLength} songs. osu!Sync loads the first 100.`;
+  }
+  return 'This playlist has more than 100 songs. osu!Sync loads the first 100.';
+}
 
 function downloadBlob(blob, filename) {
   if (typeof window === 'undefined') return;
@@ -71,7 +104,7 @@ function downloadBlob(blob, filename) {
   document.body.appendChild(a);
   a.click();
   document.body.removeChild(a);
-  URL.revokeObjectURL(url);
+  setTimeout(() => URL.revokeObjectURL(url), REVOKE_DELAY_MS);
 }
 
 export default function Home() {
@@ -105,6 +138,10 @@ export default function Home() {
   // Download completion toasts
   const [toasts, setToasts] = useState([]);
 
+  // The YouTube truncation popup (2.1 item 5 / 2.4 item 9). Unlike `playlistMeta`, this is
+  // set on every fetch that comes back `truncated`, appends included, and clears on OK.
+  const [truncationNotice, setTruncationNotice] = useState(null);
+
   // osu! player search state
   const [playerResults, setPlayerResults] = useState([]);
   const [playerResultsTotal, setPlayerResultsTotal] = useState(0);
@@ -112,6 +149,34 @@ export default function Home() {
   const [playerQuery, setPlayerQuery] = useState('');
   const [playerProfile, setPlayerProfile] = useState(null);
   const [playerSections, setPlayerSections] = useState(createEmptySections);
+
+  // The latest songs, for async work that outlives the render it started in: the automatic
+  // rate-limit retry must see whether a row was reset or re-searched while it waited.
+  const songsRef = useRef(songs);
+  useEffect(() => { songsRef.current = songs; }, [songs]);
+
+  // Player section loads (F-13). Each `${userId}:${type}` key has its own generation and
+  // AbortController: a new load for a key aborts the old one, loads for different keys never
+  // touch each other, and switching player aborts them all.
+  const sectionLoadsRef = useRef(new Map());
+  const sectionLoadGenRef = useRef(0);
+  // The mode the current player's `best` window was last requested with, or null.
+  const bestModeRef = useRef(null);
+  const bestRefetchTimerRef = useRef(null);
+  // The tabs a load that lands later must be filtered by: the ones active when it lands.
+  const playerFiltersRef = useRef({ mode, status: statusFilter });
+  useEffect(() => { playerFiltersRef.current = { mode, status: statusFilter }; }, [mode, statusFilter]);
+
+  // A hidden row can never ride into a bulk download: in player mode the selection is kept to
+  // the ids the sections show under the active tabs (F-12).
+  useEffect(() => {
+    if (!playerProfile) return;
+    const visible = new Set(Object.values(playerSections).flatMap(section => section.allItems.map(s => s.id)));
+    setSelectedIds(prev => {
+      const next = new Set([...prev].filter(id => visible.has(id)));
+      return next.size === prev.size ? prev : next;
+    });
+  }, [playerSections, playerProfile]);
 
   // Check system status on mount
   useEffect(() => {
@@ -128,7 +193,21 @@ export default function Home() {
     return handleFetchPlaylist(value, { forceReplace: Boolean(playerProfile) });
   };
 
+  const abortSectionLoad = (key) => {
+    sectionLoadsRef.current.get(key)?.controller.abort();
+    sectionLoadsRef.current.delete(key);
+  };
+
+  const abortAllSectionLoads = () => {
+    clearTimeout(bestRefetchTimerRef.current);
+    bestRefetchTimerRef.current = null;
+    for (const { controller } of sectionLoadsRef.current.values()) controller.abort();
+    sectionLoadsRef.current.clear();
+    bestModeRef.current = null;
+  };
+
   const clearPlayerState = () => {
+    abortAllSectionLoads();
     setPlayerProfile(null);
     setPlayerResults([]);
     setPlayerResultsTotal(0);
@@ -146,7 +225,7 @@ export default function Home() {
 
     // Switching to player search drops any playlist/song results.
     if (page === 1) {
-      setSongs([]);
+      dropSongList();
       setSelectedIds(new Set());
       setPlaylistMeta(null);
       setCurrentPage(1);
@@ -155,6 +234,13 @@ export default function Home() {
     try {
       const res = await fetch(`/api/osu/player?q=${encodeURIComponent(query)}&page=${page}`);
       const data = await res.json();
+
+      if (data.isDemo) {
+        setErrorMessage('Player search needs osu! API credentials.');
+        setIsSetupOpen(true);
+        setIsLoading(false);
+        return;
+      }
 
       if (!res.ok) throw new Error(data.error || 'Player search failed');
 
@@ -185,10 +271,11 @@ export default function Home() {
 
   // Switch the app into player mode for a resolved profile.
   const applyPlayerProfile = (profile) => {
+    abortAllSectionLoads();
     setPlayerProfile(profile);
     setPlayerResults([]);
     setPlayerResultsTotal(0);
-    setSongs([]);
+    dropSongList();
     setSelectedIds(new Set());
     setPlaylistMeta(null);
     setErrorMessage('');
@@ -210,8 +297,15 @@ export default function Home() {
     setErrorMessage('');
 
     try {
-      const res = await fetch(`/api/osu/player?userId=${user.id}`);
+      const res = await fetch(`/api/osu/player?userId=${encodeURIComponent(user.id)}`);
       const data = await res.json();
+
+      if (data.isDemo) {
+        setErrorMessage('Player search needs osu! API credentials.');
+        setIsSetupOpen(true);
+        setIsLoading(false);
+        return;
+      }
 
       if (!res.ok) throw new Error(data.error || 'Could not load that player');
       applyPlayerProfile(data.user);
@@ -232,44 +326,58 @@ export default function Home() {
     });
   };
 
-  // Loads one section's window, filtered by the active mode/status tabs.
-  const loadSection = async (userId, type, currentMode = mode, currentStatus = statusFilter) => {
+  // Loads one section's window. The server sends it unfiltered and undeduped; the active
+  // mode/status tabs are applied here, when it lands, so a later tab change costs no call.
+  // Only `best` sends a mode, because only its upstream endpoint filters by one.
+  const loadSection = async (userId, type, currentMode = playerFiltersRef.current.mode) => {
+    const key = `${userId}:${type}`;
+    abortSectionLoad(key);
+    const controller = new AbortController();
+    const gen = ++sectionLoadGenRef.current;
+    sectionLoadsRef.current.set(key, { gen, controller });
+    const isCurrent = () => sectionLoadsRef.current.get(key)?.gen === gen;
+    if (type === 'best') bestModeRef.current = currentMode;
+
     setPlayerSections(prev => ({
       ...prev,
       [type]: { ...prev[type], isLoading: true, error: '' },
     }));
 
     try {
-      const params = new URLSearchParams({
-        userId: String(userId),
-        type,
-        mode: currentMode,
-        status: currentStatus,
-      });
-      const res = await fetch(`/api/osu/player/beatmaps?${params.toString()}`);
+      const params = new URLSearchParams({ userId: String(userId), type, mode: currentMode });
+      const res = await fetch(`/api/osu/player/beatmaps?${params.toString()}`, { signal: controller.signal });
       const data = await res.json();
+      if (!isCurrent()) return;
 
       if (!res.ok) throw new Error(data.error || 'Could not load beatmaps');
 
-      const entries = (data.items || []).map(item => beatmapToSong(item, type));
-
+      const entries = data.items || [];
+      const { mode: viewMode, status: viewStatus } = playerFiltersRef.current;
       setPlayerSections(prev => ({
         ...prev,
         [type]: {
           ...prev[type],
-          allItems: entries,
-          total: entries.length,
-          isLoading: false,
+          entries,
+          allItems: visibleItemsFor(type, entries, viewMode, viewStatus),
           loaded: true,
         },
       }));
-      mergeSongs(entries);
+      // The shared list holds every loaded set once; the tabs only decide what is shown.
+      mergeSongs(visibleItemsFor(type, entries, 'all', 'any'));
     } catch (err) {
+      if (!isCurrent() || isAbortError(err)) return;
       console.error(err);
       setPlayerSections(prev => ({
         ...prev,
-        [type]: { ...prev[type], isLoading: false, error: err.message || 'Could not load beatmaps' },
+        [type]: { ...prev[type], error: err.message || 'Could not load beatmaps' },
       }));
+    } finally {
+      // Only the newest load for this key may settle it, so a stale or aborted response can
+      // never leave the section stuck loading, nor clear a newer load's spinner.
+      if (isCurrent()) {
+        sectionLoadsRef.current.delete(key);
+        setPlayerSections(prev => ({ ...prev, [type]: { ...prev[type], isLoading: false } }));
+      }
     }
   };
 
@@ -296,34 +404,44 @@ export default function Home() {
     }
   };
 
-  // Mode/status tabs changed while browsing a player: drop loaded maps and refetch.
+  // Mode/status tabs changed while browsing a player (F-12). Every section is re-filtered
+  // from the window it already holds, with no call. The one exception is a mode change on
+  // `best`, whose upstream window depends on the mode: it refetches, debounced, if open, and
+  // is marked stale for its next open if not. The selection is pruned by the effect above.
   const reloadPlayerSections = (nextMode, nextStatus) => {
     if (!playerProfile) return;
+    playerFiltersRef.current = { mode: nextMode, status: nextStatus };
 
-    setSongs([]);
-    setSelectedIds(new Set());
+    const userId = playerProfile.id;
+    const bestIsStale = bestModeRef.current !== null && bestModeRef.current !== nextMode;
+    const bestIsOpen = playerSections.best.isOpen;
+    if (bestIsStale && !bestIsOpen) {
+      abortSectionLoad(`${userId}:best`);
+      bestModeRef.current = null;
+    }
+
     setPlayerSections(prev => {
       const next = { ...prev };
       Object.keys(next).forEach(type => {
-        next[type] = {
-          ...next[type],
-          allItems: [],
-          total: playerProfile.counts?.[type] || 0,
-          loaded: false,
-          error: '',
-        };
+        next[type] = { ...next[type], allItems: visibleItemsFor(type, next[type].entries, nextMode, nextStatus) };
       });
+      if (bestIsStale && !bestIsOpen) next.best = { ...next.best, loaded: false, isLoading: false };
       return next;
     });
 
-    Object.entries(playerSections).forEach(([type, section]) => {
-      if (section.isOpen) loadSection(playerProfile.id, type, nextMode, nextStatus);
-    });
+    clearTimeout(bestRefetchTimerRef.current);
+    bestRefetchTimerRef.current = null;
+    if (bestIsStale && bestIsOpen) {
+      bestRefetchTimerRef.current = setTimeout(() => {
+        bestRefetchTimerRef.current = null;
+        loadSection(userId, 'best', nextMode);
+      }, BEST_MODE_REFETCH_DEBOUNCE_MS);
+    }
   };
 
   const handleClearPlayer = () => {
     clearPlayerState();
-    setSongs([]);
+    dropSongList();
     setSelectedIds(new Set());
     setErrorMessage('');
     osuAudio.playClick();
@@ -337,7 +455,7 @@ export default function Home() {
     setIsLoading(true);
     setErrorMessage('');
     if (!isAppending) {
-      setSongs([]);
+      dropSongList();
       setSelectedIds(new Set());
       setPlaylistMeta(null);
       setCurrentPage(1);
@@ -353,6 +471,12 @@ export default function Home() {
         throw new Error(data.error || 'Could not load playlist items');
       }
 
+      // Once per fetch, first load or append alike -- an append still hits the same
+      // 100-item cap, and the user needs to know the same way.
+      if (data.truncated) {
+        setTruncationNotice(truncationMessage({ playlistLength: data.playlistLength, loadedCount: data.loadedCount }));
+      }
+
       if (!isAppending) {
         setPlaylistMeta({
           id: data.playlistId,
@@ -360,31 +484,45 @@ export default function Home() {
           platform: data.platform,
           isSingleTrack: data.isSingleTrack,
           isDemo: data.isDemo,
+          returnedCount: data.returnedCount,
+          loadedCount: data.loadedCount,
+          unavailableCount: data.unavailableCount,
+          truncated: data.truncated,
+          playlistLength: data.playlistLength,
         });
       }
 
-      const offset = isAppending ? songs.length : 0;
+      // page.js is the one place a song id is made: a provider id when there is one, else a
+      // per batch placeholder that songKey knows not to trust, so the row is deduped on its
+      // title and artist instead.
       const batchTag = Date.now();
-      const newSongs = (data.songs || []).map((s, index) => ({
+      const fetched = (data.songs || []).map((s, index) => ({
         ...s,
         id: s.id || `track_${batchTag}_${index}`,
-        position: offset + index,
         ...blankMatchState(),
       }));
 
-      const combinedSongs = isAppending ? [...songs, ...newSongs] : newSongs;
+      // Every load goes through the same identity rule (songKey in song.js). An append never
+      // repeats a song already in the queue, and a playlist that lists one video twice keeps
+      // one row, so two rows can never share a React key. Existing rows win, keeping their
+      // matches and selection, and positions are given to the additions only.
+      const { songs: combinedSongs, added, skipped } = mergeSongLists(isAppending ? songs : [], fetched);
       setSongs(combinedSongs);
       setIsLoading(false);
 
       // An append is the one load with nothing to show for itself: the rows land at the
       // bottom of the queue, usually off-screen, and the page does not move. The first
-      // playlist needs no toast because it fills the whole table. Nothing is announced for
-      // an empty result either -- that means the scrape failed, and the error says so.
-      if (isAppending && newSongs.length > 0) {
+      // playlist needs no toast because it fills the whole table. An append where every song
+      // was already queued still says so, since otherwise nothing at all would happen.
+      const unavailable = data.unavailableCount || 0;
+      if (isAppending && (added > 0 || skipped > 0 || unavailable > 0)) {
         const from = data.playlistTitle ? ` from ${data.playlistTitle}` : '';
+        const parts = [`Added ${added} song${added === 1 ? '' : 's'}${from}`];
+        if (skipped > 0) parts.push(`${skipped} ${skipped === 1 ? 'was' : 'were'} already in the queue`);
+        if (unavailable > 0) parts.push(`${unavailable} ${unavailable === 1 ? 'is' : 'are'} unavailable on YouTube`);
         pushToast(
-          'Added to queue bottom',
-          `${newSongs.length} song${newSongs.length === 1 ? '' : 's'}${from} · ${combinedSongs.length} in queue`,
+          added > 0 ? 'Added to queue bottom' : 'Nothing new to add',
+          parts.join(' · '),
           'queue',
         );
       }
@@ -441,40 +579,38 @@ export default function Home() {
     let completedCount = 0;
     const concurrency = 3;
     let currentIndex = 0;
+    const rateLimitedIds = [];
+    let retryAfterSec = 0;
 
-    async function searchNext() {
-      if (currentIndex >= targets.length) return;
-      const targetSong = targets[currentIndex++];
-
+    // One search, its outcome written onto the row. Resolves true when the answer was a
+    // 429, so the batch can come back for that row once at the end.
+    const searchOne = async (targetSong) => {
       try {
-        const queryParams = new URLSearchParams({
-          q: targetSong.cleanQuery || targetSong.title,
-          title: targetSong.extractedTitle || targetSong.title || '',
-          artist: targetSong.extractedArtist || targetSong.channelTitle || '',
+        const queryParams = buildSearchRequest(targetSong, {
           mode: currentMode,
           status: currentStatus,
-          strictness: String(currentStrictness),
-          source: targetSong.source || '',
+          strictness: currentStrictness,
         });
 
-        const extraQueries = [
-          ...(targetSong.fallbacks || []),
-          ...(targetSong.queries || []),
-        ];
-        if (extraQueries.length > 0) {
-          queryParams.set('fallbacks', JSON.stringify(Array.from(new Set(extraQueries))));
-        }
-
         const res = await fetch(`/api/osu/search?${queryParams.toString()}`);
-        const result = await res.json();
+        const result = await res.json().catch(() => ({}));
+
+        // Demo mode is an answer (there is simply no key to search with), not a failure.
+        if (!result.isDemo && (!res.ok || !result.success)) {
+          const limited = res.status === 429;
+          if (limited) retryAfterSec = Math.max(retryAfterSec, Number(res.headers.get('Retry-After')) || 0);
+          markSearchFailed(targetSong.id, limited ? 'rate-limited' : 'failed');
+          return limited;
+        }
 
         setSongs(prev => prev.map(s => {
           if (s.id === targetSong.id) {
             const hasMatch = result.beatmapsets && result.beatmapsets.length > 0;
             const matched = hasMatch ? result.beatmapsets[0] : null;
-            // A result that failed the artist gate is shown but never pre-selected --
-            // it must not slip into a bulk download just because it was displayed.
-            if (matched && !matched.artistOverride) {
+            // A result that failed the artist gate, or matched on title alone, is shown but
+            // never pre-selected: it must not slip into a bulk download just because it was
+            // displayed.
+            if (isAutoSelectable(matched)) {
               setSelectedIds(curr => new Set(curr).add(s.id));
             }
             return {
@@ -484,14 +620,23 @@ export default function Home() {
               matchedBeatmap: matched,
               allMatches: result.beatmapsets || [],
               rejection: result.rejection || null,
+              searchError: null,
             };
           }
           return s;
         }));
       } catch (err) {
         console.warn(`Search failed for ${targetSong.title}:`, err);
-        setSongs(prev => prev.map(s => s.id === targetSong.id ? { ...s, hasSearched: true, isSearching: false, matchedBeatmap: null, allMatches: [] } : s));
+        markSearchFailed(targetSong.id, 'failed');
       }
+      return false;
+    };
+
+    async function searchNext() {
+      if (currentIndex >= targets.length) return;
+      const targetSong = targets[currentIndex++];
+
+      if (await searchOne(targetSong)) rateLimitedIds.push(targetSong.id);
 
       completedCount++;
       setSearchProgress(Math.round((completedCount / targets.length) * 100));
@@ -505,8 +650,36 @@ export default function Home() {
     }
 
     await Promise.all(pool);
+
+    // A 429 means "not now", so those rows get one more go once the batch is done, one at
+    // a time, after the wait osu! asked for. A row that was reset or re-searched in the
+    // meantime no longer carries the error and is left alone.
+    // A wait longer than the cap is not shortened: retrying before the window reopens only
+    // earns another 429, so those rows simply keep their Retry button.
+    if (rateLimitedIds.length > 0 && retryAfterSec <= RATE_LIMIT_RETRY_WAIT_CAP_S) {
+      const waitSec = Math.max(retryAfterSec, 1);
+      await new Promise(resolve => setTimeout(resolve, waitSec * 1000));
+      for (const id of rateLimitedIds) {
+        const current = songsRef.current.find(s => s.id === id);
+        if (current?.searchError !== 'rate-limited') continue;
+        setSongs(prev => prev.map(s => s.id === id ? { ...s, isSearching: true } : s));
+        await searchOne(current);
+      }
+    }
+
     setIsSearching(false);
     osuAudio.playSuccess();
+  };
+
+  // A search with no answer leaves the row matchless, and a matchless row is never selected.
+  const markSearchFailed = (songId, searchError) => {
+    setSongs(prev => prev.map(s => s.id === songId ? { ...s, ...failedSearchState(searchError) } : s));
+    setSelectedIds(prev => {
+      if (!prev.has(songId)) return prev;
+      const next = new Set(prev);
+      next.delete(songId);
+      return next;
+    });
   };
 
   // Handle Page navigation: automatically lazily query unsearched songs on the new page
@@ -534,7 +707,7 @@ export default function Home() {
 
   // Search all remaining unsearched tracks across all pages
   const handleSearchAllRemaining = () => {
-    const unsearched = songs.filter(s => !s.hasSearched && !s.isSearching);
+    const unsearched = songs.filter(awaitsAnswer);
     if (unsearched.length > 0) {
       searchTargetSongs(songs, unsearched.map(s => s.id), mode, statusFilter);
     }
@@ -598,13 +771,13 @@ export default function Home() {
     setSongs(narrowed);
 
     // Selections survive the narrowing unless what they pointed at did not. A song
-    // whose new best candidate is artist-flagged is dropped for the same reason one
+    // whose new best candidate is flagged is dropped for the same reason one
     // is never auto-selected: it must not ride along in a bulk download.
     setSelectedIds(prev => {
       const next = new Set(prev);
       for (const song of narrowed) {
         if (!next.has(song.id)) continue;
-        if (!song.matchedBeatmap || song.matchedBeatmap.artistOverride) next.delete(song.id);
+        if (!isAutoSelectable(song.matchedBeatmap)) next.delete(song.id);
       }
       return next;
     });
@@ -668,25 +841,41 @@ export default function Home() {
     !isLoading &&
     matchThreshold !== appliedStrictness;
 
-  // Manual query edit & rematch for a single song
+  // Manual query edit & rematch for a single song.
+  //
+  // A query the user typed is a typed query from then on (`manualQuery`), for this search and
+  // every later re-search of the row. Re-running the row's own query unchanged (Search on an
+  // unsearched row, Retry after a failure) is not a typed query, so it keeps the song's
+  // extracted artist and the gate that comes with it.
   const handleManualSearch = async (songId, customQuery) => {
-    setSongs(prev => prev.map(s => s.id === songId ? { ...s, cleanQuery: customQuery, isSearching: true } : s));
+    const song = songsRef.current.find(s => s.id === songId);
+    if (!song) return;
+    const isTyped = Boolean(song.manualQuery) || customQuery !== (song.cleanQuery || song.title);
+    const manualQuery = isTyped ? customQuery : null;
+    setSongs(prev => prev.map(s => s.id === songId
+      ? { ...s, cleanQuery: customQuery, ...(manualQuery ? { manualQuery } : {}), isSearching: true }
+      : s));
 
     try {
-      const queryParams = new URLSearchParams({
-        q: customQuery,
+      const queryParams = buildSearchRequest(song, {
         mode,
         status: statusFilter,
-        strictness: String(matchThreshold),
+        strictness: matchThreshold,
+        manualQuery,
       });
 
       const res = await fetch(`/api/osu/search?${queryParams.toString()}`);
-      const result = await res.json();
+      const result = await res.json().catch(() => ({}));
+
+      if (!result.isDemo && (!res.ok || !result.success)) {
+        markSearchFailed(songId, res.status === 429 ? 'rate-limited' : 'failed');
+        return;
+      }
 
       setSongs(prev => prev.map(s => {
         if (s.id === songId) {
           const matched = result.beatmapsets && result.beatmapsets.length > 0 ? result.beatmapsets[0] : null;
-          if (matched && !matched.artistOverride) {
+          if (isAutoSelectable(matched)) {
             setSelectedIds(curr => new Set(curr).add(songId));
           }
           return {
@@ -697,6 +886,7 @@ export default function Home() {
             matchedBeatmap: matched,
             allMatches: result.beatmapsets || [],
             rejection: result.rejection || null,
+            searchError: null,
           };
         }
         return s;
@@ -705,7 +895,7 @@ export default function Home() {
       osuAudio.playSuccess();
     } catch (err) {
       console.error('Manual search failed:', err);
-      setSongs(prev => prev.map(s => s.id === songId ? { ...s, hasSearched: true, isSearching: false } : s));
+      markSearchFailed(songId, 'failed');
     }
   };
 
@@ -737,32 +927,86 @@ export default function Home() {
     setToasts(prev => prev.filter(t => t.id !== id));
   };
 
+  // One batch (Download or ZIP) at a time. The ref is what stops a double click:
+  // the state would still read false on the second click, before React re-renders.
+  // The state is what the StatsBar buttons key on.
+  const batchInFlightRef = useRef(false);
+  const batchAbortRef = useRef(null);
+  const [isBatchActive, setIsBatchActive] = useState(false);
+
+  // One proxy allowance for the whole page session, not a fresh one per batch, so
+  // back to back batches during a mirror outage cannot each proxy their own share.
+  const proxyBudgetRef = useRef(null);
+  const sessionProxyBudget = () => {
+    if (!proxyBudgetRef.current) proxyBudgetRef.current = createProxyBudget();
+    return proxyBudgetRef.current;
+  };
+
+  // Returns the batch's AbortController, or null when a batch is already running.
+  const beginBatch = () => {
+    if (batchInFlightRef.current) return null;
+    batchInFlightRef.current = true;
+    const controller = new AbortController();
+    batchAbortRef.current = controller;
+    setIsBatchActive(true);
+    return controller;
+  };
+
+  const endBatch = (controller) => {
+    if (batchAbortRef.current !== controller) return;
+    batchAbortRef.current = null;
+    batchInFlightRef.current = false;
+    setIsBatchActive(false);
+  };
+
+  // The loops check the signal between items; an archive mid fetch is aborted too,
+  // and a cancelled item never falls back to the proxy.
+  const handleCancelBatch = () => {
+    batchAbortRef.current?.abort();
+  };
+
+  // Every path that throws the song list away comes through here. A running batch is not
+  // left to keep downloading rows the list no longer holds: Cancel does the same abort, and
+  // replacing the list must leave the same clean state.
+  const dropSongList = () => {
+    handleCancelBatch();
+    setDownloadingIds(new Set());
+    setIsDownloadingZip(false);
+    setZipProgress(0);
+    setSongs([]);
+  };
+
   // Download a single .osz file. Batch callers pass `silent` so only one toast
-  // fires, and a shared `budget` so the whole batch cannot fall back to the proxy.
-  const handleDownloadSingle = async (song, { silent = false, budget = null } = {}) => {
+  // fires, the session `budget` so a batch cannot fall back to the proxy without
+  // limit, and their `pacer` and `signal`.
+  const handleDownloadSingle = async (song, { silent = false, budget = null, pacer = null, signal = null } = {}) => {
     if (!song.matchedBeatmap) return false;
-    const beatmapId = song.matchedBeatmap.id;
+    const { id: beatmapId, artist, title } = song.matchedBeatmap;
 
     setDownloadingIds(prev => new Set(prev).add(song.id));
 
     try {
-      const result = await fetchBeatmapArchive(beatmapId, { budget });
+      const result = await fetchBeatmapArchive(beatmapId, { budget, pacer, signal });
       if (!result) throw new Error('Download failed');
 
-      const filename = `${beatmapId} ${song.matchedBeatmap.artist} - ${song.matchedBeatmap.title}.osz`.replace(/[\\/*?:"<>|]/g, '_');
-      downloadBlob(result.blob, filename);
+      downloadBlob(result.blob, osuFilename(beatmapId, artist, title));
       osuAudio.playSuccess();
 
       if (!silent) {
-        pushToast('Download completed', `${song.matchedBeatmap.artist} - ${song.matchedBeatmap.title}`);
+        pushToast('Download completed', `${artist} - ${title}`);
       }
       return true;
     } catch (err) {
+      if (isAbortError(err)) return false;
       console.error(`Download failed for mapset ${beatmapId}:`, err);
-      // Fallback: direct browser link. Only for a single click: in a batch every
-      // failure would open its own tab, and an outage fails most of the batch.
-      // The batch reports its skipped maps in one toast instead.
-      if (!silent) window.open(`https://catboy.best/d/${beatmapId}`, '_blank');
+      // Last resort: the map's osu! page, never a mirror that has just failed. Only
+      // for a single click: in a batch every failure would open its own tab, and an
+      // outage fails most of the batch. The batch reports its skipped maps in one
+      // toast instead.
+      if (!silent) {
+        window.open(beatmapsetPage(beatmapId), '_blank');
+        pushToast('Download failed', 'No mirror could send this map right now, so its osu! page is open instead.');
+      }
       return false;
     } finally {
       setDownloadingIds(prev => {
@@ -776,19 +1020,38 @@ export default function Home() {
   // Only ticked beatmaps are ever downloaded.
   const getSelectedSongs = () => songs.filter(s => selectedIds.has(s.id) && s.matchedBeatmap);
 
+  const pushCancelledToast = (saved, total) => {
+    pushToast('Download cancelled', `${saved} of ${total} saved.`);
+  };
+
   // Download batch sequentially
   const handleDownloadBatch = async () => {
     const targetSongs = getSelectedSongs();
 
     if (targetSongs.length === 0) return;
 
-    const budget = createProxyBudget();
+    const controller = beginBatch();
+    if (!controller) return;
+    const { signal } = controller;
+    const budget = sessionProxyBudget();
+    // The bytes come from volunteer-run mirrors, so the loop paces itself.
+    const pacer = createPacer();
     let completed = 0;
-    for (const song of targetSongs) {
-      if (await handleDownloadSingle(song, { silent: true, budget })) completed++;
-      await new Promise(r => setTimeout(r, 600));
+
+    try {
+      for (let i = 0; i < targetSongs.length; i++) {
+        if (i > 0) await pacer.wait(signal);
+        if (signal.aborted) break;
+        if (await handleDownloadSingle(targetSongs[i], { silent: true, budget, pacer, signal })) completed++;
+      }
+    } finally {
+      endBatch(controller);
     }
 
+    if (signal.aborted) {
+      pushCancelledToast(completed, targetSongs.length);
+      return;
+    }
     if (completed > 0) {
       pushToast('Download completed', `${completed} beatmap${completed === 1 ? '' : 's'}`);
     }
@@ -800,60 +1063,97 @@ export default function Home() {
     }
   };
 
-  // Bundle as .ZIP
+  // Bundle as .ZIP, in parts of at most MAX_ZIP_PART_BYTES. JSZip holds a part's
+  // inputs and its output at once, so the part cap is the only bound on memory.
   const handleDownloadZipBatch = async () => {
     const targetSongs = getSelectedSongs();
 
     if (targetSongs.length === 0) return;
 
+    const controller = beginBatch();
+    if (!controller) return;
+    const { signal } = controller;
+
     setIsDownloadingZip(true);
     setZipProgress(0);
-    const zip = new JSZip();
-    const budget = createProxyBudget();
+    const budget = sessionProxyBudget();
+    const pacer = createPacer();
+    const baseTitle = playerProfile
+      ? `${playerProfile.username}_osu_maps`
+      : playlistMeta?.title || 'osu_playlist_sync';
     let added = 0;
 
     try {
+      const { default: JSZip } = await import('jszip');
+      let zip = new JSZip();
+      let partBytes = 0;
+      let partCount = 0;
+      let partsSaved = 0;
+
+      // Generates and saves the current part, then drops it so its blobs can be freed.
+      const savePart = async (filename) => {
+        const content = await zip.generateAsync({ type: 'blob' });
+        downloadBlob(content, filename);
+        partsSaved++;
+        zip = new JSZip();
+        partBytes = 0;
+        partCount = 0;
+      };
+
       for (let i = 0; i < targetSongs.length; i++) {
-        const song = targetSongs[i];
-        const beatmapId = song.matchedBeatmap.id;
-        const filename = `${beatmapId} ${song.matchedBeatmap.artist} - ${song.matchedBeatmap.title}.osz`.replace(/[\\/*?:"<>|]/g, '_');
+        if (i > 0) await pacer.wait(signal);
+        if (signal.aborted) break;
+
+        const { id: beatmapId, artist, title } = targetSongs[i].matchedBeatmap;
+        const filename = osuFilename(beatmapId, artist, title);
 
         try {
-          const result = await fetchBeatmapArchive(beatmapId, { budget });
+          const result = await fetchBeatmapArchive(beatmapId, { budget, pacer, signal });
           if (result) {
+            // Nothing more is fetched until the full part has been saved and released.
+            if (shouldStartNewPart(partBytes, partCount, result.blob.size)) {
+              await savePart(`osuSync-part-${partsSaved + 1}.zip`);
+            }
             zip.file(filename, result.blob);
+            partBytes += result.blob.size;
+            partCount++;
             added++;
           }
         } catch (e) {
+          if (isAbortError(e)) break;
           console.warn(`Could not add ${filename} to zip:`, e);
         }
 
         setZipProgress(Math.round(((i + 1) / targetSongs.length) * 100));
-
-        // The bytes come from volunteer-run mirrors now, so this loop paces itself
-        // the way handleDownloadBatch already did. Without it a large selection
-        // hammers them as fast as the connection allows.
-        if (i < targetSongs.length - 1) await new Promise(r => setTimeout(r, 400));
       }
 
+      // A cancelled bundle still saves what it already fetched, rather than asking the
+      // mirrors for the same maps again next time.
+      if (partCount > 0) {
+        await savePart(partsSaved > 0 ? `osuSync-part-${partsSaved + 1}.zip` : `${sanitizeStem(baseTitle)}_beatmaps.zip`);
+      }
+
+      if (signal.aborted) {
+        pushCancelledToast(added, targetSongs.length);
+        return;
+      }
       if (added === 0) {
         pushToast('Nothing to bundle', 'No beatmap could be fetched. The mirrors may be busy, so try again shortly.');
         return;
       }
 
-      const zipContent = await zip.generateAsync({ type: 'blob' });
-      const baseTitle = playerProfile
-        ? `${playerProfile.username}_osu_maps`
-        : playlistMeta?.title || 'osu_playlist_sync';
-      const safeTitle = baseTitle.replace(/[\\/*?:"<>|]/g, '_');
-      downloadBlob(zipContent, `${safeTitle}_beatmaps.zip`);
-
       osuAudio.playSuccess();
-      pushToast('Download completed', `ZIP bundle · ${added} beatmap${added === 1 ? '' : 's'}`);
+      const partsNote = partsSaved > 1 ? ` in ${partsSaved} parts` : '';
+      pushToast('Download completed', `ZIP bundle · ${added} beatmap${added === 1 ? '' : 's'}${partsNote}`);
     } catch (err) {
       console.error('ZIP generation failed:', err);
+      pushToast(
+        'Could not build the ZIP',
+        `${added} beatmap${added === 1 ? ' was' : 's were'} fetched but the bundle could not be saved. Try fewer at once.`,
+      );
     } finally {
       setIsDownloadingZip(false);
+      endBatch(controller);
     }
   };
 
@@ -871,7 +1171,7 @@ export default function Home() {
   };
 
   const handleClearList = () => {
-    setSongs([]);
+    dropSongList();
     setPlaylistMeta(null);
     setSelectedIds(new Set());
     setErrorMessage('');
@@ -882,8 +1182,10 @@ export default function Home() {
   const platformBadge = PLATFORM_BADGE[playlistMeta?.platform] || PLATFORM_BADGE.query;
 
   const matchedCount = songs.filter(s => s.matchedBeatmap).length;
-  const searchedCount = songs.filter(s => s.hasSearched).length;
-  const unsearchedCount = songs.filter(s => !s.hasSearched).length;
+  // A row whose search never got an answer is not "searched": it would otherwise count
+  // against the match rate and drop out of Search All.
+  const searchedCount = songs.filter(s => s.hasSearched && !s.searchError).length;
+  const unsearchedCount = songs.filter(s => !s.hasSearched || s.searchError).length;
 
   return (
     <div style={{ minHeight: '100vh', display: 'flex', flexDirection: 'column' }}>
@@ -957,12 +1259,16 @@ export default function Home() {
               isSearching={false}
               searchProgress={0}
               unsearchedCount={0}
+              isBatchActive={isBatchActive}
+              onCancelBatch={handleCancelBatch}
               onOpenExport={() => setIsExportOpen(true)}
               onClearList={handleClearPlayer}
             />
 
             <PlayerSections
               sections={playerSections}
+              mode={mode}
+              status={statusFilter}
               selectedIds={selectedIds}
               onToggleSelect={handleToggleSelect}
               onSelectMany={handleSelectMany}
@@ -1014,6 +1320,21 @@ export default function Home() {
               </div>
             )}
 
+            {/* REBUILD_PLAN.md 2.1 item 5: "Showing X of Y songs. N are unavailable on
+                YouTube." -- only worth saying when something was actually dropped. */}
+            {playlistMeta?.unavailableCount > 0 && (
+              <div style={{
+                maxWidth: '1240px',
+                margin: '0 auto 10px',
+                fontSize: '0.76rem',
+                fontWeight: 700,
+                color: '#9a90a6',
+              }}>
+                Showing {playlistMeta.returnedCount} of {playlistMeta.loadedCount} songs.{' '}
+                {playlistMeta.unavailableCount} {playlistMeta.unavailableCount === 1 ? 'is' : 'are'} unavailable on YouTube.
+              </div>
+            )}
+
             {/* Frosted Glass Stats & Action Bar */}
             <StatsBar
               totalSongs={songs.length}
@@ -1027,6 +1348,8 @@ export default function Home() {
               isSearching={isSearching}
               searchProgress={searchProgress}
               unsearchedCount={unsearchedCount}
+              isBatchActive={isBatchActive}
+              onCancelBatch={handleCancelBatch}
               onSearchAllRemaining={handleSearchAllRemaining}
               onOpenExport={() => setIsExportOpen(true)}
               onClearList={handleClearList}
@@ -1100,6 +1423,13 @@ export default function Home() {
         isOpen={isSetupOpen}
         onClose={() => setIsSetupOpen(false)}
         systemStatus={systemStatus}
+      />
+
+      {/* REBUILD_PLAN.md 2.1 item 5: truncation notice, once per fetch */}
+      <TruncationDialog
+        isOpen={!!truncationNotice}
+        message={truncationNotice}
+        onClose={() => setTruncationNotice(null)}
       />
     </div>
   );

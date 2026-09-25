@@ -1,0 +1,27 @@
+=== HEAD / ===
+HTTP/1.1 200 OK
+Content-Security-Policy: img-src 'self' https://assets.ppy.sh https://a.ppy.sh https://i.ytimg.com https://lh3.googleusercontent.com https://i.scdn.co https://*.mzstatic.com; media-src https://b.ppy.sh; connect-src 'self' https://catboy.best https://api.nerinyan.moe https://dl.nerinyan.moe https://s3.us-west-2.idrivee2.com; frame-ancestors 'none'
+X-Content-Type-Options: nosniff
+Referrer-Policy: strict-origin-when-cross-origin
+Vary: rsc, next-router-state-tree, next-router-prefetch, next-router-segment-prefetch, Accept-Encoding
+x-nextjs-cache: HIT
+x-nextjs-prerender: 1
+x-nextjs-prerender: 1
+x-nextjs-stale-time: 300
+Cache-Control: s-maxage=31536000
+ETag: "rbnjn5d37cht9"
+Content-Type: text/html; charset=utf-8
+Content-Length: 23090
+Date: Fri, 25 Sep 2026 00:39:28 GMT
+Connection: keep-alive
+Keep-Alive: timeout=5
+
+
+=== /api/download?beatmapsetId=abc ===
+HTTP 400
+=== /api/download?beatmapsetId=1%2F..%2Fx ===
+HTTP 400
+=== /api/osu/player/beatmaps?userId=1%2F..%2Fx&type=best ===
+HTTP 400
+=== /api/playlist?url=https://example.com/?x=music.apple.com ===
+HTTP 400

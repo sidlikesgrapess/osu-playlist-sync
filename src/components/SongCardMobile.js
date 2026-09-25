@@ -1,17 +1,23 @@
 'use client';
 
-import { useState } from 'react';
-import { Play, Download, ExternalLink, Loader2, Music, Layers, Edit3, Check, X } from 'lucide-react';
+import { useState, memo } from 'react';
+import { Download, ExternalLink, Loader2, Music, Layers, Edit3, Check, X } from 'lucide-react';
 import { osuAudio } from '@/lib/soundEffects';
 import { getStarColor, getStatusBadgeStyle, describeRejection } from '@/lib/beatmapFormat';
 import OsuCheckbox from './OsuCheckbox';
+import BeatmapCover from './BeatmapCover';
+import { OverrideMark, OverrideNotice } from './MatchNotice';
 
-export default function SongCardMobile({
+// Memoized per F-19: the JSX call site (SongTable.js) wraps `onToggleSelect`,
+// `onDownloadSingle`, `onOpenAltPicker` and `onManualSearch` with `useStableCallback` so their
+// identity does not churn every render, which is what makes this memo actually skip work.
+function SongCardMobile({
   song,
   isSelected,
   onToggleSelect,
-  activeAudio,
-  onToggleAudio,
+  isPlaying,
+  isPreviewLoading,
+  onTogglePreview,
   onDownloadSingle,
   isDownloading,
   onOpenAltPicker,
@@ -19,10 +25,9 @@ export default function SongCardMobile({
 }) {
   const [isEditingQuery, setIsEditingQuery] = useState(false);
   const [customQuery, setCustomQuery] = useState(song.cleanQuery || song.title || '');
-  const [imgError, setImgError] = useState(false);
   const [thumbError, setThumbError] = useState(false);
+  const [previewError, setPreviewError] = useState(false);
 
-  const isPlaying = activeAudio === song.id;
   const match = song.matchedBeatmap;
   const hasMatch = Boolean(match);
   const statusStyle = getStatusBadgeStyle(match?.status);
@@ -57,23 +62,16 @@ export default function SongCardMobile({
             id={`checkbox-mobile-song-${song.id}`}
             checked={isSelected && hasMatch}
             disabled={!hasMatch}
-            unavailable={song.hasSearched && !hasMatch}
+            unavailable={song.hasSearched && !hasMatch && !song.searchError}
             onChange={() => {
               if (hasMatch) {
                 osuAudio.playClick();
                 onToggleSelect(song.id);
               }
             }}
-            title={hasMatch ? 'Select beatmap' : 'No beatmap found for this song'}
+            title={hasMatch ? 'Select beatmap' : song.searchError ? 'The search did not finish' : 'No beatmap found for this song'}
           />
-          {match?.artistOverride && (
-            <span
-              title="Artist does not match. Check before downloading"
-              style={{ color: '#ff5555', fontSize: '0.82rem', fontWeight: 900, lineHeight: 1, flexShrink: 0 }}
-            >
-              !
-            </span>
-          )}
+          <OverrideMark match={match} song={song} />
         </div>
 
         <span style={{ fontSize: '0.72rem', color: '#8b7d95', fontWeight: 800, minWidth: '18px' }}>
@@ -86,6 +84,10 @@ export default function SongCardMobile({
             <img
               src={song.thumbnail}
               alt={song.title}
+              loading="lazy"
+              decoding="async"
+              width={42}
+              height={28}
               onError={() => setThumbError(true)}
               style={{
                 width: '100%',
@@ -220,9 +222,10 @@ export default function SongCardMobile({
         </div>
       ) : hasMatch ? (
         <>
-        {match.artistOverride && song.extractedArtist && (
-          <div style={{ fontSize: '0.7rem', fontWeight: 700, color: '#ff3d5e', margin: '2px 0 4px' }}>
-            Could not find one by {song.extractedArtist}. Closest match:
+        <OverrideNotice match={match} song={song} style={{ margin: '2px 0 4px' }} />
+        {previewError && (
+          <div style={{ fontSize: '0.66rem', fontWeight: 700, color: '#ff8888', margin: '2px 0 4px' }}>
+            Preview unavailable
           </div>
         )}
         <div style={{
@@ -235,59 +238,29 @@ export default function SongCardMobile({
           alignItems: 'center',
         }}>
           {/* Cover with Play Preview */}
-          <div
-            className="osu-thumb-container"
-            style={{
-              width: '60px',
-              height: '40px',
-              borderRadius: '6px',
-              flexShrink: 0,
-              background: '#343040',
-              position: 'relative',
-              overflow: 'hidden',
+          <BeatmapCover
+            key={match.covers?.list || match.id}
+            coverUrl={match.covers?.list || match.covers?.cover}
+            fallbackId={match.id}
+            alt={match.title}
+            width={60}
+            height={40}
+            fallbackIconSize={14}
+            playIconSize={13}
+            waveBarCount={3}
+            waveBarWidth={2.5}
+            playButtonClassName="osu-play-btn"
+            activeOverlayBg="rgba(16, 14, 22, 0.75)"
+            idleOverlayBg="rgba(0, 0, 0, 0.35)"
+            previewUrl={match.previewUrl}
+            isPlaying={isPlaying}
+            isPreviewLoading={isPreviewLoading}
+            onPreviewErrorChange={setPreviewError}
+            onTogglePreview={() => {
+              osuAudio.playClick();
+              return onTogglePreview(match.previewUrl);
             }}
-          >
-            {!imgError ? (
-              <img
-                src={match.covers?.list || match.covers?.cover || `https://assets.ppy.sh/beatmaps/${match.id}/covers/list.jpg`}
-                alt={match.title}
-                onError={() => setImgError(true)}
-                style={{ width: '100%', height: '100%', objectFit: 'cover' }}
-              />
-            ) : (
-              <div style={{ width: '100%', height: '100%', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
-                <Music size={14} color="#ff66aa" />
-              </div>
-            )}
-            <button
-              className="osu-play-btn"
-              onClick={() => {
-                osuAudio.playClick();
-                onToggleAudio(song.id, match.previewUrl);
-              }}
-              style={{
-                position: 'absolute',
-                inset: 0,
-                background: isPlaying ? 'rgba(16, 14, 22, 0.75)' : 'rgba(0, 0, 0, 0.35)',
-                border: 'none',
-                display: 'flex',
-                alignItems: 'center',
-                justifyContent: 'center',
-                cursor: 'pointer',
-              }}
-              title={isPlaying ? 'Pause' : 'Play preview'}
-            >
-              {isPlaying ? (
-                <div style={{ display: 'flex', alignItems: 'center', gap: '2px' }}>
-                  <div className="osu-wave-bar" style={{ width: '2.5px' }} />
-                  <div className="osu-wave-bar" style={{ width: '2.5px' }} />
-                  <div className="osu-wave-bar" style={{ width: '2.5px' }} />
-                </div>
-              ) : (
-                <Play size={13} color="#ffffff" />
-              )}
-            </button>
-          </div>
+          />
 
           {/* Details */}
           <div style={{ minWidth: 0, flex: 1 }}>
@@ -328,6 +301,27 @@ export default function SongCardMobile({
           </div>
         </div>
         </>
+      ) : song.searchError ? (
+        <div style={{ display: 'flex', alignItems: 'center', gap: '8px', padding: '4px 0' }}>
+          <span style={{ color: '#8b7d95', fontSize: '0.74rem', fontWeight: 600 }}>
+            {song.searchError === 'rate-limited' ? 'osu! is busy. Try again in a minute.' : 'The search failed. Try again.'}
+          </span>
+          <button
+            onClick={() => onManualSearch(song.id, song.cleanQuery || song.title)}
+            className="osu-btn-interactive osu-glass-card"
+            style={{
+              color: '#ff66aa',
+              fontSize: '0.7rem',
+              fontWeight: 700,
+              padding: '2px 8px',
+              borderRadius: '4px',
+              cursor: 'pointer',
+              fontFamily: 'inherit',
+            }}
+          >
+            Retry
+          </button>
+        </div>
       ) : song.hasSearched === false ? (
         <div style={{ display: 'flex', alignItems: 'center', gap: '8px', padding: '4px 0' }}>
           <span style={{ color: '#8b7d95', fontSize: '0.74rem', fontWeight: 600 }}>Not searched yet</span>
@@ -464,3 +458,5 @@ export default function SongCardMobile({
     </div>
   );
 }
+
+export default memo(SongCardMobile);
