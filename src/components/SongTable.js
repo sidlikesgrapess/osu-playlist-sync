@@ -33,7 +33,7 @@ export default function SongTable({
   // Single play-state owner (F-21/F-36, item 2): `toggle` is stable across renders (it comes
   // from a useCallback inside useAudioPreview), which is what lets SongRow/SongCardMobile stay
   // memoized while still reacting to play state through the isPlaying/isPreviewLoading props.
-  const { isPlaying, isLoading: isPreviewLoading, toggle } = useAudioPreview();
+  const { isPlaying, isBuffering, hasError, toggle } = useAudioPreview();
   const [altPickerSong, setAltPickerSong] = useState(null);
   const [filterText, setFilterText] = useState('');
 
@@ -226,7 +226,8 @@ export default function SongTable({
                   isSelected={selectedIds.has(song.id)}
                   onToggleSelect={stableToggleSelect}
                   isPlaying={isPlaying(song.matchedBeatmap?.previewUrl)}
-                  isPreviewLoading={isPreviewLoading(song.matchedBeatmap?.previewUrl)}
+                  isPreviewLoading={isBuffering(song.matchedBeatmap?.previewUrl)}
+                  hasPreviewError={hasError(song.matchedBeatmap?.previewUrl)}
                   onTogglePreview={toggle}
                   onDownloadSingle={stableDownloadSingle}
                   isDownloading={downloadingIds.has(song.id)}
@@ -248,7 +249,8 @@ export default function SongTable({
             isSelected={selectedIds.has(song.id)}
             onToggleSelect={stableToggleSelect}
             isPlaying={isPlaying(song.matchedBeatmap?.previewUrl)}
-            isPreviewLoading={isPreviewLoading(song.matchedBeatmap?.previewUrl)}
+            isPreviewLoading={isBuffering(song.matchedBeatmap?.previewUrl)}
+            hasPreviewError={hasError(song.matchedBeatmap?.previewUrl)}
             onTogglePreview={toggle}
             onDownloadSingle={stableDownloadSingle}
             isDownloading={downloadingIds.has(song.id)}
@@ -496,7 +498,7 @@ export default function SongTable({
                 const favouriteCount = match.favouriteCount ?? match.favourite_count ?? 0;
                 const statusStyle = getStatusBadgeStyle(match.status || '');
                 const isPreviewPlaying = isPlaying(match.previewUrl);
-                const isPreviewBusy = isPreviewLoading(match.previewUrl);
+                const isPreviewBusy = isBuffering(match.previewUrl);
 
                 return (
                   <div
@@ -541,6 +543,7 @@ export default function SongTable({
                       previewUrl={match.previewUrl}
                       isPlaying={isPreviewPlaying}
                       isPreviewLoading={isPreviewBusy}
+                      hasPreviewError={hasError(match.previewUrl)}
                       onTogglePreview={() => {
                         osuAudio.playClick();
                         return toggle(match.previewUrl);

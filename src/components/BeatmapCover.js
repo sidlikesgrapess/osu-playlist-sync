@@ -1,7 +1,7 @@
 'use client';
 
-import { useEffect, useState } from 'react';
-import { Music, Play } from 'lucide-react';
+import { useState } from 'react';
+import { Loader2, Music, Play } from 'lucide-react';
 import { useAudioPreviewMount } from '@/lib/useAudioPreview';
 
 /**
@@ -14,8 +14,11 @@ import { useAudioPreviewMount } from '@/lib/useAudioPreview';
  * `key={coverUrl}` at the call site (not here) is what resets `imgError` when an alternative
  * match swaps the cover out from under the same row.
  *
- * Play state (`isPlaying`/`isPreviewLoading`) is a prop, never a subscription -- the parent
- * list owns `useAudioPreview()` (item 2). This component only registers its mount for the
+ * Play state (`isPlaying`/`isPreviewLoading`/`hasPreviewError`) is a prop, never a
+ * subscription -- the parent list owns `useAudioPreview()` (item 2), and the error lives in
+ * its store too, so a failure after playback began reaches the row the same way a failed
+ * start does. `isPreviewLoading` means busy but not audibly playing: the first fetch or a
+ * mid play stall. This component only registers its mount for the
  * stop-rule registry via `useAudioPreviewMount`.
  */
 export default function BeatmapCover({
@@ -30,7 +33,7 @@ export default function BeatmapCover({
   isPlaying = false,
   isPreviewLoading = false,
   onTogglePreview,
-  onPreviewErrorChange,
+  hasPreviewError = false,
   fallbackIconSize = 16,
   playIconSize = 15,
   playIconFill = false,
@@ -41,24 +44,15 @@ export default function BeatmapCover({
   idleOverlayBg = 'rgba(0, 0, 0, 0.4)',
 }) {
   const [imgError, setImgError] = useState(false);
-  const [previewError, setPreviewError] = useState(false);
 
   useAudioPreviewMount(previewUrl);
 
-  // A successful play (or a fresh attempt) clears any earlier error.
-  useEffect(() => {
-    if (isPlaying || isPreviewLoading) setPreviewError(false);
-  }, [isPlaying, isPreviewLoading]);
-
-  useEffect(() => {
-    onPreviewErrorChange?.(previewError);
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [previewError]);
-
   const src = coverUrl || (fallbackId ? `https://assets.ppy.sh/beatmaps/${fallbackId}/covers/list.jpg` : null);
-  // Wave bars show as soon as a toggle is asked for, not only once playback is confirmed --
-  // the same instant feedback the old, un-shared version gave on click.
+  // The overlay darkens as soon as a toggle is asked for. While busy it shows a spinner;
+  // wave bars only once audio is actually coming out.
   const showActive = isPlaying || isPreviewLoading;
+  const showError = hasPreviewError && !showActive;
+  const label = showError ? 'Preview unavailable' : showActive ? 'Pause audio preview' : 'Play audio preview';
 
   const handleToggle = (event) => {
     // Stops the click from reaching a clickable ancestor (SongTable's alt-picker rows select
@@ -66,10 +60,9 @@ export default function BeatmapCover({
     // is a no-op there.
     event.stopPropagation();
     if (!onTogglePreview) return;
-    const result = onTogglePreview();
-    if (result?.catch) {
-      result.catch(() => setPreviewError(true));
-    }
+    // The store records the failure itself (`hasPreviewError`); this only keeps a rejected
+    // attempt from surfacing as an unhandled rejection.
+    onTogglePreview()?.catch?.(() => {});
   };
 
   return (
@@ -122,12 +115,8 @@ export default function BeatmapCover({
           type="button"
           className={playButtonClassName}
           onClick={handleToggle}
-          title={
-            previewError
-              ? 'Preview unavailable'
-              : showActive ? 'Pause audio preview' : 'Play audio preview'
-          }
-          aria-label={previewError ? 'Preview unavailable' : showActive ? 'Pause audio preview' : 'Play audio preview'}
+          title={label}
+          aria-label={label}
           style={{
             position: 'absolute',
             inset: 0,
@@ -140,7 +129,9 @@ export default function BeatmapCover({
             transition: 'background 0.15s ease',
           }}
         >
-          {showActive ? (
+          {isPreviewLoading ? (
+            <Loader2 size={playIconSize + 3} color="#ff66aa" className="spin-slow" />
+          ) : isPlaying ? (
             <div style={{ display: 'flex', alignItems: 'center', gap: waveBarWidth ? '2px' : '3px' }}>
               {Array.from({ length: waveBarCount }, (_, i) => (
                 <div key={i} className="osu-wave-bar" style={waveBarWidth ? { width: `${waveBarWidth}px` } : undefined} />

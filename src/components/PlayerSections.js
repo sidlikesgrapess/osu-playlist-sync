@@ -97,10 +97,9 @@ function MetaBadge({ song }) {
 // are unchanged skips re-rendering when some other row's preview state changes.
 const BeatmapRow = memo(function BeatmapRow({
   song, rowKey, isSelected, onToggleSelect, onDownloadSingle, isDownloading,
-  isPlaying, isPreviewLoading, onTogglePreview,
+  isPlaying, isPreviewLoading, hasPreviewError, onTogglePreview,
 }) {
   const [isHovered, setIsHovered] = useState(false);
-  const [previewError, setPreviewError] = useState(false);
   const match = song.matchedBeatmap;
   const statusStyle = getStatusBadgeStyle(match.status || '');
   const minStars = match.starRange?.min;
@@ -160,7 +159,7 @@ const BeatmapRow = memo(function BeatmapRow({
         previewUrl={match.previewUrl}
         isPlaying={isPlaying}
         isPreviewLoading={isPreviewLoading}
-        onPreviewErrorChange={setPreviewError}
+        hasPreviewError={hasPreviewError}
         onTogglePreview={() => {
           osuAudio.playClick();
           return onTogglePreview(match.previewUrl);
@@ -170,7 +169,7 @@ const BeatmapRow = memo(function BeatmapRow({
       {/* Details */}
       <div style={{ flex: 1, minWidth: '160px' }}>
         <OverrideNotice match={match} song={song} style={{ marginBottom: '4px' }} />
-        {previewError && (
+        {hasPreviewError && (
           <div style={{ fontSize: '0.68rem', fontWeight: 700, color: '#ff8888', marginBottom: '4px' }}>
             Preview unavailable
           </div>
@@ -301,7 +300,7 @@ export default function PlayerSections({
   // Single source of truth for preview play state (item 2): rows below get plain
   // `isPlaying`/`isPreviewLoading` booleans and the stable `toggle` reference, they never
   // subscribe themselves.
-  const { isPlaying, isLoading: isPreviewLoading, toggle } = useAudioPreview();
+  const { isPlaying, isBuffering, hasError, toggle } = useAudioPreview();
 
   // F-20's local reveal, one counter per section. Reset when the active mode/status filters
   // change, since `allItems` becomes a different list underneath the same section type.
@@ -485,7 +484,8 @@ export default function PlayerSections({
                           onDownloadSingle={onDownloadSingle}
                           isDownloading={downloadingIds.has(song.id)}
                           isPlaying={isPlaying(previewUrl)}
-                          isPreviewLoading={isPreviewLoading(previewUrl)}
+                          isPreviewLoading={isBuffering(previewUrl)}
+                          hasPreviewError={hasError(previewUrl)}
                           onTogglePreview={toggle}
                         />
                       );

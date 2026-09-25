@@ -185,3 +185,142 @@ test('toggle with no previewKey is a safe no-op', async () => {
   assert.equal(player.calls.length, 0);
   assert.equal(store.getSnapshot().activeKey, null);
 });
+
+// --- Buffering and error state (todo 03). The browser instance feeds `setBuffering` from the
+// audio element's waiting/stalled/playing events and `fail` from its error event. ---
+
+async function startPlaying(store, player, key) {
+  const p = store.toggle(key);
+  await flush();
+  player.resolveNext();
+  await p;
+}
+
+test('loading is not an error, and a fresh key has no buffering or error flags', () => {
+  const player = makeFakePlayer();
+  const store = createPreviewStore({ play: player.play, stop: player.stop });
+
+  store.toggle('a.mp3');
+  const snap = store.getSnapshot();
+  assert.equal(snap.loadingKey, 'a.mp3');
+  assert.equal(snap.bufferingKey, null);
+  assert.equal(snap.errorKeys.has('a.mp3'), false);
+});
+
+test('mid play waiting then playing toggles bufferingKey without touching activeKey', async () => {
+  const player = makeFakePlayer();
+  const store = createPreviewStore({ play: player.play, stop: player.stop });
+  await startPlaying(store, player, 'a.mp3');
+
+  store.setBuffering('a.mp3', true);
+  assert.equal(store.getSnapshot().bufferingKey, 'a.mp3');
+  assert.equal(store.getSnapshot().activeKey, 'a.mp3');
+
+  store.setBuffering('a.mp3', false);
+  assert.equal(store.getSnapshot().bufferingKey, null);
+  assert.equal(store.getSnapshot().activeKey, 'a.mp3');
+});
+
+test('fail after playback began stops once, clears state and flags the key', async () => {
+  const player = makeFakePlayer();
+  const store = createPreviewStore({ play: player.play, stop: player.stop });
+  await startPlaying(store, player, 'a.mp3');
+  store.setBuffering('a.mp3', true);
+
+  store.fail('a.mp3');
+  const snap = store.getSnapshot();
+  assert.equal(snap.activeKey, null);
+  assert.equal(snap.loadingKey, null);
+  assert.equal(snap.bufferingKey, null);
+  assert.equal(snap.errorKeys.has('a.mp3'), true);
+  assert.equal(player.stops.length, 1);
+
+  store.fail('a.mp3'); // a second error event for the same, now stopped, src
+  assert.equal(player.stops.length, 1);
+});
+
+test('fail during loading flags the key and the superseded play() settle is swallowed', async () => {
+  const player = makeFakePlayer();
+  const store = createPreviewStore({ play: player.play, stop: player.stop });
+
+  const attempt = store.toggle('a.mp3');
+  await flush();
+  store.fail('a.mp3'); // the element's error event fires before play() rejects
+  player.resolveNext(new Error('NotSupportedError'));
+  await assert.doesNotReject(attempt);
+  assert.equal(store.getSnapshot().errorKeys.has('a.mp3'), true);
+  assert.equal(store.getSnapshot().loadingKey, null);
+});
+
+test('events for a superseded or stopped key are ignored', async () => {
+  const player = makeFakePlayer();
+  const store = createPreviewStore({ play: player.play, stop: player.stop });
+  await startPlaying(store, player, 'a.mp3');
+  store.toggle('b.mp3'); // a.mp3 replaced by b.mp3, still loading
+
+  store.fail('a.mp3');
+  store.setBuffering('a.mp3', true);
+  const snap = store.getSnapshot();
+  assert.equal(snap.loadingKey, 'b.mp3');
+  assert.equal(snap.bufferingKey, null);
+  assert.equal(snap.errorKeys.has('a.mp3'), false);
+
+  store.stop();
+  const stopsBefore = player.stops.length;
+  store.fail('b.mp3');
+  assert.equal(store.getSnapshot().errorKeys.has('b.mp3'), false);
+  assert.equal(player.stops.length, stopsBefore);
+});
+
+test('a live play() rejection flags the key, and toggling it again clears the flag and retries', async () => {
+  const player = makeFakePlayer();
+  const store = createPreviewStore({ play: player.play, stop: player.stop });
+
+  const attempt = store.toggle('a.mp3');
+  await flush();
+  player.resolveNext(new Error('network'));
+  await assert.rejects(attempt);
+  assert.equal(store.getSnapshot().errorKeys.has('a.mp3'), true);
+
+  const retry = store.toggle('a.mp3');
+  assert.equal(store.getSnapshot().errorKeys.has('a.mp3'), false, 'the retry clears the error');
+  assert.equal(store.getSnapshot().loadingKey, 'a.mp3');
+  await flush();
+  player.resolveNext();
+  await retry;
+  assert.equal(store.getSnapshot().activeKey, 'a.mp3');
+  assert.equal(player.calls.length, 2);
+});
+
+test('an error on one key survives another key playing', async () => {
+  const player = makeFakePlayer();
+  const store = createPreviewStore({ play: player.play, stop: player.stop });
+  await startPlaying(store, player, 'a.mp3');
+  store.fail('a.mp3');
+  await startPlaying(store, player, 'b.mp3');
+
+  assert.equal(store.getSnapshot().errorKeys.has('a.mp3'), true);
+  assert.equal(store.getSnapshot().activeKey, 'b.mp3');
+});
+
+test('no-op events keep the snapshot reference and send no notification', async () => {
+  const player = makeFakePlayer();
+  const store = createPreviewStore({ play: player.play, stop: player.stop });
+  await startPlaying(store, player, 'a.mp3');
+
+  let notifications = 0;
+  store.subscribe(() => { notifications += 1; });
+  const before = store.getSnapshot();
+
+  store.setBuffering('a.mp3', false); // already not buffering
+  store.setBuffering('z.mp3', true); // not the current key
+  store.fail('z.mp3');
+  assert.equal(store.getSnapshot(), before);
+  assert.equal(notifications, 0);
+
+  store.setBuffering('a.mp3', true);
+  assert.notEqual(store.getSnapshot(), before, 'a real change replaces the snapshot');
+  const buffering = store.getSnapshot();
+  store.setBuffering('a.mp3', true);
+  assert.equal(store.getSnapshot(), buffering);
+});

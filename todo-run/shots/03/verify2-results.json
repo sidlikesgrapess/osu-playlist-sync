@@ -1,0 +1,110 @@
+{
+  "search": "live",
+  "previewHeaders": {
+    "len": "102708",
+    "type": "audio/ogg"
+  },
+  "A_start": [
+    {
+      "t": 3,
+      "tag": "S",
+      "label": "Pause audio preview"
+    },
+    {
+      "t": 403,
+      "tag": "B",
+      "label": "Pause audio preview"
+    }
+  ],
+  "A_afterWaiting": {
+    "label": "Pause audio preview",
+    "spinner": true,
+    "bars": 0,
+    "playIcon": false
+  },
+  "A_afterPlaying": {
+    "label": "Pause audio preview",
+    "spinner": false,
+    "bars": 5,
+    "playIcon": false
+  },
+  "A_readyState": 4,
+  "A_afterStalledBuffered": {
+    "label": "Pause audio preview",
+    "spinner": false,
+    "bars": 5,
+    "playIcon": false
+  },
+  "A_afterMidplayError": {
+    "label": "Preview unavailable",
+    "spinner": false,
+    "bars": 0,
+    "playIcon": true,
+    "unavailableText": 1,
+    "paused": true
+  },
+  "B_retryClearsText": 0,
+  "B_timeline": [
+    {
+      "t": 1,
+      "tag": "S",
+      "label": "Pause audio preview"
+    },
+    {
+      "t": 11554,
+      "tag": "B",
+      "label": "Pause audio preview"
+    },
+    {
+      "t": 22047,
+      "tag": "P",
+      "label": "Play audio preview"
+    }
+  ],
+  "C_count": 51,
+  "C_before": {
+    "label": "Play audio preview",
+    "spinner": false,
+    "bars": 0,
+    "playIcon": true
+  },
+  "C_loading": {
+    "label": "Pause audio preview",
+    "spinner": true,
+    "bars": 0,
+    "playIcon": false
+  },
+  "C_error": {
+    "label": "Preview unavailable",
+    "spinner": false,
+    "bars": 0,
+    "playIcon": true
+  },
+  "C_modalClosed": true,
+  "D_loading": {
+    "label": "Pause audio preview",
+    "spinner": true,
+    "bars": 0,
+    "playIcon": false
+  },
+  "D_tl": [
+    {
+      "t": 2,
+      "tag": "S",
+      "label": "Pause audio preview"
+    },
+    {
+      "t": 2757,
+      "tag": "B",
+      "label": "Pause audio preview"
+    }
+  ],
+  "D_error": {
+    "label": "Preview unavailable",
+    "spinner": false,
+    "bars": 0,
+    "playIcon": true,
+    "unavailableText": 1
+  },
+  "previewRequests": 6
+}

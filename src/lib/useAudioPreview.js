@@ -19,6 +19,14 @@ import { useCallback, useEffect, useSyncExternalStore } from 'react';
 export function createPreviewStore({ play, stop: stopPlayback } = {}) {
   let activeKey = null;
   let loadingKey = null;
+  // Set while the element is fetching or has run dry mid play (`waiting`/`stalled`), so the
+  // cover can draw a spinner rather than wave bars over silence. Only ever equal to
+  // `activeKey` or `loadingKey`, or null.
+  let bufferingKey = null;
+  // Keys whose last attempt failed, before or after playback began. A set rather than one
+  // key, so an earlier failed row keeps saying so while another row plays. Replaced (never
+  // mutated) on change so the snapshot reference moves with it.
+  let errorKeys = new Set();
   let token = 0;
   const registrations = new Map(); // previewKey -> Set(instanceId)
   const listeners = new Set();
@@ -29,8 +37,18 @@ export function createPreviewStore({ play, stop: stopPlayback } = {}) {
   // conclude the store changes on every render and re-render forever ("Maximum update depth
   // exceeded"). The snapshot is cached here and only replaced when `activeKey`/`loadingKey`
   // actually change (below, alongside the `notify()` calls that mean they did).
-  let snapshot = { activeKey, loadingKey };
-  const refreshSnapshot = () => { snapshot = { activeKey, loadingKey }; };
+  let snapshot = { activeKey, loadingKey, bufferingKey, errorKeys };
+  const refreshSnapshot = () => { snapshot = { activeKey, loadingKey, bufferingKey, errorKeys }; };
+
+  const isCurrent = (previewKey) => !!previewKey && (previewKey === activeKey || previewKey === loadingKey);
+
+  function setError(previewKey, errored) {
+    if (errorKeys.has(previewKey) === errored) return false;
+    errorKeys = new Set(errorKeys);
+    if (errored) errorKeys.add(previewKey);
+    else errorKeys.delete(previewKey);
+    return true;
+  }
 
   const notify = () => listeners.forEach((listener) => listener());
 
@@ -38,10 +56,33 @@ export function createPreviewStore({ play, stop: stopPlayback } = {}) {
     const wasPlaying = activeKey !== null || loadingKey !== null;
     activeKey = null;
     loadingKey = null;
+    bufferingKey = null;
     token += 1; // invalidates any in-flight attempt, so its eventual settle is a no-op
     refreshSnapshot();
     if (wasPlaying) stopPlayback?.();
     notify();
+  }
+
+  /**
+   * Media element events land here. Both are no-ops unless `previewKey` is the key being
+   * loaded or played right now, the same stale rule the token gives `toggle`: an event from
+   * a src that has since been replaced or stopped never touches state.
+   */
+  function setBuffering(previewKey, isBuffering) {
+    if (!isCurrent(previewKey)) return;
+    const next = isBuffering ? previewKey : null;
+    if (bufferingKey === next) return;
+    bufferingKey = next;
+    refreshSnapshot();
+    notify();
+  }
+
+  // A failure at any point, including after `play()` resolved (a dropped connection or a
+  // file that will not decode). Stops playback and remembers the key as errored.
+  function fail(previewKey) {
+    if (!isCurrent(previewKey)) return;
+    setError(previewKey, true);
+    stop(); // refreshes the snapshot and notifies, covering the error change too
   }
 
   /**
@@ -64,6 +105,8 @@ export function createPreviewStore({ play, stop: stopPlayback } = {}) {
     const myToken = token;
     loadingKey = previewKey;
     activeKey = null;
+    bufferingKey = null;
+    setError(previewKey, false); // a fresh attempt is the retry
     refreshSnapshot();
     notify();
 
@@ -83,6 +126,8 @@ export function createPreviewStore({ play, stop: stopPlayback } = {}) {
         if (myToken !== token) return; // stale rejection, ignored regardless of its name
         loadingKey = null;
         activeKey = null;
+        bufferingKey = null;
+        setError(previewKey, true);
         refreshSnapshot();
         notify();
         throw err;
@@ -121,7 +166,7 @@ export function createPreviewStore({ play, stop: stopPlayback } = {}) {
     return registrations.get(previewKey)?.size ?? 0;
   }
 
-  return { toggle, stop, register, unregister, subscribe, getSnapshot, registrationCount };
+  return { toggle, stop, setBuffering, fail, register, unregister, subscribe, getSnapshot, registrationCount };
 }
 
 // --- The one instance the app actually uses. Module-scoped so every consumer (SongTable's
@@ -144,8 +189,20 @@ const store = createPreviewStore({
     const audio = ensureAudio();
     if (!audio) return Promise.reject(new Error('no window'));
     audio.pause();
-    audio.src = previewUrl;
+    // Handlers are properties, not addEventListener, so each attempt replaces the last one's
+    // and every handler is bound to the key it was set up for. The store ignores a key that
+    // is no longer current, so a late event from an old src cannot mark the new one.
     audio.onended = () => store.stop();
+    audio.onwaiting = () => store.setBuffering(previewUrl, true);
+    // `stalled` only means the network went quiet; buffered audio may still be playing, and
+    // then no `playing` event would follow to clear the spinner. Count it only when the
+    // element really has nothing ahead to play (below HAVE_FUTURE_DATA).
+    audio.onstalled = () => {
+      if (audio.readyState < 3) store.setBuffering(previewUrl, true);
+    };
+    audio.onplaying = () => store.setBuffering(previewUrl, false);
+    audio.onerror = () => store.fail(previewUrl);
+    audio.src = previewUrl;
     return audio.play();
   },
   stop: () => {
@@ -153,7 +210,7 @@ const store = createPreviewStore({
   },
 });
 
-const EMPTY_SNAPSHOT = { activeKey: null, loadingKey: null };
+const EMPTY_SNAPSHOT = { activeKey: null, loadingKey: null, bufferingKey: null, errorKeys: new Set() };
 function getServerSnapshot() {
   return EMPTY_SNAPSHOT;
 }
@@ -161,7 +218,8 @@ function getServerSnapshot() {
 /**
  * Used by the component that owns a list of rows (SongTable, PlayerSections) -- the
  * "parent" that subscribes to play state, per item 2. Rows receive `isPlaying` /
- * `isPreviewLoading` as plain boolean props computed from this; `BeatmapCover` itself never
+ * `isPreviewLoading` (from `isBuffering`) / `hasPreviewError` as plain boolean props computed
+ * from this; `BeatmapCover` itself never
  * calls this hook (see `useAudioPreviewMount` below).
  */
 export function useAudioPreview() {
@@ -173,6 +231,10 @@ export function useAudioPreview() {
     loadingKey: snapshot.loadingKey,
     isPlaying: (previewUrl) => !!previewUrl && snapshot.activeKey === previewUrl,
     isLoading: (previewUrl) => !!previewUrl && snapshot.loadingKey === previewUrl,
+    // Busy but not audibly playing: the first fetch, or a mid play `waiting`/`stalled`.
+    isBuffering: (previewUrl) => !!previewUrl
+      && (snapshot.loadingKey === previewUrl || snapshot.bufferingKey === previewUrl),
+    hasError: (previewUrl) => !!previewUrl && snapshot.errorKeys.has(previewUrl),
     toggle,
   };
 }

@@ -1,0 +1,150 @@
+{
+  "desktop_idle": {
+    "label": "Play audio preview",
+    "title": "Play audio preview",
+    "spinner": false,
+    "spinnerColor": null,
+    "spinnerSize": null,
+    "bars": 0,
+    "playIcon": true,
+    "bg": "rgba(0, 0, 0, 0.4)"
+  },
+  "desktop_loading": {
+    "label": "Pause audio preview",
+    "title": "Pause audio preview",
+    "spinner": true,
+    "spinnerColor": "#ff66aa",
+    "spinnerSize": "18",
+    "bars": 0,
+    "playIcon": false,
+    "bg": "rgba(16, 14, 22, 0.85)"
+  },
+  "desktop_stoppedWhileLoading": {
+    "label": "Play audio preview",
+    "title": "Play audio preview",
+    "spinner": false,
+    "spinnerColor": null,
+    "spinnerSize": null,
+    "bars": 0,
+    "playIcon": true,
+    "bg": "rgba(0, 0, 0, 0.4)"
+  },
+  "desktop_loading2": {
+    "label": "Pause audio preview",
+    "title": "Pause audio preview",
+    "spinner": true,
+    "spinnerColor": "#ff66aa",
+    "spinnerSize": "18",
+    "bars": 0,
+    "playIcon": false,
+    "bg": "rgba(16, 14, 22, 0.85)"
+  },
+  "desktop_playing": {
+    "label": "Pause audio preview",
+    "title": "Pause audio preview",
+    "spinner": false,
+    "spinnerColor": null,
+    "spinnerSize": null,
+    "bars": 5,
+    "playIcon": false,
+    "bg": "rgba(16, 14, 22, 0.85)"
+  },
+  "desktop_error": {
+    "label": "Preview unavailable",
+    "title": "Preview unavailable",
+    "spinner": false,
+    "spinnerColor": null,
+    "spinnerSize": null,
+    "bars": 0,
+    "playIcon": true,
+    "bg": "rgba(0, 0, 0, 0.4)",
+    "unavailableText": 1
+  },
+  "desktop_retryImmediate": {
+    "label": "Pause audio preview",
+    "title": "Pause audio preview",
+    "spinner": false,
+    "spinnerColor": null,
+    "spinnerSize": null,
+    "bars": 5,
+    "playIcon": false,
+    "bg": "rgba(16, 14, 22, 0.85)",
+    "unavailableText": 0
+  },
+  "desktop_retryPlaying": {
+    "label": "Pause audio preview",
+    "title": "Pause audio preview",
+    "spinner": false,
+    "spinnerColor": null,
+    "spinnerSize": null,
+    "bars": 5,
+    "playIcon": false,
+    "bg": "rgba(16, 14, 22, 0.85)",
+    "unavailableText": 0
+  },
+  "midplayTimeline": [
+    {
+      "t": 8,
+      "tag": "S"
+    }
+  ],
+  "midplaySawBarsThenSpinner": false,
+  "offlineTimeline": [
+    {
+      "t": 11,
+      "tag": "S",
+      "label": "Pause audio preview"
+    },
+    {
+      "t": 271,
+      "tag": "B",
+      "label": "Pause audio preview"
+    },
+    {
+      "t": 10667,
+      "tag": "P",
+      "label": "Play audio preview"
+    }
+  ],
+  "offlineFinal": {
+    "label": "Play audio preview",
+    "title": "Play audio preview",
+    "spinner": false,
+    "spinnerColor": null,
+    "spinnerSize": null,
+    "bars": 0,
+    "playIcon": true,
+    "bg": "rgba(0, 0, 0, 0.4)",
+    "unavailableText": 0
+  },
+  "altLoading": {
+    "label": "Preview unavailable",
+    "title": "Preview unavailable",
+    "spinner": false,
+    "spinnerColor": null,
+    "spinnerSize": null,
+    "bars": 0,
+    "playIcon": true,
+    "bg": "rgba(0, 0, 0, 0.4)"
+  },
+  "altError": {
+    "label": "Preview unavailable",
+    "title": "Preview unavailable",
+    "spinner": false,
+    "spinnerColor": null,
+    "spinnerSize": null,
+    "bars": 0,
+    "playIcon": true,
+    "bg": "rgba(0, 0, 0, 0.4)"
+  },
+  "phone_idle": {
+    "label": "Play audio preview",
+    "title": "Play audio preview",
+    "spinner": false,
+    "spinnerColor": null,
+    "spinnerSize": null,
+    "bars": 0,
+    "playIcon": true,
+    "bg": "rgba(0, 0, 0, 0.35)"
+  }
+}

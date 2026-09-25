@@ -1,0 +1,54 @@
+{
+  "desktop_rows": 3,
+  "desktop_loading": {
+    "label": "Pause audio preview",
+    "spinner": true,
+    "bars": 0,
+    "playIcon": false
+  },
+  "desktop_playing": {
+    "label": "Pause audio preview",
+    "spinner": false,
+    "bars": 3,
+    "playIcon": false
+  },
+  "desktop_error": {
+    "label": "Preview unavailable",
+    "spinner": false,
+    "bars": 0,
+    "playIcon": true,
+    "first": {
+      "label": "Play audio preview",
+      "spinner": false,
+      "bars": 0,
+      "playIcon": true
+    },
+    "unavailableText": 1
+  },
+  "phone_rows": 3,
+  "phone_loading": {
+    "label": "Pause audio preview",
+    "spinner": true,
+    "bars": 0,
+    "playIcon": false
+  },
+  "phone_playing": {
+    "label": "Pause audio preview",
+    "spinner": false,
+    "bars": 3,
+    "playIcon": false
+  },
+  "phone_error": {
+    "label": "Preview unavailable",
+    "spinner": false,
+    "bars": 0,
+    "playIcon": true,
+    "first": {
+      "label": "Play audio preview",
+      "spinner": false,
+      "bars": 0,
+      "playIcon": true
+    },
+    "unavailableText": 1
+  }
+}

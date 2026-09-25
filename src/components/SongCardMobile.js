@@ -17,6 +17,7 @@ function SongCardMobile({
   onToggleSelect,
   isPlaying,
   isPreviewLoading,
+  hasPreviewError,
   onTogglePreview,
   onDownloadSingle,
   isDownloading,
@@ -26,7 +27,6 @@ function SongCardMobile({
   const [isEditingQuery, setIsEditingQuery] = useState(false);
   const [customQuery, setCustomQuery] = useState(song.cleanQuery || song.title || '');
   const [thumbError, setThumbError] = useState(false);
-  const [previewError, setPreviewError] = useState(false);
 
   const match = song.matchedBeatmap;
   const hasMatch = Boolean(match);
@@ -223,7 +223,7 @@ function SongCardMobile({
       ) : hasMatch ? (
         <>
         <OverrideNotice match={match} song={song} style={{ margin: '2px 0 4px' }} />
-        {previewError && (
+        {hasPreviewError && (
           <div style={{ fontSize: '0.66rem', fontWeight: 700, color: '#ff8888', margin: '2px 0 4px' }}>
             Preview unavailable
           </div>
@@ -255,7 +255,7 @@ function SongCardMobile({
             previewUrl={match.previewUrl}
             isPlaying={isPlaying}
             isPreviewLoading={isPreviewLoading}
-            onPreviewErrorChange={setPreviewError}
+            hasPreviewError={hasPreviewError}
             onTogglePreview={() => {
               osuAudio.playClick();
               return onTogglePreview(match.previewUrl);

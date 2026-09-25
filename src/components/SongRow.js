@@ -17,6 +17,7 @@ function SongRow({
   onToggleSelect,
   isPlaying,
   isPreviewLoading,
+  hasPreviewError,
   onTogglePreview,
   onDownloadSingle,
   isDownloading,
@@ -26,7 +27,6 @@ function SongRow({
   const [isEditingQuery, setIsEditingQuery] = useState(false);
   const [customQuery, setCustomQuery] = useState(song.cleanQuery || song.title || '');
   const [thumbError, setThumbError] = useState(false);
-  const [previewError, setPreviewError] = useState(false);
 
   const match = song.matchedBeatmap;
   const hasMatch = Boolean(match);
@@ -228,7 +228,7 @@ function SongRow({
             {/* No beatmap by the target artist exists, so what follows is the nearest thing
                 found. Said as a sentence introducing the result, not a label on it. */}
             <OverrideNotice match={match} song={song} />
-            {previewError && (
+            {hasPreviewError && (
               <div style={{ fontSize: '0.68rem', fontWeight: 700, color: '#ff8888', marginBottom: '4px' }}>
                 Preview unavailable
               </div>
@@ -249,7 +249,7 @@ function SongRow({
               previewUrl={match.previewUrl}
               isPlaying={isPlaying}
               isPreviewLoading={isPreviewLoading}
-              onPreviewErrorChange={setPreviewError}
+              hasPreviewError={hasPreviewError}
               onTogglePreview={() => {
                 osuAudio.playClick();
                 return onTogglePreview(match.previewUrl);
