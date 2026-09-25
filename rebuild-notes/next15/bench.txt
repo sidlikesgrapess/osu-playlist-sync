@@ -1,0 +1,76 @@
+
+> osu-playlist-sync@1.0.0 bench
+> node bench/run.mjs
+
+37 fixtures | threshold 70 | labels: 109
+
+── baseline ─────────────────────────────
+  hit              29  78.4%   correct beatmap, artist confirmed
+  correctAbstain    6  16.2%   returned nothing, and nothing was right
+  WRONG ARTIST      1  2.7%   <- the failure that matters
+  miss              1  2.7%   right answer was in the pool, we returned nothing
+  unreachable       0  0.0%   right answer never came back from the API
+  unlabelled        0  0.0%   needs a verdict in labels.json
+  ---
+  correct maps offered   790   confirmed-artist mapsets the user can actually pick
+  hard-rejected correct   62   confirmed-artist mapsets made invisible by the gate
+
+── ladder+lazyprobe ─────────────────────────────
+  hit              30  81.1%   correct beatmap, artist confirmed
+  correctAbstain    3  8.1%   returned nothing, and nothing was right
+  WRONG ARTIST      4  10.8%   <- the failure that matters
+  miss              0  0.0%   right answer was in the pool, we returned nothing
+  unreachable       0  0.0%   right answer never came back from the API
+  unlabelled        0  0.0%   needs a verdict in labels.json
+  ---
+  correct maps offered   793   confirmed-artist mapsets the user can actually pick
+  hard-rejected correct   16   confirmed-artist mapsets made invisible by the gate
+
+── ladder+probe ─────────────────────────────
+  hit              30  81.1%   correct beatmap, artist confirmed
+  correctAbstain    3  8.1%   returned nothing, and nothing was right
+  WRONG ARTIST      4  10.8%   <- the failure that matters
+  miss              0  0.0%   right answer was in the pool, we returned nothing
+  unreachable       0  0.0%   right answer never came back from the API
+  unlabelled        0  0.0%   needs a verdict in labels.json
+  ---
+  correct maps offered   293   confirmed-artist mapsets the user can actually pick
+  hard-rejected correct    4   confirmed-artist mapsets made invisible by the gate
+
+── ladder ─────────────────────────────
+  hit              30  81.1%   correct beatmap, artist confirmed
+  correctAbstain    3  8.1%   returned nothing, and nothing was right
+  WRONG ARTIST      4  10.8%   <- the failure that matters
+  miss              0  0.0%   right answer was in the pool, we returned nothing
+  unreachable       0  0.0%   right answer never came back from the API
+  unlabelled        0  0.0%   needs a verdict in labels.json
+  ---
+  correct maps offered   793   confirmed-artist mapsets the user can actually pick
+  hard-rejected correct   16   confirmed-artist mapsets made invisible by the gate
+
+── matrix ─────────────────────────────
+  hit              31  83.8%   correct beatmap, artist confirmed
+  correctAbstain    3  8.1%   returned nothing, and nothing was right
+  WRONG ARTIST      3  8.1%   <- the failure that matters
+  miss              0  0.0%   right answer was in the pool, we returned nothing
+  unreachable       0  0.0%   right answer never came back from the API
+  unlabelled        0  0.0%   needs a verdict in labels.json
+  ---
+  correct maps offered   752   confirmed-artist mapsets the user can actually pick
+  hard-rejected correct   16   confirmed-artist mapsets made invisible by the gate
+
+── SHIPPED (src) ─────────────────────────────
+  hit              31  83.8%   correct beatmap, artist confirmed
+  correctAbstain    6  16.2%   returned nothing, and nothing was right
+  WRONG ARTIST      0  0.0%   <- the failure that matters
+  miss              0  0.0%   right answer was in the pool, we returned nothing
+  unreachable       0  0.0%   right answer never came back from the API
+  unlabelled        0  0.0%   needs a verdict in labels.json
+  ---
+  correct maps offered   752   confirmed-artist mapsets the user can actually pick
+  hard-rejected correct   22   confirmed-artist mapsets made invisible by the gate
+
+(node:15988) [MODULE_TYPELESS_PACKAGE_JSON] Warning: Module type of file:///C:/Users/Siddartha/Desktop/study(fr)/Antigravity/osuplaylist-ws/next15/src/lib/osu.js is not specified and it doesn't parse as CommonJS.
+Reparsing as ES module because module syntax was detected. This incurs a performance overhead.
+To eliminate this warning, add "type": "module" to \\?\C:\Users\Siddartha\Desktop\study(fr)\Antigravity\osuplaylist-ws\next15\package.json.
+(Use `node --trace-warnings ...` to show where the warning was created)

@@ -1,0 +1,54 @@
+
+> osu-playlist-sync@1.0.0 build
+> next build
+
+(node:23872) [MODULE_TYPELESS_PACKAGE_JSON] Warning: Module type of file:///C:/Users/Siddartha/Desktop/study(fr)/Antigravity/osuplaylist-ws/next15/src/lib/mirrors.js is not specified and it doesn't parse as CommonJS.
+Reparsing as ES module because module syntax was detected. This incurs a performance overhead.
+To eliminate this warning, add "type": "module" to \\?\C:\Users\Siddartha\Desktop\study(fr)\Antigravity\osuplaylist-ws\next15\package.json.
+(Use `node --trace-warnings ...` to show where the warning was created)
+   ▲ Next.js 15.5.26
+   - Environments: .env.local
+
+   Creating an optimized production build ...
+(node:13908) [MODULE_TYPELESS_PACKAGE_JSON] Warning: Module type of file:///C:/Users/Siddartha/Desktop/study(fr)/Antigravity/osuplaylist-ws/next15/src/lib/mirrors.js is not specified and it doesn't parse as CommonJS.
+Reparsing as ES module because module syntax was detected. This incurs a performance overhead.
+To eliminate this warning, add "type": "module" to \\?\C:\Users\Siddartha\Desktop\study(fr)\Antigravity\osuplaylist-ws\next15\package.json.
+(Use `node --trace-warnings ...` to show where the warning was created)
+(node:4748) [MODULE_TYPELESS_PACKAGE_JSON] Warning: Module type of file:///C:/Users/Siddartha/Desktop/study(fr)/Antigravity/osuplaylist-ws/next15/src/lib/mirrors.js is not specified and it doesn't parse as CommonJS.
+Reparsing as ES module because module syntax was detected. This incurs a performance overhead.
+To eliminate this warning, add "type": "module" to \\?\C:\Users\Siddartha\Desktop\study(fr)\Antigravity\osuplaylist-ws\next15\package.json.
+(Use `node --trace-warnings ...` to show where the warning was created)
+(node:18540) [MODULE_TYPELESS_PACKAGE_JSON] Warning: Module type of file:///C:/Users/Siddartha/Desktop/study(fr)/Antigravity/osuplaylist-ws/next15/src/lib/mirrors.js is not specified and it doesn't parse as CommonJS.
+Reparsing as ES module because module syntax was detected. This incurs a performance overhead.
+To eliminate this warning, add "type": "module" to \\?\C:\Users\Siddartha\Desktop\study(fr)\Antigravity\osuplaylist-ws\next15\package.json.
+(Use `node --trace-warnings ...` to show where the warning was created)
+ ✓ Compiled successfully in 37.8s
+   Linting and checking validity of types ...
+   Collecting page data ...
+   Generating static pages (0/4) ...
+   Generating static pages (1/4) 
+   Generating static pages (2/4) 
+   Generating static pages (3/4) 
+ ✓ Generating static pages (4/4)
+   Finalizing page optimization ...
+   Collecting build traces ...
+
+Route (app)                                 Size  First Load JS
+┌ ○ /                                    34.2 kB         137 kB
+├ ○ /_not-found                            995 B         104 kB
+├ ƒ /api/download                          140 B         103 kB
+├ ƒ /api/github/commits                    140 B         103 kB
+├ ƒ /api/osu/player                        140 B         103 kB
+├ ƒ /api/osu/player/beatmaps               140 B         103 kB
+├ ƒ /api/osu/search                        140 B         103 kB
+├ ƒ /api/playlist                          140 B         103 kB
+└ ƒ /api/status                            140 B         103 kB
++ First Load JS shared by all             103 kB
+  ├ chunks/255-2dbbf79f36f0dfa2.js       46.4 kB
+  ├ chunks/4bd1b696-c023c6e3521b1417.js  54.2 kB
+  └ other shared chunks (total)          1.99 kB
+
+
+○  (Static)   prerendered as static content
+ƒ  (Dynamic)  server-rendered on demand
+
