@@ -14,7 +14,7 @@ Status values: pending | needs-decision | scoping | implementing | verifying | f
 | 05 | Hover bounce, toggleable | dropped | 1 | reverted | | USER: scratched the idea, d1de6ec reverted |
 | 06 | Mode switcher to 2 modes | done | 1 | 973ab48 | items/06-mode-switcher.md | |
 | 07 | Re:Re: split (F-28) | done | 1 | 39fb490 | items/07-rere.md | |
-| 08 | YouTube 500 + paced Search All | pending | 0 | | items/08-yt500.md | |
+| 08 | YouTube 500 + paced Search All | done | 1 | 035ae14 | items/08-yt500.md | |
 | 09 | Global top bar, keep both result sets | pending | 0 | | items/09-global-bar.md | |
 | 10 | Change Player vs trash | pending | 0 | | items/10-change-player.md | |
 | 11 | Player search loading cost | pending | 0 | | items/11-player-loading.md | |
