@@ -18,7 +18,7 @@ Status values: pending | needs-decision | scoping | implementing | verifying | f
 | 09 | Global top bar, keep both result sets | done | 1 | 1fc967d | items/09-global-bar.md | |
 | 10 | Change Player vs trash | done | 1 | baf94e3 | items/10-change-player.md | |
 | 11 | Player search loading cost | done | 1 | f7e1a5e | items/11-player-loading.md | |
-| 12 | Full-length player sections, sticky headers | pending | 0 | | items/12-sticky-sections.md | |
+| 12 | Full-length player sections, sticky headers | done | 1 | | items/12-sticky-sections.md | 9a5e273 |
 | 13 | Redo F-46 | pending | 0 | | items/13-f46.md | |
 
 Baselines: `baseline/tests.txt` (165 / 164 pass / 0 fail / 1 todo), `baseline/bench.txt`
