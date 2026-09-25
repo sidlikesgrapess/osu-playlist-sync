@@ -17,7 +17,7 @@ import { GitHubIcon } from '@/components/Icons';
 import { Star } from 'lucide-react';
 import { osuAudio } from '@/lib/soundEffects';
 import { DEFAULT_STRICTNESS } from '@/lib/matchStrictness';
-import { isRankedStatus, isAutoSelectable } from '@/lib/beatmapFormat';
+import { isRankedStatus, isAutoSelectable, confirmedMatchIds } from '@/lib/beatmapFormat';
 import {
   fetchBeatmapArchive,
   createProxyBudget,
@@ -914,6 +914,12 @@ export default function Home() {
     setSelectedIds(new Set(matchedIds));
   };
 
+  // The toolbar's "Select Confirmed" preset: replaces the selection with only the matches
+  // that pass isAutoSelectable, so flagged rows ticked by the header checkbox drop out.
+  const handleSelectConfirmed = () => {
+    setSelectedIds(new Set(confirmedMatchIds(songs)));
+  };
+
   const handleDeselectAll = () => {
     setSelectedIds(new Set());
   };
@@ -1368,6 +1374,7 @@ export default function Home() {
               selectedIds={selectedIds}
               onToggleSelect={handleToggleSelect}
               onSelectAll={handleSelectAll}
+              onSelectConfirmed={handleSelectConfirmed}
               onDeselectAll={handleDeselectAll}
               onDownloadSingle={handleDownloadSingle}
               downloadingIds={downloadingIds}

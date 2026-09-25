@@ -7,7 +7,7 @@ import OsuCheckbox from './OsuCheckbox';
 import BeatmapCover from './BeatmapCover';
 import { X, Check, Search, ChevronLeft, ChevronRight, Heart, Play } from 'lucide-react';
 import { osuAudio } from '@/lib/soundEffects';
-import { getStarColor, formatCompactNumber, getStatusBadgeStyle } from '@/lib/beatmapFormat';
+import { getStarColor, formatCompactNumber, getStatusBadgeStyle, confirmedMatchIds } from '@/lib/beatmapFormat';
 import { useAudioPreview } from '@/lib/useAudioPreview';
 import { useStableCallback } from '@/lib/useStableCallback';
 
@@ -23,6 +23,7 @@ export default function SongTable({
   selectedIds,
   onToggleSelect,
   onSelectAll,
+  onSelectConfirmed,
   onDeselectAll,
   onDownloadSingle,
   downloadingIds,
@@ -50,6 +51,17 @@ export default function SongTable({
   const matchedSongs = songs.filter(s => s.matchedBeatmap);
   const allSelected = matchedSongs.length > 0 && matchedSongs.every(s => selectedIds.has(s.id));
   const isIndeterminate = matchedSongs.some(s => selectedIds.has(s.id)) && !allSelected;
+
+  // The toolbar button is a "confirmed only" preset, not a copy of the header checkbox: it
+  // selects exactly the matches that pass isAutoSelectable. It flips to Deselect All once the
+  // selection is that set, or when nothing is confirmed but something is ticked, because on
+  // phones the header checkbox is hidden and this is the only bulk deselect.
+  const confirmedIds = confirmedMatchIds(songs);
+  const confirmedSelected = confirmedIds.length > 0
+    && selectedIds.size === confirmedIds.length
+    && confirmedIds.every(id => selectedIds.has(id));
+  const showDeselect = selectedIds.size > 0 && (confirmedSelected || confirmedIds.length === 0);
+  const selectConfirmedDisabled = !showDeselect && confirmedIds.length === 0;
 
   // Filter songs by search term
   const filteredSongs = filterText.trim()
@@ -99,14 +111,19 @@ export default function SongTable({
       }}>
         <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
           <button
+            id="select-confirmed-button"
             className="osu-btn-interactive osu-glass-card"
+            disabled={selectConfirmedDisabled}
+            title={showDeselect ? 'Clear the selection' : 'Select only matches that need no second look'}
             onClick={() => {
               osuAudio.playClick();
-              if (allSelected) onDeselectAll();
-              else onSelectAll();
+              if (showDeselect) onDeselectAll();
+              else onSelectConfirmed();
             }}
             style={{
               color: '#ffffff',
+              opacity: selectConfirmedDisabled ? 0.5 : 1,
+              cursor: selectConfirmedDisabled ? 'not-allowed' : 'pointer',
               borderRadius: '6px',
               padding: '6px 14px',
               fontSize: '0.76rem',
@@ -117,7 +134,7 @@ export default function SongTable({
               fontFamily: 'inherit',
             }}
           >
-            <span>{allSelected ? 'Deselect All' : 'Select All Matched'}</span>
+            <span>{showDeselect ? 'Deselect All' : `Select Confirmed (${confirmedIds.length})`}</span>
           </button>
           <span style={{ fontSize: '0.76rem', color: '#8b7d95', fontWeight: 600 }}>
             {selectedIds.size} of {matchedSongs.length} selected

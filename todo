@@ -17,10 +17,10 @@
 - can slider refetch be stopped since we already have everything?. done (resolved with
   a button)
 - breakcore playlist has 11 songs but only 7 are fetched. This is the playlist https://music.youtube.com/playlist?list=PLJU2iuLr5pzzwD1BjsQSX4Exb-w1Wc2Kp. done
+- select all confirmed matches (come up with a good name) button instead of Select all since the tickmark of the top row does the same thing. done
 
 ## Remaining
 
-- select all confirmed matches (come up with a good name) button instead of Select all since the tickmark of the top row does the same thing.
 - mode switcher has yt,spotify, AM, single song combine them into playlist/song search. So then we will have song/playlist saerch and player search
 - is there memory leak problem? the cached beatmaps and pics have to be deleted when the user pulls up a new search or player search (is song preview cached?)
 - song preview should show a loading or errors. (network) as song as its loading it should show a buffering animation

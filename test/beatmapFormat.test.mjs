@@ -11,6 +11,7 @@ import {
   upstreamStatusFor,
   isAutoSelectable,
   overrideNoticeFor,
+  confirmedMatchIds,
 } from '../src/lib/beatmapFormat.js';
 
 test('isRankedStatus accepts exactly RANKED_LOVED_STATUSES, never qualified (U-8)', () => {
@@ -83,4 +84,29 @@ test('overrideNoticeFor: titleOnly is its own kind, regardless of artist', () =>
 
 test('overrideNoticeFor: no beatmapset at all is null', () => {
   assert.equal(overrideNoticeFor(null, { extractedArtist: 'YOASOBI' }), null);
+});
+
+test('confirmedMatchIds keeps only auto-selectable matches, in song order', () => {
+  const songs = [
+    { id: 'a', matchedBeatmap: { id: 1 } },
+    { id: 'b', matchedBeatmap: { id: 2, artistOverride: true } },
+    { id: 'c', matchedBeatmap: { id: 3, titleOnly: true } },
+    { id: 'd', matchedBeatmap: null },
+    { id: 'e' },
+    { id: 'f', matchedBeatmap: { id: 6 } },
+  ];
+  assert.deepEqual(confirmedMatchIds(songs), ['a', 'f']);
+});
+
+test('confirmedMatchIds returns [] for an empty or missing list', () => {
+  assert.deepEqual(confirmedMatchIds([]), []);
+  assert.deepEqual(confirmedMatchIds(undefined), []);
+});
+
+test('confirmedMatchIds returns [] when every match is flagged', () => {
+  const songs = [
+    { id: 'b', matchedBeatmap: { artistOverride: true } },
+    { id: 'c', matchedBeatmap: { titleOnly: true } },
+  ];
+  assert.deepEqual(confirmedMatchIds(songs), []);
 });

@@ -54,6 +54,15 @@ export function isAutoSelectable(beatmapset) {
 }
 
 /**
+ * Ids of the songs whose match is confirmed, in song order: the set the "Select Confirmed"
+ * toolbar button selects. Same rule as every auto-select site (`isAutoSelectable`), so a
+ * flagged match (`artistOverride` / `titleOnly`) or an unmatched song is never included.
+ */
+export function confirmedMatchIds(songs) {
+  return (songs || []).filter(s => isAutoSelectable(s?.matchedBeatmap)).map(s => s.id);
+}
+
+/**
  * The notice `MatchNotice.js` renders over a flagged beatmapset, or `null` for an ordinary
  * one. `song` supplies the target artist for the `artist` case -- the artist the search was
  * for, never the beatmapset's own artist (see `describeRejection` above for why that
