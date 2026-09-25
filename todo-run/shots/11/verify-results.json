@@ -1,0 +1,248 @@
+[
+  {
+    "name": "desktop",
+    "checks": {
+      "a_results_avatars_lazy_async": {
+        "pass": true,
+        "detail": {
+          "n": 20,
+          "first": {
+            "loading": "lazy",
+            "decoding": "async",
+            "nw": 2
+          }
+        }
+      },
+      "a_results_avatars_render": {
+        "pass": true,
+        "detail": [
+          2,
+          2,
+          2,
+          2,
+          2,
+          2,
+          2,
+          2,
+          2,
+          2,
+          2,
+          2,
+          2,
+          2,
+          2,
+          2,
+          2,
+          2,
+          2,
+          2
+        ]
+      },
+      "a_one_search_call": {
+        "pass": true,
+        "detail": {
+          "q": 1,
+          "userId": 0,
+          "beatmaps": 0,
+          "other": 0
+        }
+      },
+      "b_pick_calls": {
+        "pass": true,
+        "detail": {
+          "q": 1,
+          "userId": 1,
+          "beatmaps": 1,
+          "other": 0
+        }
+      },
+      "c_section_call": {
+        "pass": true,
+        "detail": {
+          "q": 1,
+          "userId": 1,
+          "beatmaps": 2,
+          "other": 0
+        }
+      },
+      "d_show_more_no_calls": {
+        "pass": true,
+        "detail": {
+          "q": 1,
+          "userId": 1,
+          "beatmaps": 2,
+          "other": 0
+        }
+      },
+      "d_rows_revealed": {
+        "pass": true
+      },
+      "e_chip_lazy_async": {
+        "pass": true,
+        "detail": {
+          "loading": "lazy",
+          "decoding": "async"
+        }
+      },
+      "e_chip_renders": {
+        "pass": true,
+        "detail": 2
+      },
+      "e_change_player_no_calls": {
+        "pass": true,
+        "detail": {
+          "q": 1,
+          "userId": 1,
+          "beatmaps": 2,
+          "other": 0
+        }
+      },
+      "z_total_calls": {
+        "pass": true,
+        "detail": {
+          "q": 1,
+          "userId": 1,
+          "beatmaps": 2,
+          "other": 0
+        }
+      },
+      "z_no_console_errors": {
+        "pass": true,
+        "detail": []
+      },
+      "z_no_leaks": {
+        "pass": true,
+        "detail": []
+      }
+    },
+    "calls": {
+      "q": 1,
+      "userId": 1,
+      "beatmaps": 2,
+      "other": 0
+    }
+  },
+  {
+    "name": "phone",
+    "checks": {
+      "a_results_avatars_lazy_async": {
+        "pass": true,
+        "detail": {
+          "n": 20,
+          "first": {
+            "loading": "lazy",
+            "decoding": "async",
+            "nw": 2
+          }
+        }
+      },
+      "a_results_avatars_render": {
+        "pass": true,
+        "detail": [
+          2,
+          2,
+          2,
+          2,
+          2,
+          2,
+          2,
+          2,
+          2,
+          2,
+          2,
+          2,
+          2,
+          2,
+          2,
+          2,
+          2,
+          2,
+          2,
+          2
+        ]
+      },
+      "a_one_search_call": {
+        "pass": true,
+        "detail": {
+          "q": 1,
+          "userId": 0,
+          "beatmaps": 0,
+          "other": 0
+        }
+      },
+      "b_pick_calls": {
+        "pass": true,
+        "detail": {
+          "q": 1,
+          "userId": 1,
+          "beatmaps": 1,
+          "other": 0
+        }
+      },
+      "c_section_call": {
+        "pass": true,
+        "detail": {
+          "q": 1,
+          "userId": 1,
+          "beatmaps": 2,
+          "other": 0
+        }
+      },
+      "d_show_more_no_calls": {
+        "pass": true,
+        "detail": {
+          "q": 1,
+          "userId": 1,
+          "beatmaps": 2,
+          "other": 0
+        }
+      },
+      "d_rows_revealed": {
+        "pass": true
+      },
+      "e_chip_lazy_async": {
+        "pass": true,
+        "detail": {
+          "loading": "lazy",
+          "decoding": "async"
+        }
+      },
+      "e_chip_renders": {
+        "pass": true,
+        "detail": 2
+      },
+      "e_change_player_no_calls": {
+        "pass": true,
+        "detail": {
+          "q": 1,
+          "userId": 1,
+          "beatmaps": 2,
+          "other": 0
+        }
+      },
+      "z_total_calls": {
+        "pass": true,
+        "detail": {
+          "q": 1,
+          "userId": 1,
+          "beatmaps": 2,
+          "other": 0
+        }
+      },
+      "z_no_console_errors": {
+        "pass": true,
+        "detail": []
+      },
+      "z_no_leaks": {
+        "pass": true,
+        "detail": []
+      }
+    },
+    "calls": {
+      "q": 1,
+      "userId": 1,
+      "beatmaps": 2,
+      "other": 0
+    }
+  }
+]

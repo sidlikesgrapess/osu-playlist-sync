@@ -1,0 +1,195 @@
+{
+  "checks": {
+    "desk_results_lazy_async": {
+      "pass": true,
+      "detail": {
+        "n": 12,
+        "sample": [
+          {
+            "src": "https://a.ppy.sh/7562902?1787055713.jpeg",
+            "alt": "mrekk",
+            "loading": "lazy",
+            "decoding": "async",
+            "nw": 249,
+            "complete": true,
+            "top": 479
+          },
+          {
+            "src": "https://a.ppy.sh/32756421?1675625848.png",
+            "alt": "Mrekk 2",
+            "loading": "lazy",
+            "decoding": "async",
+            "nw": 128,
+            "complete": true,
+            "top": 479
+          }
+        ],
+        "bad": []
+      }
+    },
+    "desk_one_search": {
+      "pass": true,
+      "detail": {
+        "q": 1,
+        "userId": 0,
+        "beatmaps": 0,
+        "total": 1
+      }
+    },
+    "phone_results_lazy_async": {
+      "pass": true,
+      "detail": {
+        "n": 12
+      }
+    },
+    "phone_results_render_after_scroll": {
+      "pass": true,
+      "detail": [
+        249,
+        128,
+        256,
+        256,
+        256,
+        256,
+        256,
+        256,
+        256,
+        256,
+        256,
+        160
+      ]
+    },
+    "desk_results_render": {
+      "pass": true,
+      "detail": [
+        249,
+        128,
+        256,
+        256,
+        256,
+        256,
+        256,
+        256,
+        256,
+        256,
+        256,
+        160
+      ]
+    },
+    "no_call_from_resize_scroll": {
+      "pass": true,
+      "detail": {
+        "q": 1,
+        "userId": 0,
+        "beatmaps": 0,
+        "total": 1
+      }
+    },
+    "pick_calls": {
+      "pass": true,
+      "detail": {
+        "q": 1,
+        "userId": 1,
+        "beatmaps": 1,
+        "total": 3
+      }
+    },
+    "section_call": {
+      "pass": true,
+      "detail": {
+        "q": 1,
+        "userId": 1,
+        "beatmaps": 2,
+        "total": 4
+      }
+    },
+    "show_more_no_call": {
+      "pass": true,
+      "detail": {
+        "q": 1,
+        "userId": 1,
+        "beatmaps": 2,
+        "total": 4
+      }
+    },
+    "desk_chip": {
+      "pass": true,
+      "detail": {
+        "text": "Back to mrekk",
+        "img": {
+          "loading": "lazy",
+          "decoding": "async",
+          "nw": 249
+        }
+      }
+    },
+    "phone_chip": {
+      "pass": true,
+      "detail": {
+        "text": "Back to mrekk",
+        "img": {
+          "loading": "lazy",
+          "decoding": "async",
+          "nw": 249
+        }
+      }
+    },
+    "change_player_no_call": {
+      "pass": true,
+      "detail": {
+        "q": 1,
+        "userId": 1,
+        "beatmaps": 2,
+        "total": 4
+      }
+    }
+  },
+  "log": [
+    "Loading the image 'https://osu.ppy.sh/images/layout/avatar-guest@2x.png' violates the following Content Security Policy directive: \"img-src 'self' https://assets.ppy.sh https://a.ppy.sh https://i.ytimg.com https://lh3.googleusercontent.com https://i.scdn.co https://*.mzstatic.com\". The action has been blocked.",
+    "Loading the image 'https://osu.ppy.sh/images/layout/avatar-guest@2x.png' violates the following Content Security Policy directive: \"img-src 'self' https://assets.ppy.sh https://a.ppy.sh https://i.ytimg.com https://lh3.googleusercontent.com https://i.scdn.co https://*.mzstatic.com\". The action has been blocked.",
+    "Loading the image 'https://osu.ppy.sh/images/layout/avatar-guest@2x.png' violates the following Content Security Policy directive: \"img-src 'self' https://assets.ppy.sh https://a.ppy.sh https://i.ytimg.com https://lh3.googleusercontent.com https://i.scdn.co https://*.mzstatic.com\". The action has been blocked.",
+    "Loading the image 'https://osu.ppy.sh/images/layout/avatar-guest@2x.png' violates the following Content Security Policy directive: \"img-src 'self' https://assets.ppy.sh https://a.ppy.sh https://i.ytimg.com https://lh3.googleusercontent.com https://i.scdn.co https://*.mzstatic.com\". The action has been blocked.",
+    "Loading the image 'https://osu.ppy.sh/images/layout/avatar-guest@2x.png' violates the following Content Security Policy directive: \"img-src 'self' https://assets.ppy.sh https://a.ppy.sh https://i.ytimg.com https://lh3.googleusercontent.com https://i.scdn.co https://*.mzstatic.com\". The action has been blocked.",
+    "Loading the image 'https://osu.ppy.sh/images/layout/avatar-guest@2x.png' violates the following Content Security Policy directive: \"img-src 'self' https://assets.ppy.sh https://a.ppy.sh https://i.ytimg.com https://lh3.googleusercontent.com https://i.scdn.co https://*.mzstatic.com\". The action has been blocked.",
+    "Loading the image 'https://osu.ppy.sh/images/layout/avatar-guest@2x.png' violates the following Content Security Policy directive: \"img-src 'self' https://assets.ppy.sh https://a.ppy.sh https://i.ytimg.com https://lh3.googleusercontent.com https://i.scdn.co https://*.mzstatic.com\". The action has been blocked.",
+    "Loading the image 'https://osu.ppy.sh/images/layout/avatar-guest@2x.png' violates the following Content Security Policy directive: \"img-src 'self' https://assets.ppy.sh https://a.ppy.sh https://i.ytimg.com https://lh3.googleusercontent.com https://i.scdn.co https://*.mzstatic.com\". The action has been blocked.",
+    "Loading the image 'https://osu.ppy.sh/images/layout/avatar-guest@2x.png' violates the following Content Security Policy directive: \"img-src 'self' https://assets.ppy.sh https://a.ppy.sh https://i.ytimg.com https://lh3.googleusercontent.com https://i.scdn.co https://*.mzstatic.com\". The action has been blocked.",
+    "Loading the image 'https://osu.ppy.sh/images/layout/avatar-guest@2x.png' violates the following Content Security Policy directive: \"img-src 'self' https://assets.ppy.sh https://a.ppy.sh https://i.ytimg.com https://lh3.googleusercontent.com https://i.scdn.co https://*.mzstatic.com\". The action has been blocked.",
+    "Loading the image 'https://osu.ppy.sh/images/layout/avatar-guest@2x.png' violates the following Content Security Policy directive: \"img-src 'self' https://assets.ppy.sh https://a.ppy.sh https://i.ytimg.com https://lh3.googleusercontent.com https://i.scdn.co https://*.mzstatic.com\". The action has been blocked.",
+    "Loading the image 'https://osu.ppy.sh/images/layout/avatar-guest@2x.png' violates the following Content Security Policy directive: \"img-src 'self' https://assets.ppy.sh https://a.ppy.sh https://i.ytimg.com https://lh3.googleusercontent.com https://i.scdn.co https://*.mzstatic.com\". The action has been blocked.",
+    "Loading the image 'https://osu.ppy.sh/images/layout/avatar-guest@2x.png' violates the following Content Security Policy directive: \"img-src 'self' https://assets.ppy.sh https://a.ppy.sh https://i.ytimg.com https://lh3.googleusercontent.com https://i.scdn.co https://*.mzstatic.com\". The action has been blocked.",
+    "Loading the image 'https://osu.ppy.sh/images/layout/avatar-guest@2x.png' violates the following Content Security Policy directive: \"img-src 'self' https://assets.ppy.sh https://a.ppy.sh https://i.ytimg.com https://lh3.googleusercontent.com https://i.scdn.co https://*.mzstatic.com\". The action has been blocked.",
+    "Loading the image 'https://osu.ppy.sh/images/layout/avatar-guest@2x.png' violates the following Content Security Policy directive: \"img-src 'self' https://assets.ppy.sh https://a.ppy.sh https://i.ytimg.com https://lh3.googleusercontent.com https://i.scdn.co https://*.mzstatic.com\". The action has been blocked.",
+    "Loading the image 'https://osu.ppy.sh/images/layout/avatar-guest@2x.png' violates the following Content Security Policy directive: \"img-src 'self' https://assets.ppy.sh https://a.ppy.sh https://i.ytimg.com https://lh3.googleusercontent.com https://i.scdn.co https://*.mzstatic.com\". The action has been blocked.",
+    "Loading the image 'https://osu.ppy.sh/images/layout/avatar-guest@2x.png' violates the following Content Security Policy directive: \"img-src 'self' https://assets.ppy.sh https://a.ppy.sh https://i.ytimg.com https://lh3.googleusercontent.com https://i.scdn.co https://*.mzstatic.com\". The action has been blocked.",
+    "Loading the image 'https://osu.ppy.sh/images/layout/avatar-guest@2x.png' violates the following Content Security Policy directive: \"img-src 'self' https://assets.ppy.sh https://a.ppy.sh https://i.ytimg.com https://lh3.googleusercontent.com https://i.scdn.co https://*.mzstatic.com\". The action has been blocked.",
+    "Loading the image 'https://osu.ppy.sh/images/layout/avatar-guest@2x.png' violates the following Content Security Policy directive: \"img-src 'self' https://assets.ppy.sh https://a.ppy.sh https://i.ytimg.com https://lh3.googleusercontent.com https://i.scdn.co https://*.mzstatic.com\". The action has been blocked.",
+    "Loading the image 'https://osu.ppy.sh/images/layout/avatar-guest@2x.png' violates the following Content Security Policy directive: \"img-src 'self' https://assets.ppy.sh https://a.ppy.sh https://i.ytimg.com https://lh3.googleusercontent.com https://i.scdn.co https://*.mzstatic.com\". The action has been blocked.",
+    "Loading the image 'https://osu.ppy.sh/images/layout/avatar-guest@2x.png' violates the following Content Security Policy directive: \"img-src 'self' https://assets.ppy.sh https://a.ppy.sh https://i.ytimg.com https://lh3.googleusercontent.com https://i.scdn.co https://*.mzstatic.com\". The action has been blocked.",
+    "Loading the image 'https://osu.ppy.sh/images/layout/avatar-guest@2x.png' violates the following Content Security Policy directive: \"img-src 'self' https://assets.ppy.sh https://a.ppy.sh https://i.ytimg.com https://lh3.googleusercontent.com https://i.scdn.co https://*.mzstatic.com\". The action has been blocked.",
+    "Loading the image 'https://osu.ppy.sh/images/layout/avatar-guest@2x.png' violates the following Content Security Policy directive: \"img-src 'self' https://assets.ppy.sh https://a.ppy.sh https://i.ytimg.com https://lh3.googleusercontent.com https://i.scdn.co https://*.mzstatic.com\". The action has been blocked.",
+    "Loading the image 'https://osu.ppy.sh/images/layout/avatar-guest@2x.png' violates the following Content Security Policy directive: \"img-src 'self' https://assets.ppy.sh https://a.ppy.sh https://i.ytimg.com https://lh3.googleusercontent.com https://i.scdn.co https://*.mzstatic.com\". The action has been blocked.",
+    "Loading the image 'https://osu.ppy.sh/images/layout/avatar-guest@2x.png' violates the following Content Security Policy directive: \"img-src 'self' https://assets.ppy.sh https://a.ppy.sh https://i.ytimg.com https://lh3.googleusercontent.com https://i.scdn.co https://*.mzstatic.com\". The action has been blocked.",
+    "Loading the image 'https://osu.ppy.sh/images/layout/avatar-guest@2x.png' violates the following Content Security Policy directive: \"img-src 'self' https://assets.ppy.sh https://a.ppy.sh https://i.ytimg.com https://lh3.googleusercontent.com https://i.scdn.co https://*.mzstatic.com\". The action has been blocked.",
+    "Loading the image 'https://osu.ppy.sh/images/layout/avatar-guest@2x.png' violates the following Content Security Policy directive: \"img-src 'self' https://assets.ppy.sh https://a.ppy.sh https://i.ytimg.com https://lh3.googleusercontent.com https://i.scdn.co https://*.mzstatic.com\". The action has been blocked.",
+    "Loading the image 'https://osu.ppy.sh/images/layout/avatar-guest@2x.png' violates the following Content Security Policy directive: \"img-src 'self' https://assets.ppy.sh https://a.ppy.sh https://i.ytimg.com https://lh3.googleusercontent.com https://i.scdn.co https://*.mzstatic.com\". The action has been blocked.",
+    "Loading the image 'https://osu.ppy.sh/images/layout/avatar-guest@2x.png' violates the following Content Security Policy directive: \"img-src 'self' https://assets.ppy.sh https://a.ppy.sh https://i.ytimg.com https://lh3.googleusercontent.com https://i.scdn.co https://*.mzstatic.com\". The action has been blocked.",
+    "Loading the image 'https://osu.ppy.sh/images/layout/avatar-guest@2x.png' violates the following Content Security Policy directive: \"img-src 'self' https://assets.ppy.sh https://a.ppy.sh https://i.ytimg.com https://lh3.googleusercontent.com https://i.scdn.co https://*.mzstatic.com\". The action has been blocked.",
+    "Loading the image 'https://osu.ppy.sh/images/layout/avatar-guest@2x.png' violates the following Content Security Policy directive: \"img-src 'self' https://assets.ppy.sh https://a.ppy.sh https://i.ytimg.com https://lh3.googleusercontent.com https://i.scdn.co https://*.mzstatic.com\". The action has been blocked.",
+    "Loading the image 'https://osu.ppy.sh/images/layout/avatar-guest@2x.png' violates the following Content Security Policy directive: \"img-src 'self' https://assets.ppy.sh https://a.ppy.sh https://i.ytimg.com https://lh3.googleusercontent.com https://i.scdn.co https://*.mzstatic.com\". The action has been blocked."
+  ],
+  "avatarReqsBeforeScroll": 12,
+  "picked": "mrekk",
+  "calls": [
+    "/api/osu/player?q=mrekk&page=1",
+    "/api/osu/player?userId=7562902",
+    "/api/osu/player/beatmaps?userId=7562902&type=best&mode=all",
+    "/api/osu/player/beatmaps?userId=7562902&type=most_played&mode=all"
+  ],
+  "final": {
+    "q": 1,
+    "userId": 1,
+    "beatmaps": 2,
+    "total": 4
+  }
+}

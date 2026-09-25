@@ -58,6 +58,8 @@ export default function PlayerResults({ users, total, page = 1, onPageChange, on
             <img
               src={user.avatarUrl}
               alt={user.username}
+              loading="lazy"
+              decoding="async"
               style={{
                 width: '40px',
                 height: '40px',
@@ -186,6 +188,8 @@ export function PlayerBackChip({ player, onBack }) {
           <img
             src={player.avatarUrl}
             alt=""
+            loading="lazy"
+            decoding="async"
             style={{ width: '20px', height: '20px', borderRadius: '4px', objectFit: 'cover', flexShrink: 0 }}
           />
         )}
