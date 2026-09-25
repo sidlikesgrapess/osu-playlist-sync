@@ -10,7 +10,7 @@ Status values: pending | needs-decision | scoping | implementing | verifying | f
 | 01 | Breakcore playlist 11 to 7 | done | 1 | ea53948 | items/01-breakcore.md | |
 | 02 | Select exact matches button | done | 1 | e1b13ba | items/02-select-exact.md | |
 | 03 | Song preview loading/error | done | 1 | 891bcf8 | items/03-preview-states.md | |
-| 04 | Memory leak check | pending | 0 | | items/04-memory.md | |
+| 04 | Memory leak check | done | 1 | b9b3f14 | items/04-memory.md | |
 | 05 | Hover bounce, toggleable | pending | 0 | | items/05-bounce.md | |
 | 06 | Mode switcher to 2 modes | pending | 0 | | items/06-mode-switcher.md | |
 | 07 | Re:Re: split (F-28) | pending | 0 | | items/07-rere.md | |
