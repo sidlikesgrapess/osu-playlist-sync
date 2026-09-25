@@ -20,7 +20,6 @@
 - select all confirmed matches (come up with a good name) button instead of Select all since the tickmark of the top row does the same thing. done
 - song preview should show a loading or errors. (network) as song as its loading it should show a buffering animation done
 - is there memory leak problem? the cached beatmaps and pics have to be deleted when the user pulls up a new search or player search (is song preview cached?) done
-- maybe a little bounce on every hover animation? toggleable done
 
 ## Remaining
 

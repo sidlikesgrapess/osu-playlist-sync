@@ -1,10 +1,9 @@
 'use client';
 
-import { Volume2, VolumeX, Bug, MoveVertical } from 'lucide-react';
+import { Volume2, VolumeX, Bug } from 'lucide-react';
 import { useState, useEffect, useRef } from 'react';
 import { osuAudio } from '@/lib/soundEffects';
 import { useScrollOffset } from '@/lib/useScrollOffset';
-import { isBounceEnabled, saveBounceEnabled, applyBounceClass } from '@/lib/bouncePref';
 import HitCircleEaster from './HitCircleEaster';
 
 const ISSUE_URL = 'https://github.com/sidlikesgrapess/osu-playlist-sync/issues/new';
@@ -14,8 +13,6 @@ const NAV_SCROLL_RANGE = 140;
 
 export default function Navbar({ onOpenSetupGuide }) {
   const [soundOn, setSoundOn] = useState(false);
-  // Mirrors the `osu-bounce` class the boot script in layout.js may already have set.
-  const [bounceOn, setBounceOn] = useState(false);
   const scrollY = useScrollOffset(NAV_SCROLL_RANGE);
   const easterRef = useRef(null);
 
@@ -31,7 +28,6 @@ export default function Navbar({ onOpenSetupGuide }) {
         osuAudio.enabled = false;
       }
     } catch (e) {}
-    setBounceOn(isBounceEnabled());
   }, []);
 
   // Linear interpolation: brand seamlessly glides into header between scrollY 20px -> 120px
@@ -47,14 +43,6 @@ export default function Navbar({ onOpenSetupGuide }) {
       localStorage.setItem('osu_sfx_enabled', String(nextState));
     } catch (e) {}
     if (nextState) osuAudio.playClick();
-  };
-
-  const toggleBounce = () => {
-    const nextState = !bounceOn;
-    setBounceOn(nextState);
-    applyBounceClass(document.documentElement, nextState);
-    saveBounceEnabled(nextState);
-    osuAudio.playClick();
   };
 
   const scrollToTop = () => {
@@ -157,32 +145,6 @@ export default function Navbar({ onOpenSetupGuide }) {
           >
             {soundOn ? <Volume2 size={13} /> : <VolumeX size={13} />}
             <span>SFX</span>
-          </button>
-
-          {/* Hover Bounce Toggle (the easing lives in globals.css under html.osu-bounce) */}
-          <button
-            className="osu-btn-interactive"
-            onClick={toggleBounce}
-            onMouseEnter={() => osuAudio.playHover()}
-            aria-pressed={bounceOn}
-            style={{
-              background: bounceOn ? '#282333' : '#1c1a24',
-              border: `1px solid ${bounceOn ? 'rgba(255, 102, 170, 0.4)' : 'rgba(255, 255, 255, 0.08)'}`,
-              color: bounceOn ? '#ff66aa' : '#887c93',
-              padding: '6px 9px',
-              borderRadius: '6px',
-              fontSize: '0.75rem',
-              fontWeight: 800,
-              display: 'flex',
-              alignItems: 'center',
-              gap: '4px',
-              fontFamily: 'inherit',
-              minHeight: '34px',
-            }}
-            title={bounceOn ? 'Hover bounce on' : 'Hover bounce off'}
-          >
-            <MoveVertical size={13} />
-            <span>Bounce</span>
           </button>
 
           {/* Info & Guide / System Status Button */}
