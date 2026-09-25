@@ -28,7 +28,7 @@
   60/min /api/osu/search limit so a 500 song Search All does not end in "osu! is busy"
   rows. Overrides the F-18 "keep 100" decision in REBUILD_PLAN.md. done
 - The top bar that has the download options is not global. When doing player search it deletes all the old song search results that we ticked and vice versa. done
-- the Change player button and the trash icon is confusing. Change player deletes the search and so does the trash icon. I think change player should just go back to the prev screen with the player results.  done
+- the Change player button and the trash icon is confusing. Change player deletes the search and so does the trash icon. I think change player should just go back to the prev screen with the player results. done
 - are we loading every image and beatmap for the player search at once? is it expensive?
   if yes then we could have dynamic scroll based loading... if loading everything at once consuming less api calls, then so be it. (Don change this one without confirmation from user) done
 
