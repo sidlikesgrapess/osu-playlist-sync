@@ -262,25 +262,25 @@ test('F-08: at status ranked every search sends s=leaderboard and every returned
   assert.ok(searches > 0 && returned > 0, `searches ${searches}, returned ${returned}`);
 });
 
-// Recorded as todo, not passing: this fails today and the fix is not this matcher's. With no
-// artist field the splitter runs (as 2.1 item 7 intends) and pattern C (titleCleaner.js:222)
-// turns "Re:Re:" into artist "Re", title "Re". The probe for "Re" finds sets whose own artist
-// is "RE", so resolveArtistTrust rightly calls it a real artist (trust high) and the gate
-// refuses the ASIAN KUNG-FU GENERATION set as wrong-artist. Routing a title-split artist
-// through resolveArtistTrust cannot help when the guess happens to be a real mapped artist;
-// the split itself is the defect. It stays here so the case is seen until the cleaner is fixed.
-test('F-28: an Apple track with no provider artist is split for recall but never refused on that guess', {
-  todo: 'the colon split of "Re:Re:" yields a real osu! artist, so the gate refuses (cleaner defect)',
-}, async () => {
+// F-28. With no artist field the splitter runs (as 2.1 item 7 intends). It used to split the
+// unspaced colon of "Re:Re:" into artist "Re", whose probe finds real sets by "RE", so the gate
+// refused the ASIAN KUNG-FU GENERATION set as wrong-artist. A separator now needs whitespace on
+// one side (STANDARD_SPLIT in titleCleaner.js), so the title is searched whole, no artist is
+// guessed, and nothing is probed or refused on a guess.
+test('F-28: an Apple track with no provider artist is not split on a title colon, nor refused', async () => {
   const snap = loadSnapshots().find(s => s.fixture.id === 'colon-title');
   const fixture = { ...snap.fixture, source: 'apple' };
   const song = songFor(fixture, { channelTitle: '' });
-  assert.equal(song.artistFromTitle, true, 'the splitter ran, since there was no artist field');
+  assert.equal(song.artistFromTitle, false, 'the colon inside "Re:Re:" is not a separator');
   const log = [];
   installStub(answerFor(snap), log);
   const r = await osu.searchOsuBeatmaps(...searchArgsFor(song));
   assert.notEqual(r.rejection?.kind, 'wrong-artist');
-  assert.ok(log.some(e => e.probe), 'the guessed artist went through resolveArtistTrust');
+  assert.ok(!log.some(e => e.uncovered), 'every query was answered offline');
+  const top = r.beatmapsets?.[0];
+  assert.ok(top, 'a set is returned');
+  assert.equal(top.artist, 'ASIAN KUNG-FU GENERATION');
+  assert.equal(top.title, 'Re:Re:');
 });
 
 test('F-29: a 150 leader whose artist is only credited in tags does not end a low-trust search', async () => {

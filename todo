@@ -21,6 +21,7 @@
 - song preview should show a loading or errors. (network) as song as its loading it should show a buffering animation done
 - is there memory leak problem? the cached beatmaps and pics have to be deleted when the user pulls up a new search or player search (is song preview cached?) done
 - mode switcher has yt,spotify, AM, single song combine them into playlist/song search. So then we will have song/playlist saerch and player search done
+- Re:Re: split done
 
 ## Remaining
 
@@ -37,7 +38,6 @@
 - The top bar that has the download options is not global. When doing player search it deletes all the old song search results that we ticked and vice versa.
 - the Change player button and the trash icon is confusing. Change player deletes the search and so does the trash icon. I think change player should just go back to the prev screen with the player results.
 - need to redo F-46 with a better approach. (confirm approach with user)
-- Re:Re: split
 
 ## Long term goals
 

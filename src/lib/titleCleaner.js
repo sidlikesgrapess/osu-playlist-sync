@@ -122,6 +122,16 @@ function stripTrailingDashNoise(text) {
 
 const collapseWhitespace = (value) => String(value || '').replace(/\s+/g, ' ').trim();
 
+// An Artist/Title separator is a separator char that whitespace touches on at least one side,
+// and the title after it may not open with another separator char. An unspaced ":" or "-" is
+// part of a name ("Re:Re:", "KUNG-FU", "Re:Zero"), not a split point, and in "Re:Re: - X" the
+// colon run is skipped so the split lands on the spaced dash.
+const splitSeparator = (chars) => `(?:\\s+[${chars}]\\s*|\\s*[${chars}]\\s+)(?![\\s${chars}])`;
+// Pattern A: "Title - Artist / Covered by CoverArtist" or "Title - Artist | Cover by CoverArtist"
+const COVER_SPLIT = new RegExp(`^(.+?)${splitSeparator('\\-:—–')}(.+?)\\s*[/|•]\\s*(?:covered by|cover by|cover)\\s*(.+)$`, 'i');
+// Pattern C: "Artist - Title" or "Artist | Title" or "Artist : Title" or "Artist • Title"
+const STANDARD_SPLIT = new RegExp(`^(.+?)${splitSeparator('\\-:—–|•')}(.+)$`);
+
 /**
  * Clean a song/video title into an osu!-friendly search query with rich fallbacks.
  * @param {string} rawTitle - Raw title from YouTube / Spotify / Apple Music
@@ -215,12 +225,12 @@ export function cleanSongTitle(rawTitle, channelTitle = '', { source, providerAr
     queries.push(title);
     queries.push(`${title} ${artist}`);
   } else {
-    // Pattern A: "Title - Artist / Covered by CoverArtist" or "Title - Artist | Cover by CoverArtist"
-    const coverMatch1 = text.match(/^(.+?)\s*[-:—–]\s*(.+?)\s*[/|•]\s*(?:covered by|cover by|cover)\s*(.+)$/i);
+    // Pattern A (COVER_SPLIT): "Title - Artist / Covered by CoverArtist"
+    const coverMatch1 = text.match(COVER_SPLIT);
     // Pattern B: "Title by Artist | Covered by CoverArtist"
     const coverMatch2 = text.match(/^(.+?)\s+by\s+(.+?)\s*[/|•]\s*(?:covered by|cover by|cover)\s*(.+)$/i);
-    // Pattern C: "Artist - Title" or "Artist / Title" or "Artist | Title" or "Artist : Title"
-    const standardMatch = text.match(/^(.+?)\s*[-:—–|•]\s*(.+)$/);
+    // Pattern C (STANDARD_SPLIT): "Artist - Title", "Artist: Title", "Artist | Title"
+    const standardMatch = text.match(STANDARD_SPLIT);
     // Pattern D: "Title by Artist"
     const byMatch = text.match(/^(.+?)\s+by\s+(.+)$/i);
 

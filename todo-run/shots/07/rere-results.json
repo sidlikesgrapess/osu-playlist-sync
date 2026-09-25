@@ -1,0 +1,70 @@
+[
+  {
+    "vp": "desktop",
+    "q": "Re:Re:",
+    "api": [
+      {
+        "status": 200,
+        "top": "ASIAN KUNG-FU GENERATION - Re:Re:",
+        "artistOverride": false,
+        "titleOnly": false,
+        "rejection": null
+      }
+    ],
+    "showsAKG": true,
+    "couldNotFind": false,
+    "noHScroll": true,
+    "shot": "desktop_rere.png"
+  },
+  {
+    "vp": "desktop",
+    "q": "ASIAN KUNG-FU GENERATION - Re:Re:",
+    "api": [
+      {
+        "status": 200,
+        "top": "ASIAN KUNG-FU GENERATION - Re:Re:",
+        "artistOverride": false,
+        "titleOnly": false,
+        "rejection": null
+      }
+    ],
+    "showsAKG": true,
+    "couldNotFind": false,
+    "noHScroll": true,
+    "shot": "desktop_akg_rere.png"
+  },
+  {
+    "vp": "phone",
+    "q": "Re:Re:",
+    "api": [
+      {
+        "status": 200,
+        "top": "ASIAN KUNG-FU GENERATION - Re:Re:",
+        "artistOverride": false,
+        "titleOnly": false,
+        "rejection": null
+      }
+    ],
+    "showsAKG": true,
+    "couldNotFind": false,
+    "noHScroll": true,
+    "shot": "phone_rere.png"
+  },
+  {
+    "vp": "phone",
+    "q": "ASIAN KUNG-FU GENERATION - Re:Re:",
+    "api": [
+      {
+        "status": 200,
+        "top": "ASIAN KUNG-FU GENERATION - Re:Re:",
+        "artistOverride": false,
+        "titleOnly": false,
+        "rejection": null
+      }
+    ],
+    "showsAKG": true,
+    "couldNotFind": false,
+    "noHScroll": true,
+    "shot": "phone_akg_rere.png"
+  }
+]

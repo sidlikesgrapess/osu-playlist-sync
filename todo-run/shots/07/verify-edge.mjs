@@ -1,0 +1,3 @@
+import { cleanSongTitle } from '../../../src/lib/titleCleaner.js';
+const cases = ['Artist -- Title','Artist - Title - Remix','YOASOBI「アイドル」 Official Music Video','Alan Walker - Faded (Official Video)','Re:Zero - Artist','Artist | Title | Official','Artist - Re:Re: / cover by X','Title - Artist / Covered by Foo','Artist –Title','Artist:  Title','Artist - ','- Title','Steins;Gate - Hacking to the Gate','Artist • Title','Kaneko Lumi - Title','Title by Artist'];
+for (const c of cases) { const r = cleanSongTitle(c, ''); console.log(JSON.stringify(c), '=>', JSON.stringify({a:r.artist,t:r.title,f:r.artistFromTitle,q:r.cleanQuery})); }

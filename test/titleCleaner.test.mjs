@@ -49,10 +49,32 @@ test('the provider artist is whitespace normalized only, never put through the c
   assert.equal(m.artist, 'Tuxedo Music');
 });
 
-test('an empty provider artist leaves the splitter on, and flags a split artist as from the title', () => {
+test('an empty provider artist leaves the splitter on, and an unspaced colon is not a separator', () => {
   const r = cleanSongTitle('Re:Re:', '', { source: 'apple', providerArtist: '' });
-  assert.equal(r.artist, 'Re');
-  assert.equal(r.artistFromTitle, true);
+  assert.equal(r.title, 'Re:Re');
+  assert.equal(r.artist, '');
+  assert.equal(r.artistFromTitle, false);
+});
+
+test('a separator splits Artist/Title only when whitespace touches it', () => {
+  const akg = cleanSongTitle('ASIAN KUNG-FU GENERATION - Re:Re:', '');
+  assert.deepEqual([akg.artist, akg.title, akg.artistFromTitle], ['ASIAN KUNG-FU GENERATION', 'Re:Re', true]);
+  // The colon run is skipped; the split lands on the spaced dash.
+  const flipped = cleanSongTitle('Re:Re: - ASIAN KUNG-FU GENERATION', '');
+  assert.equal(flipped.title, 'ASIAN KUNG-FU GENERATION');
+  assert.ok(['Re:Re:', 'Re:Re'].includes(flipped.artist), flipped.artist);
+  const cover = cleanSongTitle('Re:Re: / cover by X', '');
+  assert.equal(cover.artistFromTitle, false);
+  assert.equal(cover.title, 'Re:Re');
+  for (const raw of ['Artist-Title', 'Artist:Title']) {
+    const r = cleanSongTitle(raw, '');
+    assert.equal(r.artistFromTitle, false, raw);
+    assert.equal(r.title, raw, raw);
+  }
+  for (const raw of ['Artist - Title', 'Artist: Title', 'Artist | Title', 'Artist • Title', 'Artist — Title', 'Artist- Title', 'Artist -Title']) {
+    const r = cleanSongTitle(raw, '');
+    assert.deepEqual([r.artist, r.title, r.artistFromTitle], ['Artist', 'Title', true], raw);
+  }
 });
 
 test('artistFromTitle is false for a channel artist and true for each split shape', () => {

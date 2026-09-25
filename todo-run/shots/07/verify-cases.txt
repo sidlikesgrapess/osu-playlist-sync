@@ -1,0 +1,20 @@
+(node:9696) [MODULE_TYPELESS_PACKAGE_JSON] Warning: Module type of file:///C:/Users/Siddartha/Desktop/study(fr)/Antigravity/osuplaylist/src/lib/titleCleaner.js is not specified and it doesn't parse as CommonJS.
+Reparsing as ES module because module syntax was detected. This incurs a performance overhead.
+To eliminate this warning, add "type": "module" to \\?\C:\Users\Siddartha\Desktop\study(fr)\Antigravity\osuplaylist\package.json.
+(Use `node --trace-warnings ...` to show where the warning was created)
+"Re:Re:" => {"title":"Re:Re","artist":"","aft":false,"q":"Re:Re"}
+"ASIAN KUNG-FU GENERATION - Re:Re:" => {"title":"Re:Re","artist":"ASIAN KUNG-FU GENERATION","aft":true,"q":"ASIAN KUNG-FU GENERATION Re:Re"}
+"Re:Re: - ASIAN KUNG-FU GENERATION" => {"title":"ASIAN KUNG-FU GENERATION","artist":"Re:Re","aft":true,"q":"Re:Re ASIAN KUNG-FU GENERATION"}
+"Re:Re: / cover by X" => {"title":"Re:Re","artist":"","aft":false,"q":"Re:Re"}
+"Alan Walker - Faded" => {"title":"Faded","artist":"Alan Walker","aft":true,"q":"Alan Walker Faded"}
+"Artist: Title" => {"title":"Title","artist":"Artist","aft":true,"q":"Artist Title"}
+"Artist | Title" => {"title":"Title","artist":"Artist","aft":true,"q":"Artist Title"}
+"Artist • Title" => {"title":"Title","artist":"Artist","aft":true,"q":"Artist Title"}
+"YOASOBI - Idol" => {"title":"Idol","artist":"YOASOBI","aft":true,"q":"YOASOBI Idol"}
+"Artist-Title" => {"title":"Artist-Title","artist":"","aft":false,"q":"Artist-Title"}
+"Artist:Title" => {"title":"Artist:Title","artist":"","aft":false,"q":"Artist:Title"}
+"Artist- Title" => {"title":"Title","artist":"Artist","aft":true,"q":"Artist Title"}
+"Artist -Title" => {"title":"Title","artist":"Artist","aft":true,"q":"Artist Title"}
+"Artist — Title" => {"title":"Title","artist":"Artist","aft":true,"q":"Artist Title"}
+"Re:Re:" => {"title":"Re:Re","artist":"","aft":false,"q":"Re:Re"}
+"ASIAN KUNG-FU GENERATION - Re:Re:" => {"title":"Re:Re","artist":"ASIAN KUNG-FU GENERATION","aft":true,"q":"ASIAN KUNG-FU GENERATION Re:Re"}

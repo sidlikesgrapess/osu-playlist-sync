@@ -1,0 +1,86 @@
+[
+  {
+    "vp": "desktop",
+    "q": "Re:Re:",
+    "api": [
+      {
+        "url": "http://localhost:3000/api/osu/search?q=Re:Re&title=Re:Re&artist=&source=query&fallbacks=[\"Re:Re\"]&mode=all&status=any&strictness=50",
+        "status": 200,
+        "top": "ASIAN KUNG-FU GENERATION | Re:Re:",
+        "artistOverride": false,
+        "titleOnly": false,
+        "rejection": null,
+        "n": 48
+      }
+    ],
+    "showsAKG": true,
+    "showsReReTitle": true,
+    "couldNotFind": false,
+    "noHScroll": true,
+    "shot": "verify_desktop_rere.png",
+    "bodyExcerpt": "nd favourites in bulk.\nMODE:\nAll Modes\nosu!\nosu!taiko\nosu!catch\nosu!mania\nSTATUS:\nRanked & Loved\nAll (incl. Unranked)\nMATCH STRICTNESS\nBALANCED\nClear title match, same artist\nRefetch\nPlaylist / Song\nPlayer\nClear\nAdd More Songs\nTry sample:\nosu! Banger Showcase\nToday’s Top Hits\nYOASOBI - Idol\nmrekk\n♪\nRe:Re:\nSINGLE SONG\nPLAYLIST SONGS\n1\nBEATMAP MATCHES\n1 (100%)\nSTATUS\nReady\nExport\nDownload All (1)\nBundle as .ZIP (1)\nDeselect All\n1 of 1 selected\n\t#\tTRACK / SONG\tMATCH\tACTION\n\n\t1\t\nRe:Re:\nYouTube Track\nQuery:\nRe:Re\n\t\nASIAN KUNG-FU GENERATION - Re:Re:\nRANKED\nmapped by alacat\n•\n155 BPM\n•\n★ 1.9 - 4.5\n48 versions available (change)\n\t\n.OSZ\nShowing 1 - 1 of 1 songs\nPER PAGE:\n10\n25\n50\nAll\nGitHub\n·\nConsider starring this project"
+  },
+  {
+    "vp": "phone",
+    "q": "Re:Re:",
+    "api": [
+      {
+        "url": "http://localhost:3000/api/osu/search?q=Re:Re&title=Re:Re&artist=&source=query&fallbacks=[\"Re:Re\"]&mode=all&status=any&strictness=50",
+        "status": 200,
+        "top": "ASIAN KUNG-FU GENERATION | Re:Re:",
+        "artistOverride": false,
+        "titleOnly": false,
+        "rejection": null,
+        "n": 48
+      }
+    ],
+    "showsAKG": true,
+    "showsReReTitle": true,
+    "couldNotFind": false,
+    "noHScroll": true,
+    "shot": "verify_phone_rere.png",
+    "bodyExcerpt": "r’s top plays and favourites in bulk.\nMODE:\nAll Modes\nosu!\nosu!taiko\nosu!catch\nosu!mania\nSTATUS:\nRanked & Loved\nAll (incl. Unranked)\nMATCH STRICTNESS\nBALANCED\nClear title match, same artist\nRefetch\nPlaylist / Song\nPlayer\nClear\nTry sample:\nosu! Banger Showcase\nToday’s Top Hits\nYOASOBI - Idol\nmrekk\n♪\nRe:Re:\nSINGLE SONG\nPLAYLIST SONGS\n1\nBEATMAP MATCHES\n1 (100%)\nSTATUS\nReady\nExport\nDownload All (1)\nBundle as .ZIP (1)\nDeselect All\n1 of 1 selected\n#1\nRe:Re:\nSource Track\nQuery:\nRe:Re\nASIAN KUNG-FU GENERATION - Re:Re:\nRANKED\nby alacat\n•\n155 BPM\n•\n★ 1.9-4.5\n48 versions (change)\n.OSZ\nShowing 1 - 1 of 1 songs\nPER PAGE:\n10\n25\n50\nAll\nGitHub\n·\nConsider starring this project"
+  },
+  {
+    "vp": "desktop",
+    "q": "ASIAN KUNG-FU GENERATION - Re:Re:",
+    "api": [
+      {
+        "url": "http://localhost:3000/api/osu/search?q=ASIAN+KUNG-FU+GENERATION+Re:Re&title=Re:Re&artist=ASIAN+KUNG-FU+GENERATION&source=query&artistFromTitle=1&fallbacks=[\"Re:Re\",\"Re:Re+ASIAN+KUNG-FU+GENERATION\",\"ASIAN+KUNG-FU+GENERATION+Re:Re\"]&mode=all&status=any&strictness=50",
+        "status": 200,
+        "top": "ASIAN KUNG-FU GENERATION | Re:Re:",
+        "artistOverride": false,
+        "titleOnly": false,
+        "rejection": null,
+        "n": 46
+      }
+    ],
+    "showsAKG": true,
+    "showsReReTitle": true,
+    "couldNotFind": false,
+    "noHScroll": true,
+    "shot": "verify_desktop_akg_rere.png",
+    "bodyExcerpt": ":\nAll Modes\nosu!\nosu!taiko\nosu!catch\nosu!mania\nSTATUS:\nRanked & Loved\nAll (incl. Unranked)\nMATCH STRICTNESS\nBALANCED\nClear title match, same artist\nRefetch\nPlaylist / Song\nPlayer\nClear\nAdd More Songs\nTry sample:\nosu! Banger Showcase\nToday’s Top Hits\nYOASOBI - Idol\nmrekk\n♪\nASIAN KUNG-FU GENERATION - Re:Re:\nSINGLE SONG\nPLAYLIST SONGS\n1\nBEATMAP MATCHES\n1 (100%)\nSTATUS\nReady\nExport\nDownload All (1)\nBundle as .ZIP (1)\nDeselect All\n1 of 1 selected\n\t#\tTRACK / SONG\tMATCH\tACTION\n\n\t1\t\nASIAN KUNG-FU GENERATION - Re:Re:\nYouTube Track\nQuery:\nASIAN KUNG-FU GENERATION Re:Re\n\t\nASIAN KUNG-FU GENERATION - Re:Re:\nRANKED\nmapped by alacat\n•\n155 BPM\n•\n★ 1.9 - 4.5\n46 versions available (change)\n\t\n.OSZ\nShowing 1 - 1 of 1 songs\nPER PAGE:\n10\n25\n50\nAll\nGitHub\n·\nConsider starring this project"
+  },
+  {
+    "vp": "phone",
+    "q": "ASIAN KUNG-FU GENERATION - Re:Re:",
+    "api": [
+      {
+        "url": "http://localhost:3000/api/osu/search?q=ASIAN+KUNG-FU+GENERATION+Re:Re&title=Re:Re&artist=ASIAN+KUNG-FU+GENERATION&source=query&artistFromTitle=1&fallbacks=[\"Re:Re\",\"Re:Re+ASIAN+KUNG-FU+GENERATION\",\"ASIAN+KUNG-FU+GENERATION+Re:Re\"]&mode=all&status=any&strictness=50",
+        "status": 200,
+        "top": "ASIAN KUNG-FU GENERATION | Re:Re:",
+        "artistOverride": false,
+        "titleOnly": false,
+        "rejection": null,
+        "n": 46
+      }
+    ],
+    "showsAKG": true,
+    "showsReReTitle": true,
+    "couldNotFind": false,
+    "noHScroll": true,
+    "shot": "verify_phone_akg_rere.png",
+    "bodyExcerpt": "s in bulk.\nMODE:\nAll Modes\nosu!\nosu!taiko\nosu!catch\nosu!mania\nSTATUS:\nRanked & Loved\nAll (incl. Unranked)\nMATCH STRICTNESS\nBALANCED\nClear title match, same artist\nRefetch\nPlaylist / Song\nPlayer\nClear\nTry sample:\nosu! Banger Showcase\nToday’s Top Hits\nYOASOBI - Idol\nmrekk\n♪\nASIAN KUNG-FU GENERATION - Re:Re:\nSINGLE SONG\nPLAYLIST SONGS\n1\nBEATMAP MATCHES\n1 (100%)\nSTATUS\nReady\nExport\nDownload All (1)\nBundle as .ZIP (1)\nDeselect All\n1 of 1 selected\n#1\nASIAN KUNG-FU GENERATION - Re:Re:\nSource Track\nQuery:\nASIAN KUNG-FU GENERATION Re:Re\nASIAN KUNG-FU GENERATION - Re:Re:\nRANKED\nby alacat\n•\n155 BPM\n•\n★ 1.9-4.5\n46 versions (change)\n.OSZ\nShowing 1 - 1 of 1 songs\nPER PAGE:\n10\n25\n50\nAll\nGitHub\n·\nConsider starring this project"
+  }
+]
