@@ -1,0 +1,324 @@
+/**
+ * Cleans song and YouTube video titles to extract pure song and artist names
+ * for maximum accuracy when querying the osu! API.
+ */
+
+// Terms that indicate an entire bracketed segment (parentheses, square brackets, Japanese brackets) is noise
+const BRACKET_NOISE_TERMS = [
+  'official', 'music video', 'music', 'video', 'audio', 'visualizer', 'mv', 'pv', 'hd', 'hq', '4k', '1080p', '720p',
+  '60fps', 'lyrics', 'lyric', 'full song', 'full ver', 'full version', 'short ver', 'short version',
+  'original mix', 'extended mix', 'club mix', 'radio edit', 'remaster', 'remastered', 'cover', 'ost', 'soundtrack',
+  'theme song', 'audio track', 'color coded', 'color-coded', 'cc',
+  'tv size', 'tv-size', 'tv ver', 'tv version', 'tv edit', 'anime', 'opening', 'ending', 'op', 'ed', 'insert song', 'season',
+  'nightcore', 'daycore', 'sped up', 'speed up', 'slowed', 'reverb', '8d audio', 'bass boosted', 'acoustic', 'instrumental', 'off vocal', 'karaoke',
+  'extra', 'expert', 'insane', 'hard', 'normal', 'easy', 'extreme', 'master', 'top diff', 'collab', 'four dimensions',
+  'inner oni', 'ura oni', 'oni', 'muzukashii', 'futsuu', 'kantan', 'overdose', 'rain', 'platter', 'salad', 'cup', 'gravity', 'tatsujin',
+  'replay', 'liveplay', 'mapset', 'beatmap', 'diff', 'difficulty', 'mapped by', 'mapper', 'prod.', 'produced by',
+  'live', 'clip', 'fc', 'ss', 'stream', 'release',
+  '歌ってみた', 'オリジナル', 'original', '東方', '東方project', 'フル', 'ハイレゾ', '高音質', '作業用bgm', '試聴動画',
+];
+
+// Regex constructed to match bracket pairs containing noise keywords or pattern matches (e.g. 727pp, 8.5*, 4K, 1080p)
+const BRACKET_PATTERN = /\s*([\[\(\【\「『〖〔《])\s*([^\]\)\】\」』〗〕》]+)\s*([\]\)\】\」』〗〕》])/gi;
+
+// Inline noise patterns to strip anywhere in text
+const INLINE_NOISE_PATTERNS = [
+  // osu! mods e.g. +HDHR, +HDDT, +EZ, +HR, +DT, +NC, +FL, +DTHR, +EZHD, etc.
+  /\s*\+\s*(?:HD|HR|DT|NC|FL|EZ|HT|SO|NF|TD|NM|RX|AP|V2|AT|HDHR|HDDT|DTHR|EZHD|EZDT|FLHD|HRDT|HDNC)+\b/gi,
+
+  // osu! hits & misses e.g. 6x100, 1xmiss, 2x50, 0x100, 100x100, 1xsliderbreak, 0xmiss
+  /\s*\b\d+x(?:100|50|miss|misses|sb|sliderbreak)\b/gi,
+
+  // Accuracies e.g. 99.45% FC, 100% SS, 98.5%
+  /\s*\b\d{1,3}(?:\.\d{1,2})?%\s*(?:FC|SS|S|A)?\b/gi,
+
+  // PP values e.g. 727pp, 1000pp
+  /\s*\b\d+(?:\.\d+)?\s*pp\b/gi,
+
+  // Star ratings e.g. 8.5*, 7.23★, 8.5 stars
+  /\s*\b\d+(?:\.\d+)?\s*(?:\*|★|☆|\bstars?\b)/gi,
+
+  // Standalone mod/combo words at end
+  /\s*\b(?:FC|SS|S Rank|Silver SS|Silver S|First FC|World Record|WR)\b/gi,
+
+  // Standalone release words
+  /\b(?:official\s+lyric\s+video|official\s+music\s+video|official\s+video|official\s+audio|lyric\s+video|music\s+video|official\s+visualizer|visualizer)\b/gi,
+  /\b(?:\d{4}\s*remaster|remastered\s*\d{4})\b/gi,
+  /\b(?:free\s+download|free\s+dl|stream\s+now|out\s+now|audio\s+only)\b/gi,
+  /\b(?:sped\s*up|speed\s*up|slowed\s*\+\s*reverb|slowed\s*down|nightcore|daycore|8d\s*audio|bass\s*boosted)\b/gi,
+];
+
+/**
+ * Strips symbols and noise trailing after a song name (e.g. "Song Name +HDHR 6x100" or "Song Name • Official Visualizer")
+ */
+function stripTrailingSymbolNoise(text) {
+  if (!text) return '';
+  let cleaned = text;
+
+  // 1. Strip trailing + followed by anything (mods, hits, speedup, reverb, etc.)
+  cleaned = cleaned.replace(/\s*\+.*$/i, '');
+
+  // 2. Strip anything following a symbol like ~ or • or | or / or ★ when it represents noise/effects
+  cleaned = cleaned.replace(/\s*[\~•★☆|/]\s*(?:HD|HR|DT|NC|FL|EZ|HT|SO|NF|TD|NM|\d+x|\d+pp|\d+★|\d+\*|Nightcore|Daycore|Sped|Speed|Slowed|Reverb|Audio|Official|MV|PV|Cover|Remix|Edit|Live|prod\.|sub-?title).*$/i, '');
+
+  // 3. Strip standalone trailing symbols: + ~ | / • ★ ☆ _ # : * -
+  cleaned = cleaned.replace(/\s*[\+\~\|\/•★☆_#:*\-]+\s*$/g, '');
+
+  // 4. Strip leading symbols
+  cleaned = cleaned.replace(/^[\+\~\|\/•★☆_#:*\-]+\s*/g, '');
+
+  return cleaned.trim();
+}
+
+/**
+ * Whether one title segment (the inside of a bracket pair, or a trailing " - segment") is
+ * noise to drop from the query. Both shapes are judged by this one rule.
+ */
+function isNoiseSegment(content) {
+  const lowerContent = content.toLowerCase();
+
+  // Check if the segment contains any known noise term
+  const isNoiseTerm = BRACKET_NOISE_TERMS.some(term => lowerContent.includes(term));
+
+  // Check regex patterns for PP, star rating, osu! mods, year, accuracy, resolution
+  const isPatternNoise =
+    /\b\d+pp\b/i.test(lowerContent) ||
+    /\b\d+(?:\.\d+)?\s*(?:\*|★|☆|stars?)/i.test(lowerContent) ||
+    /\b\d{3,4}p\b/i.test(lowerContent) || // 1080p, 720p, 4k
+    /\b\d+fps\b/i.test(lowerContent) ||
+    /\b\d{1,3}(?:\.\d+)?%/i.test(lowerContent) ||
+    /\b\d{4}\b/.test(lowerContent) || // 2012, 2024
+    /^\d+k$/i.test(lowerContent.trim()) || // 4K, 7K
+    /^(?:fc|ss|replay|liveplay)$/i.test(lowerContent.trim()) ||
+    /^(?:prod\.|produced by)/i.test(lowerContent.trim()) ||
+    /\+(?:HD|HR|DT|NC|FL|EZ|HT|SO|NF|TD|NM)+/i.test(lowerContent);
+
+  return isNoiseTerm || isPatternNoise;
+}
+
+/**
+ * Strips bracketed segments if their contents match noise indicators
+ */
+function stripBracketNoise(text) {
+  return text.replace(BRACKET_PATTERN, (match, open, content) => (isNoiseSegment(content) ? '' : match));
+}
+
+// A trailing segment set off by a spaced dash: "Kaikai Kitan - TV Size".
+const TRAILING_DASH_SEGMENT = /^(.+)\s+[-–—]\s+(.+?)$/;
+
+/**
+ * Drops trailing " - segment"s that are noise. Used only when the provider supplied the
+ * artist, so a dash cannot be an artist separator and the segment is judged exactly like a
+ * bracketed one. A segment that is not noise stays part of the title.
+ */
+function stripTrailingDashNoise(text) {
+  let cleaned = text;
+  let match;
+  while ((match = cleaned.match(TRAILING_DASH_SEGMENT)) && isNoiseSegment(match[2])) {
+    cleaned = stripTrailingSymbolNoise(match[1]);
+  }
+  return cleaned;
+}
+
+const collapseWhitespace = (value) => String(value || '').replace(/\s+/g, ' ').trim();
+
+// An Artist/Title separator is a separator char that whitespace touches on at least one side,
+// and the title after it may not open with another separator char. An unspaced ":" or "-" is
+// part of a name ("Re:Re:", "KUNG-FU", "Re:Zero"), not a split point, and in "Re:Re: - X" the
+// colon run is skipped so the split lands on the spaced dash.
+const splitSeparator = (chars) => `(?:\\s+[${chars}]\\s*|\\s*[${chars}]\\s+)(?![\\s${chars}])`;
+// Pattern A: "Title - Artist / Covered by CoverArtist" or "Title - Artist | Cover by CoverArtist"
+const COVER_SPLIT = new RegExp(`^(.+?)${splitSeparator('\\-:—–')}(.+?)\\s*[/|•]\\s*(?:covered by|cover by|cover)\\s*(.+)$`, 'i');
+// Pattern C: "Artist - Title" or "Artist | Title" or "Artist : Title" or "Artist • Title"
+const STANDARD_SPLIT = new RegExp(`^(.+?)${splitSeparator('\\-:—–|•')}(.+)$`);
+
+/**
+ * Clean a song/video title into an osu!-friendly search query with rich fallbacks.
+ * @param {string} rawTitle - Raw title from YouTube / Spotify / Apple Music
+ * @param {string} [channelTitle] - Optional channel name / artist
+ * @param {object} [options]
+ * @param {string} [options.source] - Where the title came from ('spotify', 'apple', 'youtube', 'query')
+ * @param {string} [options.providerArtist] - The provider's own artist field, when it has one.
+ *   When non-empty, no artist is ever split out of the title: it is returned as the artist
+ *   (whitespace normalized only), and a trailing " - segment" is judged as noise or title.
+ *
+ * `artistFromTitle` is true only when the returned artist was split out of the title text,
+ * never when it is the provider's artist or the channel name.
+ */
+export function cleanSongTitle(rawTitle, channelTitle = '', { source, providerArtist } = {}) {
+  if (!rawTitle || typeof rawTitle !== 'string') {
+    return { cleanQuery: '', artist: '', title: '', fallbacks: [], queries: [], artistFromTitle: false };
+  }
+
+  const structuredArtist = collapseWhitespace(providerArtist);
+
+  // Clean channel name
+  let cleanChannel = (channelTitle || '')
+    .replace(/ - Topic$/i, '')
+    .replace(/VEVO$/i, '')
+    .replace(/Official Channel$/i, '')
+    .replace(/Official$/i, '')
+    .replace(/Music$/i, '')
+    .replace(/Records$/i, '')
+    .replace(/\s*ch\.\s*【.*?】/gi, '')
+    .replace(/\s*【.*?】/g, '')
+    .trim();
+
+  let text = rawTitle;
+
+  // 1. Strip prefix tags like [MV], 【MV】, [Official], etc.
+  text = text.replace(/^[【\[\(][^】\]\)]+[】\]\)]\s*/, '');
+
+  // 2. Strip bracket noise
+  text = stripBracketNoise(text);
+
+  // 3. Strip inline noise
+  for (const pattern of INLINE_NOISE_PATTERNS) {
+    text = text.replace(pattern, '');
+  }
+
+  // 4. Strip trailing symbol noise
+  text = stripTrailingSymbolNoise(text);
+
+  // 5. Check if title had quotes e.g. "Sound Asleep" - Chikafuji Lisa or Artist "Song Title"
+  // Skipped when the provider supplied the artist: then nothing in the title is an artist.
+  let quotedTitle = null;
+  const quoteMatch1 = structuredArtist ? null : text.match(/^["“](.+?)["”]\s*[-:—–/|]\s*(.+)$/);
+  const quoteMatch2 = structuredArtist ? null : text.match(/^(.+?)\s*[-:—–/|]\s*["“](.+?)["”]$/);
+  if (quoteMatch1) {
+    quotedTitle = {
+      title: quoteMatch1[1].trim(),
+      artist: quoteMatch1[2].trim(),
+    };
+  } else if (quoteMatch2) {
+    quotedTitle = {
+      artist: quoteMatch2[1].trim(),
+      title: quoteMatch2[2].trim(),
+    };
+  }
+
+  text = text.replace(/["“”]/g, '').trim();
+
+  // Strip empty/leftover brackets e.g. () or [] or 【】
+  text = text.replace(/\s*[\(\[【「『〖〔《]\s*[\)\]】」』〗〕》]/g, '').trim();
+
+  // Clean trailing punctuation
+  text = stripTrailingSymbolNoise(text);
+
+  let artist = '';
+  let title = text;
+  let artistFromTitle = false;
+  const queries = [];
+
+  if (structuredArtist) {
+    // The provider's artist field is the artist. No split branch runs, so a dash, colon,
+    // "by", quote, "|" or "•" in the title stays part of the title.
+    title = stripTrailingDashNoise(text);
+    artist = structuredArtist;
+    queries.push(`${artist} ${title}`);
+    queries.push(title);
+  } else if (quotedTitle) {
+    artistFromTitle = true;
+    title = stripTrailingSymbolNoise(quotedTitle.title);
+    artist = stripTrailingSymbolNoise(quotedTitle.artist);
+    queries.push(`${artist} ${title}`);
+    queries.push(title);
+    queries.push(`${title} ${artist}`);
+  } else {
+    // Pattern A (COVER_SPLIT): "Title - Artist / Covered by CoverArtist"
+    const coverMatch1 = text.match(COVER_SPLIT);
+    // Pattern B: "Title by Artist | Covered by CoverArtist"
+    const coverMatch2 = text.match(/^(.+?)\s+by\s+(.+?)\s*[/|•]\s*(?:covered by|cover by|cover)\s*(.+)$/i);
+    // Pattern C (STANDARD_SPLIT): "Artist - Title", "Artist: Title", "Artist | Title"
+    const standardMatch = text.match(STANDARD_SPLIT);
+    // Pattern D: "Title by Artist"
+    const byMatch = text.match(/^(.+?)\s+by\s+(.+)$/i);
+
+    if (coverMatch1) {
+      artistFromTitle = true;
+      title = stripTrailingSymbolNoise(coverMatch1[1]);
+      artist = stripTrailingSymbolNoise(coverMatch1[2]);
+      queries.push(`${artist} ${title}`);
+      queries.push(title);
+      queries.push(`${title} ${artist}`);
+    } else if (coverMatch2) {
+      artistFromTitle = true;
+      title = stripTrailingSymbolNoise(coverMatch2[1]);
+      artist = stripTrailingSymbolNoise(coverMatch2[2]);
+      queries.push(`${artist} ${title}`);
+      queries.push(title);
+      queries.push(`${title} ${artist}`);
+    } else if (standardMatch) {
+      artistFromTitle = true;
+      artist = stripTrailingSymbolNoise(standardMatch[1]);
+      title = stripTrailingSymbolNoise(standardMatch[2]);
+      queries.push(`${artist} ${title}`);
+      queries.push(title);
+      queries.push(`${title} ${artist}`);
+      if (cleanChannel && cleanChannel.toLowerCase() !== artist.toLowerCase()) {
+        queries.push(`${cleanChannel} ${title}`);
+      }
+    } else if (byMatch) {
+      artistFromTitle = true;
+      title = stripTrailingSymbolNoise(byMatch[1]);
+      artist = stripTrailingSymbolNoise(byMatch[2]);
+      queries.push(`${artist} ${title}`);
+      queries.push(title);
+      queries.push(`${title} ${artist}`);
+    } else {
+      title = stripTrailingSymbolNoise(text);
+      if (cleanChannel) {
+        artist = cleanChannel;
+        queries.push(`${cleanChannel} ${title}`);
+      }
+      queries.push(title);
+    }
+  }
+
+  // Remove featuring info for cleaner secondary queries e.g. "Song (feat. Drake)" -> "Song"
+  const baseTitle = stripTrailingSymbolNoise(
+    title.replace(/\s*\((?:feat\.|ft\.|featuring).*?\)/gi, '')
+         .replace(/\s*\[(?:feat\.|ft\.|featuring).*?\]/gi, '')
+         .trim()
+  );
+
+  if (baseTitle && baseTitle !== title) {
+    if (artist) queries.push(`${artist} ${baseTitle}`);
+    queries.push(baseTitle);
+  }
+
+  // If title has a subtitle in ~ or - (e.g. "Song Name ~Subtitle~" -> "Song Name")
+  const subMatch = (baseTitle || title).match(/^(.+?)\s*[\~–—]\s*.+?\s*[\~–—]?$/);
+  if (subMatch && subMatch[1].trim().length >= 3) {
+    const mainTitle = stripTrailingSymbolNoise(subMatch[1]);
+    if (artist) queries.push(`${artist} ${mainTitle}`);
+    queries.push(mainTitle);
+  }
+
+  // Normalize spaces
+  const cleanFinalTitle = (baseTitle || title).replace(/\s+/g, ' ').trim();
+  const cleanFinalArtist = (artist || cleanChannel || '').replace(/\s+/g, ' ').trim();
+
+  const uniqueQueries = Array.from(
+    new Set(
+      queries
+        .map(q => q.replace(/\s+/g, ' ').trim())
+        .filter(q => q.length > 0)
+    )
+  );
+
+  // Primary clean query:
+  // If the title alone is complete or artist is known
+  const cleanQuery = uniqueQueries[0] || (cleanFinalArtist ? `${cleanFinalArtist} - ${cleanFinalTitle}` : cleanFinalTitle);
+
+  return {
+    cleanQuery,
+    artist: cleanFinalArtist,
+    title: cleanFinalTitle,
+    raw: rawTitle,
+    fallbacks: uniqueQueries.slice(1),
+    queries: uniqueQueries,
+    // An empty split falls back to the channel, which is not from the title.
+    artistFromTitle: artistFromTitle && Boolean(artist),
+  };
+}

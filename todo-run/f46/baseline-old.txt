@@ -1,0 +1,137 @@
+cleaner: todo-run\f46\titleCleaner.old.mjs
+entries: 116
+title  accuracy: 64/116 = 55.2%
+artist accuracy: 95/108 = 88.0%
+
+category        n   title          artist
+boilerplate     13   11/13   84.6%   11/13   84.6%
+nightcore        8   8/8    100.0%   4/4    100.0%
+replay           8   1/8     12.5%   4/6     66.7%
+jp-quote         8   1/8     12.5%   2/7     28.6%
+real-brackets    8   7/8     87.5%   8/8    100.0%
+feat             8   2/8     25.0%   8/8    100.0%
+structured      10   8/10    80.0%   10/10  100.0%
+unseen          16   5/16    31.3%   14/16   87.5%
+playlist        17   10/17   58.8%   17/17  100.0%
+channel-echo     6   1/6     16.7%   6/6    100.0%
+separators       7   3/7     42.9%   5/7     71.4%
+control          7   7/7    100.0%   6/6    100.0%
+
+misses:
+  #6 [boilerplate] TITLE+ARTIST  [MV] IU(아이유) _ Celebrity
+      title  want "Celebrity"  got "IU(아이유) _ Celebrity"
+      artist want "IU"  got "1theK (원더케이)"
+  #7 [boilerplate] TITLE+ARTIST  【MV】ずっと真夜中でいいのに。『秒針を噛む』
+      title  want "秒針を噛む"  got "ずっと真夜中でいいのに。『秒針を噛む』"
+      artist want "ずっと真夜中でいいのに。"  got "ずっと真夜中でいいのに。 ZUTOMAYO"
+  #23 [replay] TITLE  xi - Blue Zenith [FOUR DIMENSIONS] 99.37% FC #1 | 734pp
+      title  want "Blue Zenith"  got "Blue Zenith #1"
+  #24 [replay] TITLE+ARTIST  mrekk | VINXIS - Sidetracked Day [THREE DIMENSIONS] +HDHR 99.23% 1336pp
+      title  want "Sidetracked Day"  got "VINXIS - Sidetracked Day [THREE DIMENSIONS]"
+      artist want "VINXIS"  got "mrekk"
+  #25 [replay] TITLE+ARTIST  Whitecat | DragonForce - Through the Fire and Flames [Legend] 100% SS
+      title  want "Through the Fire and Flames"  got "DragonForce - Through the Fire and Flames [Legend]"
+      artist want "DragonForce"  got "Whitecat"
+  #26 [replay] TITLE  Will Stetson - Kimi no Shiranai Monogatari [Oni] 6.9⭐ | osu!
+      title  want "Kimi no Shiranai Monogatari"  got "Kimi no Shiranai Monogatari 6.9⭐ | osu!"
+  #27 [replay] TITLE  Freedom Dive [FOUR DIMENSIONS] 7.19★ | FC 99.38% HDHR
+      title  want "Freedom Dive"  got "FCHDHR"
+  #28 [replay] TITLE  [osu!] Imperial Circus Dead Decadence - Yomi yori Kikoyu, Koukoku no Tou to Honoo no Shoujo. [Kyouaku] 6.78* 99.12% FC
+      title  want "Yomi yori Kikoyu, Koukoku no Tou to Honoo no Shoujo."  got "Yomi yori Kikoyu, Koukoku no Tou to Honoo no Shoujo. [Kyouaku]"
+  #29 [replay] TITLE  Harumachi Clover | osu! Liveplay
+      title  want "Harumachi Clover"  got "osu! Liveplay"
+  #30 [jp-quote] TITLE  ヨルシカ - 「ただ君に晴れ」 MV
+      title  want "ただ君に晴れ"  got "「ただ君に晴れ」 MV"
+  #32 [jp-quote] TITLE+ARTIST  YOASOBI「夜に駆ける」 Official Music Video
+      title  want "夜に駆ける"  got "YOASOBI「夜に駆ける」"
+      artist want "YOASOBI"  got "Ayase / YOASOBI"
+  #33 [jp-quote] TITLE+ARTIST  米津玄師 MV「Lemon」
+      title  want "Lemon"  got "米津玄師 MV「Lemon」"
+      artist want "米津玄師"  got "Kenshi Yonezu 米津玄師"
+  #34 [jp-quote] TITLE+ARTIST  Aimer 『残響散歌』MUSIC VIDEO
+      title  want "残響散歌"  got "Aimer 『残響散歌』"
+      artist want "Aimer"  got "Aimer Official YouTube Channel"
+  #35 [jp-quote] TITLE+ARTIST  ヨルシカ『言って。』Music Video
+      title  want "言って。"  got "ヨルシカ『言って。』"
+      artist want "ヨルシカ"  got "ヨルシカ / n-buna"
+  #36 [jp-quote] TITLE  Eve MV「ドラマツルギー」
+      title  want "ドラマツルギー"  got "Eve MV「ドラマツルギー」"
+  #37 [jp-quote] TITLE+ARTIST  呪術廻戦 OP「廻廻奇譚」Eve
+      title  want "廻廻奇譚"  got "呪術廻戦 OP「廻廻奇譚」Eve"
+      artist want "Eve"  got "Anime OP Collection"
+  #38 [real-brackets] TITLE  (Don't Fear) The Reaper
+      title  want "(Don't Fear) The Reaper"  got "The Reaper"
+  #47 [feat] TITLE  Martin Garrix - In The Name Of Love ft. Bebe Rexha (Official Video)
+      title  want "In The Name Of Love"  got "In The Name Of Love ft. Bebe Rexha"
+  #48 [feat] TITLE  DECO*27 - ヴァンパイア feat. 初音ミク
+      title  want "ヴァンパイア"  got "ヴァンパイア feat. 初音ミク"
+  #49 [feat] TITLE  アンノウン・マザーグース/wowaka feat. 初音ミク
+      title  want "アンノウン・マザーグース"  got "アンノウン・マザーグース/wowaka feat. 初音ミク"
+  #50 [feat] TITLE  Masayoshi Minoshima - Bad Apple!! feat. nomico
+      title  want "Bad Apple!!"  got "Bad Apple!! feat. nomico"
+  #52 [feat] TITLE  STAY (with Justin Bieber)
+      title  want "STAY"  got "STAY (with Justin Bieber)"
+  #53 [feat] TITLE  cosMo@暴走P - 初音ミクの消失 (Hatsune Miku)
+      title  want "初音ミクの消失"  got "初音ミクの消失 (Hatsune Miku)"
+  #59 [structured] TITLE  Sunflower - Spider-Man: Into the Spider-Verse
+      title  want "Sunflower"  got "Sunflower - Spider-Man: Into the Spider-Verse"
+  #61 [structured] TITLE  Sparkle - movie ver.
+      title  want "Sparkle"  got "Sparkle - movie ver."
+  #64 [unseen] TITLE+ARTIST  BTS (방탄소년단) 'Dynamite' Official MV (Choreography Version)
+      title  want "Dynamite"  got "BTS (방탄소년단) 'Dynamite' Official MV (Choreography Version)"
+      artist want "BTS"  got "HYBE LABELS"
+  #65 [unseen] TITLE+ARTIST  TWICE "FANCY" M/V
+      title  want "FANCY"  got "TWICE FANCY M/V"
+      artist want "TWICE"  got "JYP Entertainment"
+  #66 [unseen] TITLE  Aimer - Kataomoi (Vietsub)
+      title  want "Kataomoi"  got "Kataomoi (Vietsub)"
+  #67 [unseen] TITLE  Linkin Park - In The End (Legendado)
+      title  want "In The End"  got "In The End (Legendado)"
+  #68 [unseen] TITLE  Bad Bunny - Tití Me Preguntó (Letra)
+      title  want "Tití Me Preguntó"  got "Tití Me Preguntó (Letra)"
+  #69 [unseen] TITLE  Stromae - Alors on danse (Paroles)
+      title  want "Alors on danse"  got "Alors on danse (Paroles)"
+  #70 [unseen] TITLE  LiSA - Homura [Engsub]
+      title  want "Homura"  got "Homura [Engsub]"
+  #71 [unseen] TITLE  NewJeans - Ditto (Dance Practice)
+      title  want "Ditto"  got "Ditto (Dance Practice)"
+  #72 [unseen] TITLE  Ado - 唱 / THE FIRST TAKE
+      title  want "唱"  got "唱 / THE FIRST TAKE"
+  #74 [unseen] TITLE  Eminem - Without Me (Explicit)
+      title  want "Without Me"  got "Without Me (Explicit)"
+  #79 [unseen] TITLE  The Weeknd - Blinding Lights (Dolby Atmos)
+      title  want "Blinding Lights"  got "Blinding Lights (Dolby Atmos)"
+  #86 [playlist] TITLE  Yorushika - Say It 【Vietsub + Kara】
+      title  want "Say It"  got "Say It 【Vietsub"
+  #87 [playlist] TITLE  Aimer - Brave Shine 【Vietsub + Kara】
+      title  want "Brave Shine"  got "Brave Shine 【Vietsub"
+  #88 [playlist] TITLE  RADWIMPS - Sparkle 【Vietsub + Kara】
+      title  want "Sparkle"  got "Sparkle 【Vietsub"
+  #89 [playlist] TITLE  Kenshi Yonezu - Lemon 【Vietsub + Kara】
+      title  want "Lemon"  got "Lemon 【Vietsub"
+  #90 [playlist] TITLE  Yuuri - Dry Flower 【Vietsub + Kara】
+      title  want "Dry Flower"  got "Dry Flower 【Vietsub"
+  #91 [playlist] TITLE  Aimer - Zankyou Sanka 【Vietsub + Kara】
+      title  want "Zankyou Sanka"  got "Zankyou Sanka 【Vietsub"
+  #93 [playlist] TITLE  Moe Shop - Love Taste (w/ Jamie Paige & Shiki) 【Kawaii Future Bass】
+      title  want "Love Taste"  got "Love Taste (w/ Jamie Paige & Shiki)"
+  #98 [channel-echo] TITLE  Pegboard Nerds - Downhearted [Monstercat]
+      title  want "Downhearted"  got "Downhearted [Monstercat]"
+  #99 [channel-echo] TITLE  Alan Walker - Faded | Trap Nation
+      title  want "Faded"  got "Faded | Trap Nation"
+  #100 [channel-echo] TITLE  星街すいせい - Stellar Stellar (Hoshimachi Suisei)
+      title  want "Stellar Stellar"  got "Stellar Stellar (Hoshimachi Suisei)"
+  #101 [channel-echo] TITLE  Bling-Bang-Bang-Born / Creepy Nuts
+      title  want "Bling-Bang-Bang-Born"  got "Bling-Bang-Bang-Born / Creepy Nuts"
+  #102 [channel-echo] TITLE  Lost Frequencies - Are You With Me (Proximity)
+      title  want "Are You With Me"  got "Are You With Me (Proximity)"
+  #103 [separators] TITLE+ARTIST  LiSA 『紅蓮華』 -MUSiC CLiP-
+      title  want "紅蓮華"  got "MUSiC CLiP"
+      artist want "LiSA"  got "LiSA 『紅蓮華』"
+  #105 [separators] TITLE  Porter Robinson - Shelter - Live at Second Sky
+      title  want "Shelter"  got "Shelter - Live at Second Sky"
+  #106 [separators] TITLE  Frank Ocean - Pink + White
+      title  want "Pink + White"  got "Pink"
+  #108 [separators] TITLE+ARTIST  千本桜 / 和楽器バンド
+      title  want "千本桜"  got "千本桜 / 和楽器バンド"
+      artist want "和楽器バンド"  got "和楽器バンド / Wagakki Band"
