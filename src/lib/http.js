@@ -61,6 +61,8 @@ async function openRequest(url, { profile = 'server', timeoutMs = 8000, headers,
     });
 
     if (!res.ok) {
+      // Nobody reads an error body, and an unread one holds its connection until GC.
+      await res.body?.cancel().catch(() => {});
       throw httpError(`Upstream responded ${res.status} for ${url}`, res.status);
     }
     return { res, controller, timer };
