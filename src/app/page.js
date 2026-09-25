@@ -65,6 +65,11 @@ const failedSearchState = (searchError) => ({
   hasSearched: true, isSearching: false, matchedBeatmap: null, allMatches: [], rejection: null, searchError,
 });
 
+// A row still owed an answer: never searched, or searched without one (a 429 or a failed
+// request). Only what the user explicitly asks for (Search All) reaches for the failed
+// rows; paging only fills in rows that were never tried, so it cannot hammer a busy osu!.
+const awaitsAnswer = (s) => !s.isSearching && (!s.hasSearched || Boolean(s.searchError));
+
 // How long the one automatic retry of rate-limited rows waits, at most, for the
 // Retry-After osu! (or our own limiter) asked for. Past this the row keeps its Retry button.
 const RATE_LIMIT_RETRY_WAIT_CAP_S = 15;
@@ -220,7 +225,7 @@ export default function Home() {
 
     // Switching to player search drops any playlist/song results.
     if (page === 1) {
-      setSongs([]);
+      dropSongList();
       setSelectedIds(new Set());
       setPlaylistMeta(null);
       setCurrentPage(1);
@@ -270,7 +275,7 @@ export default function Home() {
     setPlayerProfile(profile);
     setPlayerResults([]);
     setPlayerResultsTotal(0);
-    setSongs([]);
+    dropSongList();
     setSelectedIds(new Set());
     setPlaylistMeta(null);
     setErrorMessage('');
@@ -436,7 +441,7 @@ export default function Home() {
 
   const handleClearPlayer = () => {
     clearPlayerState();
-    setSongs([]);
+    dropSongList();
     setSelectedIds(new Set());
     setErrorMessage('');
     osuAudio.playClick();
@@ -450,7 +455,7 @@ export default function Home() {
     setIsLoading(true);
     setErrorMessage('');
     if (!isAppending) {
-      setSongs([]);
+      dropSongList();
       setSelectedIds(new Set());
       setPlaylistMeta(null);
       setCurrentPage(1);
@@ -649,8 +654,10 @@ export default function Home() {
     // A 429 means "not now", so those rows get one more go once the batch is done, one at
     // a time, after the wait osu! asked for. A row that was reset or re-searched in the
     // meantime no longer carries the error and is left alone.
-    if (rateLimitedIds.length > 0) {
-      const waitSec = Math.min(Math.max(retryAfterSec, 1), RATE_LIMIT_RETRY_WAIT_CAP_S);
+    // A wait longer than the cap is not shortened: retrying before the window reopens only
+    // earns another 429, so those rows simply keep their Retry button.
+    if (rateLimitedIds.length > 0 && retryAfterSec <= RATE_LIMIT_RETRY_WAIT_CAP_S) {
+      const waitSec = Math.max(retryAfterSec, 1);
       await new Promise(resolve => setTimeout(resolve, waitSec * 1000));
       for (const id of rateLimitedIds) {
         const current = songsRef.current.find(s => s.id === id);
@@ -700,7 +707,7 @@ export default function Home() {
 
   // Search all remaining unsearched tracks across all pages
   const handleSearchAllRemaining = () => {
-    const unsearched = songs.filter(s => !s.hasSearched && !s.isSearching);
+    const unsearched = songs.filter(awaitsAnswer);
     if (unsearched.length > 0) {
       searchTargetSongs(songs, unsearched.map(s => s.id), mode, statusFilter);
     }
@@ -958,6 +965,17 @@ export default function Home() {
     batchAbortRef.current?.abort();
   };
 
+  // Every path that throws the song list away comes through here. A running batch is not
+  // left to keep downloading rows the list no longer holds: Cancel does the same abort, and
+  // replacing the list must leave the same clean state.
+  const dropSongList = () => {
+    handleCancelBatch();
+    setDownloadingIds(new Set());
+    setIsDownloadingZip(false);
+    setZipProgress(0);
+    setSongs([]);
+  };
+
   // Download a single .osz file. Batch callers pass `silent` so only one toast
   // fires, the session `budget` so a batch cannot fall back to the proxy without
   // limit, and their `pacer` and `signal`.
@@ -1153,13 +1171,7 @@ export default function Home() {
   };
 
   const handleClearList = () => {
-    // A running batch is not left to keep downloading rows this list is about to drop --
-    // Cancel does the same abort, and clearing the list must leave the same clean state.
-    handleCancelBatch();
-    setDownloadingIds(new Set());
-    setIsDownloadingZip(false);
-    setZipProgress(0);
-    setSongs([]);
+    dropSongList();
     setPlaylistMeta(null);
     setSelectedIds(new Set());
     setErrorMessage('');
@@ -1170,8 +1182,10 @@ export default function Home() {
   const platformBadge = PLATFORM_BADGE[playlistMeta?.platform] || PLATFORM_BADGE.query;
 
   const matchedCount = songs.filter(s => s.matchedBeatmap).length;
-  const searchedCount = songs.filter(s => s.hasSearched).length;
-  const unsearchedCount = songs.filter(s => !s.hasSearched).length;
+  // A row whose search never got an answer is not "searched": it would otherwise count
+  // against the match rate and drop out of Search All.
+  const searchedCount = songs.filter(s => s.hasSearched && !s.searchError).length;
+  const unsearchedCount = songs.filter(s => !s.hasSearched || s.searchError).length;
 
   return (
     <div style={{ minHeight: '100vh', display: 'flex', flexDirection: 'column' }}>
