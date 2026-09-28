@@ -61,6 +61,7 @@ Understanding it explains most of the codebase:
   rejection, searchError }                               // why the gate refused / why no answer came ('rate-limited')
   (also artistFromTitle, beside extractedArtist)         // artist was split from the title, so never provider trust
   (also manualQuery)                                     // a query the user typed; sent as-is from then on
+  (also altTitle)                                        // H1: the title with its ambiguous tags kept ('' when same as H0)
   (also playerMeta, playerSection)                       // osu! player path only: pp/playcount, which section
 ```
 
@@ -156,14 +157,21 @@ download, and the match column introduces it with "Could not find one by <artist
 match:". Keep both halves: showing it without the notice, or showing the notice while
 auto-selecting, each defeats the point.
 
-`src/lib/titleCleaner.js` exists only to stop noise tokens (`Nightcore`, `Official Video`,
-`+HDHR`) from producing zero-result queries. It is a recall tool, not a precision tool —
-precision is `scoreBeatmapMatch`'s job.
+`src/lib/titleCleaner.js` has **no noise word list** (F-46; do not add one back). It parses
+a title into a core plus tags and judges each tag on evidence: shape (pp, %, stars, 1080p,
+mods), a tag repeated on 2+ tracks of the playlist (`cleanPlaylistTitles`), an echo of the
+channel or artist, bracket type (「」『』 quote the song name) and position. It returns two
+hypotheses: `title` (H0, likely noise stripped) and `altTitle` (H1, ambiguous tags kept).
+`searchOsuBeatmaps` scores every candidate against both and takes the max, and an exact H1
+match gets `FULLER_MARGIN` so a remix upload gets the remix map rather than the more popular
+original (a noise tag loses nothing, since no map carries it). An exact H0 leader does not end
+the loop while the H1 query is pending. `npm run bench` never sends `altTitle`, so it cannot
+see H1; its cost shows in `test/search-replay.test.mjs` (`MAX_CALLS`). The held out title set
+and A/B harness are in `todo-run/f46/` (`node todo-run/f46/ab.mjs`), results in `REPORT.md`.
 
 **See `MATCHING_PLAN.md`** before working on matching — but note it is partly historical now.
 The unicode title/artist fields, `tags` credit, graded title similarity and a popularity
-tiebreak have all landed. **Beatmap `duration` is still unused**, and the cleaner has not been
-shrunk (Phase 4). Measure any change with `npm run bench` first; without it, matching changes
+tiebreak have all landed. **Beatmap `duration` is still unused.** Measure any change with `npm run bench` first; without it, matching changes
 are unverifiable.
 
 ### Zero-key extraction is scraping, and it is fragile

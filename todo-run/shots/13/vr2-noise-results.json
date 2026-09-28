@@ -1,0 +1,39 @@
+{
+  "errors": [],
+  "searches": [
+    {
+      "q": "Imagine Dragons Believer",
+      "title": "Believer",
+      "altTitle": "Believer (Official Video)",
+      "artist": "Imagine Dragons",
+      "source": "query",
+      "artistFromTitle": "1",
+      "fallbacks": "[\"Believer\",\"Believer Imagine Dragons\",\"Imagine Dragons Believer\"]",
+      "mode": "all",
+      "status": "any",
+      "strictness": "50"
+    }
+  ],
+  "responses": [
+    {
+      "status": 200,
+      "bestScore": 224.31150878849178,
+      "rejection": null,
+      "top": [
+        "Imagine Dragons - Believer (224.31150878849178)",
+        "Imagine Dragons - Believer (205.96847456584683)",
+        "Imagine Dragons - Believer (205.461728577044)"
+      ]
+    }
+  ],
+  "desktopText": "Sync\nSFX\nOnline\nReport Issue\nosu!Sync\nSync your playlists and songs. Or pull any player’s top plays and favourites in bulk.\nMODE:\nAll Modes\nosu!\nosu!taiko\nosu!catch\nosu!mania\nSTATUS:\nRanked & Loved\nAll (incl. Unranked)\nMATCH STRICTNESS\nBALANCED\nClear title match, same artist\nRefetch\nPlaylist / Song\nPlayer\nClear\nAdd More Songs\nTry sample:\nosu! Banger Showcase\nToday’s Top Hits\nYOASOBI - Idol\nmrekk\n♪\nImagine Dragons - Believer (Official Video)\nSINGLE SONG\nPLAYLIST SONGS\n1\nBEATMAP MATCHES\n1 (100%)\nSTATUS\nReady\nExport\nDownload All (1)\nBundle as .ZIP (1)\nDeselect All\n1 of 1 selected\n\t#\tTRACK / SONG\tMATCH\tACTION\n\n\t1\t\nImagine Dragons - Believer (Official Video)\nYouTube Track\nQuery:\nImagine Dragons Believer\n\t\nImagine Dragons - Believer\nRANKED\nmapped by Striderin\n•\n125 BPM\n•\n★ 1.6 - 5.4\n50 versions available (change)\n\t\n.OSZ\nShowing 1 - 1 of 1 songs\nPER PAGE:\n10\n25\n50\nAll\nGitHub\n·\nConsider starring this project",
+  "desktopSW": [
+    1280,
+    1280
+  ],
+  "phoneText": "Sync\nSFX\nOnline\nReport Issue\nosu!Sync\nSync your playlists and songs. Or pull any player’s top plays and favourites in bulk.\nMODE:\nAll Modes\nosu!\nosu!taiko\nosu!catch\nosu!mania\nSTATUS:\nRanked & Loved\nAll (incl. Unranked)\nMATCH STRICTNESS\nBALANCED\nClear title match, same artist\nRefetch\nPlaylist / Song\nPlayer\nClear\nTry sample:\nosu! Banger Showcase\nToday’s Top Hits\nYOASOBI - Idol\nmrekk\n♪\nImagine Dragons - Believer (Official Video)\nSINGLE SONG\nPLAYLIST SONGS\n1\nBEATMAP MATCHES\n1 (100%)\nSTATUS\nReady\nExport\nDownload All (1)\nBundle as .ZIP (1)\nDeselect All\n1 of 1 selected\n#1\nImagine Dragons - Believer (Official Video)\nSource Track\nQuery:\nImagine Dragons Believer\nImagine Dragons - Believer\nRANKED\nby Striderin\n•\n125 BPM\n•\n★ 1.6-5.4\n50 versions (change)\n.OSZ\nShowing 1 - 1 of 1 songs\nPER PAGE:\n10\n25\n50\nAll\nGitHub\n·\nConsider starring this project",
+  "phoneSW": [
+    375,
+    375
+  ]
+}

@@ -610,39 +610,6 @@ async function verifyLowConfidenceArtist(artist, candidates, token) {
 
 const MAX_QUERY_VARIANTS = 4;
 
-/**
- * F-46: the cleaner hands over two readings of a title, H0 (every tag that leans noise
- * stripped) and H1 (`altTitle`, the ambiguous tags kept). It cannot tell "(CYRIL Remix)" from
- * "(Official Video)" without a word list, so osu! decides: a candidate is scored against both
- * and keeps the better score. A tie goes to H0. The artist is the same for both, so a gate
- * refusal (-Infinity) is -Infinity under either reading and nothing can buy it back.
- *
- * The fuller match wins (USER, 2026-09-26): a candidate that matches H1 exactly explains more
- * of the raw title than one that only matches H0 exactly, so it gets FULLER_MARGIN on top.
- * Without it the two exact matches differ only by ranked status and popularity, and a plain
- * "The Sound Of Silence" beat the "(CYRIL Remix)" set on favourites alone. A noise tag loses
- * nothing: no map is titled "Song (Official Video)", so nothing earns the margin.
- */
-// Above ranked (15) plus the popularity cap (10), so any exact H1 match beats any exact
-// H0-only match with the same artist verdict; below the smallest artist step (WEAK vs SAME,
-// 70), so it never buys a better artist verdict and never touches the gate.
-export const FULLER_MARGIN = 30;
-
-const distinctAlt = (targetTitle, altTitle) =>
-  Boolean(altTitle) && normalizeForComparison(altTitle) !== normalizeForComparison(targetTitle || '');
-
-export function scoreAgainstTitles(beatmap, targetTitle, altTitle, targetArtist, options) {
-  const h0 = scoreBeatmapMatch(beatmap, targetTitle, targetArtist, options);
-  if (!distinctAlt(targetTitle, altTitle)) return { score: h0, h0, fuller: false };
-  const h1 = scoreBeatmapMatch(beatmap, altTitle, targetArtist, options);
-  const fuller = h1 !== -Infinity && titleSimilarity(beatmap, altTitle) === 1;
-  const h1Score = fuller ? h1 + FULLER_MARGIN : h1;
-  return { score: h1Score > h0 ? h1Score : h0, h0, fuller };
-}
-
-const bestTitleSimilarity = (beatmap, targetTitle, altTitle) =>
-  altTitle ? Math.max(titleSimilarity(beatmap, targetTitle), titleSimilarity(beatmap, altTitle)) : titleSimilarity(beatmap, targetTitle);
-
 // Sources whose artist is a field the provider handed us, not a guess from a title.
 const STRUCTURED_SOURCES = new Set(['spotify', 'apple', 'osu-player']);
 
@@ -658,7 +625,6 @@ export async function searchOsuBeatmaps(query, options = {}) {
 
   const targetTitle = options.title || query;
   const targetArtist = options.artist || '';
-  const altTitle = distinctAlt(targetTitle, options.altTitle) ? options.altTitle : '';
 
   // Structured metadata (Spotify, Apple) is authoritative straight away, so the gate is
   // active while we score and can end the query loop early. Anything else is scored
@@ -696,26 +662,6 @@ export async function searchOsuBeatmaps(query, options = {}) {
     ? variants.filter(q => q === targetTitle || othersKept++ < MAX_QUERY_VARIANTS - 1)
     : variants;
 
-  // The H1 query (F-46) takes the slot of the last variant that is not the bare title, so the
-  // cap and the bare title both hold. With a slot to spare it is appended instead. It always
-  // runs unless an exact H1 candidate is already pooled: the fuller match wins, so an exact H0
-  // leader cannot end the search while the fuller reading is still unasked (see below).
-  const altQuery = altTitle ? (targetArtist ? `${targetArtist} ${altTitle}` : altTitle) : '';
-  let altSlot = -1;
-  if (altQuery && !queriesToRun.includes(altQuery)) {
-    if (queriesToRun.length < MAX_QUERY_VARIANTS) {
-      queriesToRun.push(null);
-      altSlot = queriesToRun.length - 1;
-    } else {
-      for (let i = queriesToRun.length - 1; i >= 0; i -= 1) {
-        if (queriesToRun[i] !== targetTitle) { altSlot = i; break; }
-      }
-    }
-  }
-  const altIndex = altSlot >= 0 ? altSlot : (altQuery ? queriesToRun.indexOf(altQuery) : -1);
-  let altDone = altIndex < 0;
-  let fullerPooled = false; // an exact H1 candidate the gate kept
-
   const modeMap = { osu: '0', taiko: '1', fruits: '2', mania: '3' };
   const modeParam = options.mode && modeMap[options.mode] ? modeMap[options.mode] : null;
 
@@ -740,11 +686,7 @@ export async function searchOsuBeatmaps(query, options = {}) {
   // variant failed, in which case there is no answer at all and that is thrown too.
   let answered = 0;
   let lastError = null;
-  for (let slot = 0; slot < queriesToRun.length; slot += 1) {
-    let q = queriesToRun[slot];
-    if (slot === altSlot) q = altQuery;
-    if (slot === altIndex) altDone = true;
-    if (!q) continue;
+  for (const q of queriesToRun) {
     const searchPath = `/beatmapsets/search?q=${encodeURIComponent(q)}&sort=relevance_desc${modeParam ? `&m=${modeParam}` : ''}&s=${upstreamStatusFor(statusFilter)}`;
 
     let data;
@@ -767,7 +709,7 @@ export async function searchOsuBeatmaps(query, options = {}) {
     }
 
     for (const bm of sets) {
-      const { score, fuller } = scoreAgainstTitles(bm, targetTitle, altTitle, targetArtist, scoreOptions);
+      const score = scoreBeatmapMatch(bm, targetTitle, targetArtist, scoreOptions);
       if (score === -Infinity) {
         if (!gatedOut.some(existing => beatmapsetKey(existing) === beatmapsetKey(bm))) gatedOut.push(bm);
         continue;
@@ -775,7 +717,6 @@ export async function searchOsuBeatmaps(query, options = {}) {
       if (!allFoundSets.some(existing => beatmapsetKey(existing) === beatmapsetKey(bm))) {
         allFoundSets.push({ ...bm, _score: score });
       }
-      if (fuller) fullerPooled = true;
       if (score > bestScore) {
         bestScore = score;
         leader = bm;
@@ -786,16 +727,8 @@ export async function searchOsuBeatmaps(query, options = {}) {
     // settled (F-29): the artist is trusted, or the leader's own artist is the target's. A
     // low-trust artist is only settled after the loop, and an early exit there would starve
     // that settling of the very candidates it reasons from.
-    //
-    // The fuller match wins, so an exact H0 leader alone does not end it while the H1 query is
-    // still pending and no exact H1 candidate is pooled: the loop jumps straight to the H1
-    // query (skipping the H0 variants between) and stops after it. A noise tag costs one
-    // extra call this way; a remix whose map was already pooled costs none.
     if (bestScore >= 150
-      && (artistConfidence === 'high' || artistVerdict(leader, targetArtist, aliases).verdict === 'SAME')) {
-      if (altDone || fullerPooled) break;
-      slot = altIndex - 1;
-    }
+      && (artistConfidence === 'high' || artistVerdict(leader, targetArtist, aliases).verdict === 'SAME')) break;
   }
   if (answered === 0 && lastError) throw lastError;
 
@@ -810,7 +743,7 @@ export async function searchOsuBeatmaps(query, options = {}) {
 
     const rescored = [];
     for (const bm of [...allFoundSets, ...gatedOut]) {
-      const { score } = scoreAgainstTitles(bm, targetTitle, altTitle, targetArtist, scoreOptions);
+      const score = scoreBeatmapMatch(bm, targetTitle, targetArtist, scoreOptions);
       if (score === -Infinity) continue;
       rescored.push({ ...bm, _score: score });
     }
@@ -847,11 +780,9 @@ export async function searchOsuBeatmaps(query, options = {}) {
     // at 0 it admits the whole gated pile, and the row shows those candidates flagged
     // instead of a bare "no beatmaps by this artist" for maps osu! plainly returned.
     const titleMatches = [...gatedOut, ...allFoundSets]
-      .filter(s => bestTitleSimilarity(s, targetTitle, altTitle) >= strict.salvageFloor)
+      .filter(s => titleSimilarity(s, targetTitle) >= strict.salvageFloor)
       .sort((a, b) =>
-        (bestTitleSimilarity(b, targetTitle, altTitle) - bestTitleSimilarity(a, targetTitle, altTitle))
-        // the fuller match wins here too: an exact H1 title before an exact H0-only one
-        || (Number(Boolean(altTitle) && titleSimilarity(b, altTitle) === 1) - Number(Boolean(altTitle) && titleSimilarity(a, altTitle) === 1))
+        (titleSimilarity(b, targetTitle) - titleSimilarity(a, targetTitle))
         || ((b.favourite_count || 0) - (a.favourite_count || 0)))
       .slice(0, 8);
 

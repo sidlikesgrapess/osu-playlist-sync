@@ -1,0 +1,3 @@
+import { cleanSongTitle } from '../../../src/lib/titleCleaner.js';
+const cases=[['COOL&CREATE - Night of Nights (Flowering nights remix)','COOL&CREATE'],['Hanasaka Yui - Harumachi Clover (Swing Arrangement)','x'],['Disturbed - The Sound Of Silence (CYRIL Remix)','x'],['ZUN - Lunatic Eyes ~ Invisible Full Moon','x'],['Artist - Song ~ Night Ver.','Chan'],['Nightcore ~ Angel With A Shotgun','NightcoreReality'],['Nightcore - Angel With A Shotgun','NightcoreReality'],['Nightcore - Monster (Lyrics)','Syrex']];
+for(const [t,c] of cases){const r=cleanSongTitle(t,c,{source:'youtube'});console.log(JSON.stringify({t,title:r.title,alt:r.altTitle,artist:r.artist,aft:r.artistFromTitle}));}

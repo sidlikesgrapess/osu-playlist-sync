@@ -1,0 +1,39 @@
+{
+  "errors": [],
+  "searches": [
+    {
+      "q": "Disturbed The Sound Of Silence",
+      "title": "The Sound Of Silence",
+      "altTitle": "The Sound Of Silence (CYRIL Remix)",
+      "artist": "Disturbed",
+      "source": "query",
+      "artistFromTitle": "1",
+      "fallbacks": "[\"The Sound Of Silence\",\"The Sound Of Silence Disturbed\",\"Disturbed The Sound Of Silence\"]",
+      "mode": "all",
+      "status": "any",
+      "strictness": "50"
+    }
+  ],
+  "responses": [
+    {
+      "status": 200,
+      "bestScore": 202.11274510003565,
+      "rejection": null,
+      "top": [
+        "Disturbed - The Sound Of Silence (202.11274510003565)",
+        "Disturbed - The sound Of Silence (201.74742501084006)",
+        "Disturbed - The Sound Of Silence (CYRIL Remix) (201.19280313679914)"
+      ]
+    }
+  ],
+  "desktopText": "Sync\nSFX\nOnline\nReport Issue\nosu!Sync\nSync your playlists and songs. Or pull any player’s top plays and favourites in bulk.\nMODE:\nAll Modes\nosu!\nosu!taiko\nosu!catch\nosu!mania\nSTATUS:\nRanked & Loved\nAll (incl. Unranked)\nMATCH STRICTNESS\nBALANCED\nClear title match, same artist\nRefetch\nPlaylist / Song\nPlayer\nClear\nAdd More Songs\nTry sample:\nosu! Banger Showcase\nToday’s Top Hits\nYOASOBI - Idol\nmrekk\n♪\nDisturbed - The Sound Of Silence (CYRIL Remix)\nSINGLE SONG\nPLAYLIST SONGS\n1\nBEATMAP MATCHES\n1 (100%)\nSTATUS\nReady\nExport\nDownload All (1)\nBundle as .ZIP (1)\nDeselect All\n1 of 1 selected\n\t#\tTRACK / SONG\tMATCH\tACTION\n\n\t1\t\nDisturbed - The Sound Of Silence (CYRIL Remix)\nYouTube Track\nQuery:\nDisturbed The Sound Of Silence\n\t\nDisturbed - The Sound Of Silence\nGRAVEYARD\nmapped by Fox Sin Ban\n•\n78 BPM\n•\n★ 1.9 - 1.9\n4 versions available (change)\n\t\n.OSZ\nShowing 1 - 1 of 1 songs\nPER PAGE:\n10\n25\n50\nAll\nGitHub\n·\nConsider starring this project",
+  "desktopSW": [
+    1280,
+    1280
+  ],
+  "phoneText": "Sync\nSFX\nOnline\nReport Issue\nosu!Sync\nSync your playlists and songs. Or pull any player’s top plays and favourites in bulk.\nMODE:\nAll Modes\nosu!\nosu!taiko\nosu!catch\nosu!mania\nSTATUS:\nRanked & Loved\nAll (incl. Unranked)\nMATCH STRICTNESS\nBALANCED\nClear title match, same artist\nRefetch\nPlaylist / Song\nPlayer\nClear\nTry sample:\nosu! Banger Showcase\nToday’s Top Hits\nYOASOBI - Idol\nmrekk\n♪\nDisturbed - The Sound Of Silence (CYRIL Remix)\nSINGLE SONG\nPLAYLIST SONGS\n1\nBEATMAP MATCHES\n1 (100%)\nSTATUS\nReady\nExport\nDownload All (1)\nBundle as .ZIP (1)\nDeselect All\n1 of 1 selected\n#1\nDisturbed - The Sound Of Silence (CYRIL Remix)\nSource Track\nQuery:\nDisturbed The Sound Of Silence\nDisturbed - The Sound Of Silence\nGRAVEYARD\nby Fox Sin Ban\n•\n78 BPM\n•\n★ 1.9-1.9\n4 versions (change)\n.OSZ\nShowing 1 - 1 of 1 songs\nPER PAGE:\n10\n25\n50\nAll\nGitHub\n·\nConsider starring this project",
+  "phoneSW": [
+    375,
+    375
+  ]
+}

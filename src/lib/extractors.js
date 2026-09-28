@@ -1,4 +1,4 @@
-import { cleanSongTitle } from './titleCleaner.js';
+import { cleanSongTitle, cleanPlaylistTitles } from './titleCleaner.js';
 import { extractPlaylistId, extractVideoId, fetchPlaylistItems, ExtractionError } from './youtube.js';
 import { classifyInput, buildProviderUrl } from './platform.js';
 import { fetchText, fetchJson } from './http.js';
@@ -371,12 +371,16 @@ export async function extractMusicData(inputUrlOrQuery) {
 
   // Clean and prepare each track for osu! matching
   const structured = STRUCTURED_PLATFORMS.has(result.platform);
+  // F-46: a tag that repeats across the playlist is the uploader's house style, not part of
+  // a song's name. Counted once here and shared by every track.
+  const playlistTitles = cleanPlaylistTitles((result.songs || []).map((song) => song.title));
   const processedSongs = (result.songs || []).map((song, index) => {
     // Spotify and Apple hand over a real artist field; the cleaner must not split another
     // artist out of the title when one is there. YouTube and a typed query have none.
     const cleaned = cleanSongTitle(song.title, song.channelTitle, {
       source: result.platform,
       ...(structured ? { providerArtist: song.channelTitle || '' } : {}),
+      playlistTitles,
     });
     return {
       ...song,
@@ -394,6 +398,8 @@ export async function extractMusicData(inputUrlOrQuery) {
       // the provider, so the matcher must not give it a provider's trust.
       artistFromTitle: cleaned.artistFromTitle,
       extractedTitle: cleaned.title,
+      // The title with its ambiguous tags kept, or '' when that is the same (F-46).
+      altTitle: cleaned.altTitle,
       fallbacks: cleaned.fallbacks,
       queries: cleaned.queries,
     };

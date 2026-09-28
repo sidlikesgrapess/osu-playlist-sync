@@ -1,0 +1,17 @@
+import { cleanSongTitle, cleanPlaylistTitles } from '../../../src/lib/titleCleaner.js';
+const titles = [];
+for (let i=0;i<5000;i++) titles.push(`Artist${i%300} - Song number ${i} (Official Video) [HD]`);
+let t=Date.now(); const pt = cleanPlaylistTitles(titles); console.log('cleanPlaylistTitles 5000 ms', Date.now()-t);
+t=Date.now(); for (const x of titles) cleanSongTitle(x,'Chan',{source:'youtube',playlistTitles:pt}); console.log('clean 5000 ms', Date.now()-t);
+const show=(r)=>console.log(JSON.stringify({title:r.title,alt:r.altTitle,artist:r.artist,aft:r.artistFromTitle,q:r.cleanQuery}));
+show(cleanSongTitle('Shape of You - Stormzy Remix','Ed Sheeran',{source:'spotify',providerArtist:'Ed Sheeran'}));
+show(cleanSongTitle('Believer','Imagine Dragons',{source:'spotify',providerArtist:'Imagine Dragons'}));
+show(cleanSongTitle('Imagine Dragons - Believer (Official Video)','ImagineDragonsVEVO',{source:'youtube'}));
+show(cleanSongTitle('Nightcore ~ Hikaru Nara','Nightcore Anime',{source:'youtube'}));
+show(cleanSongTitle('Artist - Song ~ Night Ver.','Chan',{source:'youtube'}));
+show(cleanSongTitle('','',{source:'youtube'}));
+show(cleanSongTitle('~','',{source:'query'}));
+show(cleanSongTitle(' - ','',{source:'query'}));
+const pl=['Nightcore - Monster','Hikaru Nara (Nightcore)','Skillet - Monster'];
+const p2=cleanPlaylistTitles(pl); for (const x of pl) show(cleanSongTitle(x,'Syrex',{source:'youtube',playlistTitles:p2}));
+const pl3=['Skillet - Monster','Skillet - Hero','Awake (Skillet)']; const p3=cleanPlaylistTitles(pl3); for (const x of pl3) show(cleanSongTitle(x,'Chan',{source:'youtube',playlistTitles:p3}));

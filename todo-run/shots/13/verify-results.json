@@ -1,0 +1,166 @@
+{
+  "checks": {
+    "desktop/remix: search sent": {
+      "pass": true,
+      "detail": 1
+    },
+    "desktop/remix: title param": {
+      "pass": true,
+      "detail": "Night of Nights"
+    },
+    "desktop/remix: altTitle param": {
+      "pass": true,
+      "detail": "Night of Nights (Flowering nights remix)"
+    },
+    "desktop/remix: matched row rendered": {
+      "pass": true,
+      "detail": "Night of Nights (Flowering nights remix)"
+    },
+    "desktop/remix: no horizontal scroll": {
+      "pass": true,
+      "detail": [
+        1280,
+        1280
+      ]
+    },
+    "desktop/plain: search sent": {
+      "pass": true,
+      "detail": 1
+    },
+    "desktop/plain: title param": {
+      "pass": true,
+      "detail": "Lemon"
+    },
+    "desktop/plain: altTitle param": {
+      "pass": true,
+      "detail": null
+    },
+    "desktop/plain: matched row rendered": {
+      "pass": true,
+      "detail": "Lemon"
+    },
+    "desktop/plain: no horizontal scroll": {
+      "pass": true,
+      "detail": [
+        1280,
+        1280
+      ]
+    },
+    "phone/remix: search sent": {
+      "pass": true,
+      "detail": 1
+    },
+    "phone/remix: title param": {
+      "pass": true,
+      "detail": "Night of Nights"
+    },
+    "phone/remix: altTitle param": {
+      "pass": true,
+      "detail": "Night of Nights (Flowering nights remix)"
+    },
+    "phone/remix: matched row rendered": {
+      "pass": true,
+      "detail": "Night of Nights (Flowering nights remix)"
+    },
+    "phone/remix: no horizontal scroll": {
+      "pass": true,
+      "detail": [
+        375,
+        375
+      ]
+    },
+    "phone/plain: search sent": {
+      "pass": true,
+      "detail": 1
+    },
+    "phone/plain: title param": {
+      "pass": true,
+      "detail": "Lemon"
+    },
+    "phone/plain: altTitle param": {
+      "pass": true,
+      "detail": null
+    },
+    "phone/plain: matched row rendered": {
+      "pass": true,
+      "detail": "Lemon"
+    },
+    "phone/plain: no horizontal scroll": {
+      "pass": true,
+      "detail": [
+        375,
+        375
+      ]
+    }
+  },
+  "log": [],
+  "searches": [
+    {
+      "vp": "desktop",
+      "case": "remix",
+      "params": {
+        "q": "COOL&CREATE Night of Nights",
+        "title": "Night of Nights",
+        "altTitle": "Night of Nights (Flowering nights remix)",
+        "artist": "COOL&CREATE",
+        "source": "query",
+        "artistFromTitle": "1",
+        "fallbacks": "[\"Night of Nights\",\"Night of Nights COOL&CREATE\",\"COOL&CREATE Night of Nights\"]",
+        "mode": "all",
+        "status": "any",
+        "strictness": "50"
+      }
+    },
+    {
+      "vp": "desktop",
+      "case": "plain",
+      "params": {
+        "q": "Kenshi Yonezu Lemon",
+        "title": "Lemon",
+        "artist": "Kenshi Yonezu",
+        "source": "query",
+        "artistFromTitle": "1",
+        "fallbacks": "[\"Lemon\",\"Lemon Kenshi Yonezu\",\"Kenshi Yonezu Lemon\"]",
+        "mode": "all",
+        "status": "any",
+        "strictness": "50"
+      }
+    },
+    {
+      "vp": "phone",
+      "case": "remix",
+      "params": {
+        "q": "COOL&CREATE Night of Nights",
+        "title": "Night of Nights",
+        "altTitle": "Night of Nights (Flowering nights remix)",
+        "artist": "COOL&CREATE",
+        "source": "query",
+        "artistFromTitle": "1",
+        "fallbacks": "[\"Night of Nights\",\"Night of Nights COOL&CREATE\",\"COOL&CREATE Night of Nights\"]",
+        "mode": "all",
+        "status": "any",
+        "strictness": "50"
+      }
+    },
+    {
+      "vp": "phone",
+      "case": "plain",
+      "params": {
+        "q": "Kenshi Yonezu Lemon",
+        "title": "Lemon",
+        "artist": "Kenshi Yonezu",
+        "source": "query",
+        "artistFromTitle": "1",
+        "fallbacks": "[\"Lemon\",\"Lemon Kenshi Yonezu\",\"Kenshi Yonezu Lemon\"]",
+        "mode": "all",
+        "status": "any",
+        "strictness": "50"
+      }
+    }
+  ],
+  "summary": {
+    "total": 20,
+    "failed": 0,
+    "errors": 0
+  }
+}

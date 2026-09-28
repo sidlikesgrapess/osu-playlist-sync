@@ -18,9 +18,10 @@ test('F-28 repro: a provider artist stops the dash split, and a noise dash segme
   assert.equal(old.artistFromTitle, true);
 });
 
-test('a dash segment that is not noise stays part of the title', () => {
+test('a structured dash segment is a version tag: H0 drops it, altTitle keeps it for osu! to judge', () => {
   const r = cleanSongTitle('Shape of You - Stormzy Remix', 'Ed Sheeran', spotify('Ed Sheeran'));
-  assert.equal(r.title, 'Shape of You - Stormzy Remix');
+  assert.equal(r.title, 'Shape of You');
+  assert.equal(r.altTitle, 'Shape of You - Stormzy Remix');
   assert.equal(r.artist, 'Ed Sheeran');
 });
 
@@ -28,8 +29,8 @@ test('every split branch is skipped when the provider supplied the artist', () =
   const cases = [
     ['Re:Re:', 'Re:Re'], // colon
     ['Stand by Me', 'Stand by Me'], // by
-    ['"Sound Asleep" - Chikafuji Lisa', 'Sound Asleep - Chikafuji Lisa'], // quoted
-    ['Lemon - Kenshi Yonezu / Cover Rainych', 'Lemon - Kenshi Yonezu'], // cover (the trailing / Cover is stripped as noise first)
+    ['"Sound Asleep" - Chikafuji Lisa', 'Sound Asleep'], // quoted (the dash segment is a version tag)
+    ['Lemon - Kenshi Yonezu / Cover Rainych', 'Lemon'], // cover (the dash segment is a version tag)
     ['Song | Part Two', 'Song | Part Two'], // pipe
     ['Song • Part Two', 'Song • Part Two'], // bullet
   ];

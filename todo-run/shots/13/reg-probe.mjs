@@ -1,0 +1,15 @@
+import { cleanSongTitle, cleanPlaylistTitles } from '../../../src/lib/titleCleaner.js';
+const show = (l, f) => { try { console.log(l, JSON.stringify(f())); } catch (e) { console.log(l, 'THROW', e.message); } };
+show('null', () => cleanSongTitle(null));
+show('undef', () => cleanSongTitle(undefined, undefined));
+show('empty', () => cleanSongTitle(''));
+show('pl undefined', () => cleanPlaylistTitles([undefined, null, '', 'a [MV]']));
+show('pl nonarray', () => cleanPlaylistTitles(undefined));
+show('pl map passed', () => cleanSongTitle('Song [MV]', 'Ch', { playlistTitles: cleanPlaylistTitles(['x [MV]', 'y [MV]', 'Song [MV]']) }));
+show('plain', () => cleanSongTitle('Kenshi Yonezu - Lemon', 'Kenshi Yonezu'));
+show('spotify', () => cleanSongTitle('Lemon', 'Kenshi Yonezu', { source: 'spotify', providerArtist: 'Kenshi Yonezu' }));
+show('query', () => cleanSongTitle('camellia ghost', '', { source: 'query' }));
+show('long', () => cleanSongTitle('a'.repeat(5000) + ' (' + 'b '.repeat(2000) + ')', 'c').title.length);
+const t0 = Date.now(); const big = Array.from({length: 500}, (_, i) => `Artist ${i} - Song ${i} (Official Video) [MV] 【${i}】`);
+const pl = cleanPlaylistTitles(big); for (const t of big) cleanSongTitle(t, 'ch', { playlistTitles: pl }); console.log('500 titles ms', Date.now() - t0);
+show('keys', () => Object.keys(cleanSongTitle('A - B (feat. C) [MV]', 'x')));

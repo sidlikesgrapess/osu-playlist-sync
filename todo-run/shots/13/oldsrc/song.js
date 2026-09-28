@@ -32,8 +32,6 @@ export function makeSong(input = {}) {
     cleanQuery: '',
     extractedTitle: '',
     extractedArtist: '',
-    // F-46: the title with its ambiguous tags kept, when that differs from extractedTitle.
-    altTitle: '',
     fallbacks: [],
     queries: [],
     hasSearched: false,

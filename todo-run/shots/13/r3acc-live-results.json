@@ -1,0 +1,39 @@
+{
+  "errors": [],
+  "searches": [
+    {
+      "q": "COOL&CREATE Night of Nights",
+      "title": "Night of Nights",
+      "altTitle": "Night of Nights (Flowering nights remix)",
+      "artist": "COOL&CREATE",
+      "source": "query",
+      "artistFromTitle": "1",
+      "fallbacks": "[\"Night of Nights\",\"Night of Nights COOL&CREATE\",\"COOL&CREATE Night of Nights\"]",
+      "mode": "all",
+      "status": "any",
+      "strictness": "50"
+    }
+  ],
+  "responses": [
+    {
+      "status": 200,
+      "bestScore": 236.05400981717457,
+      "rejection": null,
+      "top": [
+        "COOL&CREATE/BeatMARIO - Night of Nights (Flowering nights remix) (236.05400981717457)",
+        "COOL&CREATE/BeatMARIO - Night of Nights (Flowering nights remix) (234.20310309343895)",
+        "COOL&CREATE // Beat Mario - Night of Nights (Flowering Nights Remix) (231.9453781259591)"
+      ]
+    }
+  ],
+  "desktopText": "Sync\nSFX\nOnline\nReport Issue\nosu!Sync\nSync your playlists and songs. Or pull any player’s top plays and favourites in bulk.\nMODE:\nAll Modes\nosu!\nosu!taiko\nosu!catch\nosu!mania\nSTATUS:\nRanked & Loved\nAll (incl. Unranked)\nMATCH STRICTNESS\nBALANCED\nClear title match, same artist\nRefetch\nPlaylist / Song\nPlayer\nClear\nAdd More Songs\nTry sample:\nosu! Banger Showcase\nToday’s Top Hits\nYOASOBI - Idol\nmrekk\n♪\nCOOL&CREATE - Night of Nights (Flowering nights remix)\nSINGLE SONG\nPLAYLIST SONGS\n1\nBEATMAP MATCHES\n1 (100%)\nSTATUS\nReady\nExport\nDownload All (1)\nBundle as .ZIP (1)\nDeselect All\n1 of 1 selected\n\t#\tTRACK / SONG\tMATCH\tACTION\n\n\t1\t\nCOOL&CREATE - Night of Nights (Flowering nights remix)\nYouTube Track\nQuery:\nCOOL&CREATE Night of Nights\n\t\nCOOL&CREATE/BeatMARIO - Night of Nights (Flowering nights remix)\nGRAVEYARD\nmapped by Ojily\n•\n180 BPM\n•\n★ 1.7 - 4.8\n37 versions available (change)\n\t\n.OSZ\nShowing 1 - 1 of 1 songs\nPER PAGE:\n10\n25\n50\nAll\nGitHub\n·\nConsider starring this project",
+  "desktopSW": [
+    1280,
+    1280
+  ],
+  "phoneText": "Sync\nSFX\nOnline\nReport Issue\nosu!Sync\nSync your playlists and songs. Or pull any player’s top plays and favourites in bulk.\nMODE:\nAll Modes\nosu!\nosu!taiko\nosu!catch\nosu!mania\nSTATUS:\nRanked & Loved\nAll (incl. Unranked)\nMATCH STRICTNESS\nBALANCED\nClear title match, same artist\nRefetch\nPlaylist / Song\nPlayer\nClear\nTry sample:\nosu! Banger Showcase\nToday’s Top Hits\nYOASOBI - Idol\nmrekk\n♪\nCOOL&CREATE - Night of Nights (Flowering nights remix)\nSINGLE SONG\nPLAYLIST SONGS\n1\nBEATMAP MATCHES\n1 (100%)\nSTATUS\nReady\nExport\nDownload All (1)\nBundle as .ZIP (1)\nDeselect All\n1 of 1 selected\n#1\nCOOL&CREATE - Night of Nights (Flowering nights remix)\nSource Track\nQuery:\nCOOL&CREATE Night of Nights\nCOOL&CREATE/BeatMARIO - Night of Nights (Flowering nights remix)\nGRAVEYARD\nby Ojily\n•\n180 BPM\n•\n★ 1.7-4.8\n37 versions (change)\n.OSZ\nShowing 1 - 1 of 1 songs\nPER PAGE:\n10\n25\n50\nAll\nGitHub\n·\nConsider starring this project",
+  "phoneSW": [
+    375,
+    375
+  ]
+}

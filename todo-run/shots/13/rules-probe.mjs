@@ -1,0 +1,11 @@
+import { cleanSongTitle, cleanPlaylistTitles } from '../../../src/lib/titleCleaner.js';
+const p = (t, c, o) => { const r = cleanSongTitle(t, c, o); console.log(JSON.stringify(t), '->', r.artist, '|', r.title, '|', r.altTitle, '| fromTitle', r.artistFromTitle); };
+p('Artist - Song ~ Night Ver.', 'Chan', { source: 'youtube' });
+p('ZUN - Lunatic Eyes ~ Invisible Full Moon', 'x', { source: 'youtube' });
+p('Nightcore - Angel With A Shotgun', 'NightcoreReality', { source: 'youtube' });
+p('Nightcore - Monster (Lyrics)', 'Syrex', { source: 'youtube' });
+p('Nightcore ~ Faded', 'Nightcore', { source: 'youtube' });
+const pl = ['DECO*27 - Ghost Rule feat. Hatsune Miku', 'Vampire [DECO*27]'];
+p(pl[0], 'DECO*27', { source: 'youtube', playlistTitles: cleanPlaylistTitles(pl) });
+const pl2 = ['Alan Walker - Faded', 'Spectre (Alan Walker)', 'x'];
+p(pl2[0], 'SomeUploader', { source: 'youtube', playlistTitles: cleanPlaylistTitles(pl2) });

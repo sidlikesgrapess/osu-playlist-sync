@@ -29,9 +29,12 @@ const supplement = existsSync(SUPPLEMENT_FILE)
 // (fixture, query) pairs allowed to go unanswered, each with its reason.
 const UNCOVERED_ALLOWED = [];
 
-// The first real post-F-28 run's own count (recorded in that commit). Never the bench
-// model's 55 or the hybrid spike's 56.
-const MAX_CALLS = 57;
+// The first real post-F-28 run's own count was 57 (recorded in that commit), and the
+// committed tree before F-46 ran 55. F-46's fuller match wins (USER 2026-09-26) raises it
+// to 58: an exact H0 leader no longer ends the search while the H1 query is pending, so the
+// three uploads whose H1 keeps a tag ("(Official Video)", "(Lyrics)", "[Insane]") each send
+// that one query (todo-run/f46/REPORT.md).
+const MAX_CALLS = 58;
 
 const STRUCTURED = new Set(['spotify', 'apple']);
 
@@ -55,6 +58,7 @@ function songFor(fixture, overrides = {}) {
     extractedArtist: cleaned.artist,
     artistFromTitle: cleaned.artistFromTitle,
     extractedTitle: cleaned.title,
+    altTitle: cleaned.altTitle,
     fallbacks: cleaned.fallbacks,
     queries: cleaned.queries,
   };
@@ -72,6 +76,7 @@ function searchArgsFor(song, { status = 'any', strictness = 50, mode = 'all' } =
     strictness,
     source: song.source || '',
     artistFromTitle: Boolean(song.artistFromTitle),
+    altTitle: song.altTitle || '',
   }];
 }
 

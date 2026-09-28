@@ -21,6 +21,8 @@ export function buildSearchRequest(song, overrides = {}) {
   } else {
     params.set('q', song.cleanQuery || song.title || '');
     params.set('title', song.extractedTitle || song.title || '');
+    // F-46: the second reading of the title; the matcher scores against both.
+    if (song.altTitle) params.set('altTitle', song.altTitle);
     params.set('artist', song.extractedArtist || song.channelTitle || '');
     params.set('source', song.source || '');
     if (song.artistFromTitle) params.set('artistFromTitle', '1');

@@ -1,0 +1,38 @@
+{
+  "errors": [],
+  "searches": [
+    {
+      "q": "ヨルシカ ただ君に晴れ",
+      "title": "ただ君に晴れ",
+      "artist": "ヨルシカ",
+      "source": "query",
+      "artistFromTitle": "1",
+      "fallbacks": "[\"ただ君に晴れ\",\"ただ君に晴れ ヨルシカ\",\"ヨルシカ ただ君に晴れ\"]",
+      "mode": "all",
+      "status": "any",
+      "strictness": "50"
+    }
+  ],
+  "responses": [
+    {
+      "status": 200,
+      "bestScore": 223.08818969171762,
+      "rejection": null,
+      "top": [
+        "Yorushika - Tada Kimi ni Hare (223.08818969171762)",
+        "Yorushika - Just a Sunny Day for You (221.9453781259591)",
+        "Yorushika - Tada Kimi ni Hare (221.16345712862105)"
+      ]
+    }
+  ],
+  "desktopText": "Sync\nSFX\nOnline\nReport Issue\nosu!Sync\nSync your playlists and songs. Or pull any player’s top plays and favourites in bulk.\nMODE:\nAll Modes\nosu!\nosu!taiko\nosu!catch\nosu!mania\nSTATUS:\nRanked & Loved\nAll (incl. Unranked)\nMATCH STRICTNESS\nBALANCED\nClear title match, same artist\nRefetch\nPlaylist / Song\nPlayer\nClear\nAdd More Songs\nTry sample:\nosu! Banger Showcase\nToday’s Top Hits\nYOASOBI - Idol\nmrekk\n♪\nヨルシカ - 「ただ君に晴れ」 MV\nSINGLE SONG\nPLAYLIST SONGS\n1\nBEATMAP MATCHES\n1 (100%)\nSTATUS\nReady\nExport\nDownload All (1)\nBundle as .ZIP (1)\nDeselect All\n1 of 1 selected\n\t#\tTRACK / SONG\tMATCH\tACTION\n\n\t1\t\nヨルシカ - 「ただ君に晴れ」 MV\nYouTube Track\nQuery:\nヨルシカ ただ君に晴れ\n\t\nYorushika - Tada Kimi ni Hare\nRANKED\nmapped by GreenHue\n•\n140 BPM\n•\n★ 2.3 - 5.3\n18 versions available (change)\n\t\n.OSZ\nShowing 1 - 1 of 1 songs\nPER PAGE:\n10\n25\n50\nAll\nGitHub\n·\nConsider starring this project",
+  "desktopSW": [
+    1280,
+    1280
+  ],
+  "phoneText": "Sync\nSFX\nOnline\nReport Issue\nosu!Sync\nSync your playlists and songs. Or pull any player’s top plays and favourites in bulk.\nMODE:\nAll Modes\nosu!\nosu!taiko\nosu!catch\nosu!mania\nSTATUS:\nRanked & Loved\nAll (incl. Unranked)\nMATCH STRICTNESS\nBALANCED\nClear title match, same artist\nRefetch\nPlaylist / Song\nPlayer\nClear\nTry sample:\nosu! Banger Showcase\nToday’s Top Hits\nYOASOBI - Idol\nmrekk\n♪\nヨルシカ - 「ただ君に晴れ」 MV\nSINGLE SONG\nPLAYLIST SONGS\n1\nBEATMAP MATCHES\n1 (100%)\nSTATUS\nReady\nExport\nDownload All (1)\nBundle as .ZIP (1)\nDeselect All\n1 of 1 selected\n#1\nヨルシカ - 「ただ君に晴れ」 MV\nSource Track\nQuery:\nヨルシカ ただ君に晴れ\nYorushika - Tada Kimi ni Hare\nRANKED\nby GreenHue\n•\n140 BPM\n•\n★ 2.3-5.3\n18 versions (change)\n.OSZ\nShowing 1 - 1 of 1 songs\nPER PAGE:\n10\n25\n50\nAll\nGitHub\n·\nConsider starring this project",
+  "phoneSW": [
+    375,
+    375
+  ]
+}

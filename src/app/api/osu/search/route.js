@@ -16,6 +16,8 @@ export async function GET(request) {
     const query = boundedString(searchParams.get('q'), { name: 'q', max: 500, required: false });
     let title = boundedString(searchParams.get('title'), { name: 'title', max: 500, required: false });
     let artist = boundedString(searchParams.get('artist'), { name: 'artist', max: 500, required: false });
+    // F-46: the title with its ambiguous tags kept. searchOsuBeatmaps scores against both.
+    let altTitle = boundedString(searchParams.get('altTitle'), { name: 'altTitle', max: 500, required: false });
     const mode = searchParams.get('mode') || 'all';
     const status = searchParams.get('status') || 'ranked';
     // Provenance of the artist string: decides whether a wrong-artist verdict may reject.
@@ -56,6 +58,7 @@ export async function GET(request) {
       title = title || cleaned.title;
       artist = cleaned.artist;
       artistFromTitle = cleaned.artistFromTitle;
+      altTitle = altTitle || cleaned.altTitle;
       rawQueries.push(cleaned.cleanQuery, ...cleaned.fallbacks, ...cleaned.queries);
     }
     const extraQueries = boundedStringArray(
@@ -75,6 +78,7 @@ export async function GET(request) {
       strictness,
       source,
       artistFromTitle,
+      altTitle: altTitle || '',
     });
 
     return NextResponse.json({
