@@ -38,6 +38,22 @@
 - need to redo F-46 with a better approach. (confirm approach with user) done
 ## Remaining
 
+- Remove redundant code. No line budget: the goal is that no logic is written twice and
+  nothing unused is left behind. The rebuild was meant to do this and did not (src/ grew
+  from 8,760 lines before it to 12,164 now, with no simplification goal ever set).
+  Steps:
+  1. Read only audit of src/ first. List every duplicated or dead piece with file:line
+     evidence, each one checked by a second agent trying to prove it is NOT redundant.
+     Show the list to the user before changing anything; the user picks what goes.
+  2. Remove one piece at a time, each its own commit, with npm test, npm run bench,
+     bench:cost and node todo-run/f46/ab.mjs unchanged before and after, plus a desktop
+     and phone check. Behaviour must not change.
+  Suspected (not yet audited):
+  - SongRow.js and SongCardMobile.js repeat the same row logic; PlayerSections.js
+    BeatmapRow may be a third copy.
+  - page.js (1,545 lines) may hold per side copies of selection and download handling.
+  - the same inline style objects (buttons, badges, cards) rewritten across components.
+  - leftover helpers, props and exports nothing uses any more.
 
 ## Long term goals
 

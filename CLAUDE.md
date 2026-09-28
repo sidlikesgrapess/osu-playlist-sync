@@ -238,4 +238,12 @@ The osu! API rate-limits aggressively, and two conventions exist to stay under i
 - `osuApiGet` attaches `.status` to thrown errors so callers can distinguish 429 from 404.
   Route handlers map those to user-facing messages; preserve that when adding endpoints.
 - Desktop and mobile have **separate components** (`SongRow.js` / `SongCardMobile.js`).
-  Changes to row behaviour usually need to land in both.
+  Changes to row behaviour usually need to land in both. This split is a known suspect for
+  redundancy (see below), not a rule to preserve.
+- **No redundant code.** The user does not want logic written twice or code nothing uses.
+  There is no line budget; the size falls where it falls. Before adding a helper, style
+  object or handler, look for an existing one and reuse or extend it. When you find a
+  duplicate or dead piece, report it with file:line rather than working around it. Cleanup
+  is behaviour neutral: `npm test`, `npm run bench`, `bench:cost` and
+  `node todo-run/f46/ab.mjs` must read the same before and after. The open work item is in
+  `todo` under Remaining; start it with a read only audit and let the user pick what goes.
