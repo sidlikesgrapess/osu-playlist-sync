@@ -1301,6 +1301,8 @@ export default function Home() {
       downloadableCount={downloadableSongs.length}
       downloadsLocked={isSearching}
       otherSideNote={otherSideNote}
+      onViewOtherSide={() => handleSearchModeChange(isPlayerView ? 'songs' : 'player')}
+      otherSideLabel={isPlayerView ? 'View Playlist' : 'View Player'}
       onDownloadAction={handleDownloadBatch}
       onDownloadZipAction={handleDownloadZipBatch}
       isDownloadingZip={isDownloadingZip}

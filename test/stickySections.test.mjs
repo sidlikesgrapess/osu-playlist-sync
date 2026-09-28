@@ -2,12 +2,13 @@ import { test } from 'node:test';
 import assert from 'node:assert/strict';
 
 import {
-  DEFAULT_DOCK_TOP, dockTopFrom, parseDockTop, isHeaderDocked, collapseScrollTarget
+  DEFAULT_DOCK_TOP, DOCK_OVERLAP, dockTopFrom, parseDockTop, isHeaderDocked, collapseScrollTarget
 } from '../src/lib/stickySections.js';
 
-test('the dock line is the bar sticky top plus its live height', () => {
-  assert.equal(dockTopFrom({ stickyTop: 56, height: 120 }), 176);
-  assert.equal(dockTopFrom({ stickyTop: 56, height: 98.4 }), 154.4);
+test('the dock line is the bar sticky top plus its live height, tucked under its border', () => {
+  assert.equal(DOCK_OVERLAP, 1);
+  assert.equal(dockTopFrom({ stickyTop: 56, height: 120 }), 175);
+  assert.equal(dockTopFrom({ stickyTop: 56, height: 98.4 }), 153.4);
   // Not measured yet: fall back to the navbar line, never NaN.
   assert.equal(dockTopFrom({ stickyTop: NaN, height: undefined }), DEFAULT_DOCK_TOP);
 });

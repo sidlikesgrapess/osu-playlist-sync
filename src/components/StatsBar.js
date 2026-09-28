@@ -29,6 +29,9 @@ export default function StatsBar({
   downloadableCount = matchedCount,
   downloadsLocked = isSearching,
   otherSideNote = '',
+  // Switches to the view the note is about, labelled with where it goes.
+  onViewOtherSide,
+  otherSideLabel = '',
 }) {
   const effectiveTotal = searchedCount !== undefined && searchedCount > 0 ? searchedCount : totalSongs;
   const matchPercentage = effectiveTotal > 0 ? Math.round((matchedCount / effectiveTotal) * 100) : 0;
@@ -98,8 +101,33 @@ export default function StatsBar({
       {/* Action Buttons */}
       <div style={{ display: 'flex', alignItems: 'center', gap: '6px', flexWrap: 'wrap', width: 'auto' }}>
         {otherSideNote && (
-          <span data-testid="stats-other-side" style={{ fontSize: '0.7rem', fontWeight: 700, color: '#9a90a6', marginRight: '2px' }}>
+          <span data-testid="stats-other-side" style={{ display: 'inline-flex', alignItems: 'center', gap: '6px', fontSize: '0.7rem', fontWeight: 700, color: '#9a90a6', marginRight: '2px' }}>
             {otherSideNote}
+            {onViewOtherSide && otherSideLabel && (
+              <button
+                type="button"
+                className="osu-btn-interactive"
+                data-testid="stats-view-other-side"
+                onClick={() => {
+                  osuAudio.playClick();
+                  onViewOtherSide();
+                }}
+                onMouseEnter={() => osuAudio.playHover()}
+                style={{
+                  padding: '3px 8px',
+                  borderRadius: '6px',
+                  border: '1px solid rgba(255, 102, 170, 0.35)',
+                  background: 'rgba(255, 102, 170, 0.1)',
+                  color: '#ff66aa',
+                  fontSize: '0.7rem',
+                  fontWeight: 800,
+                  cursor: 'pointer',
+                  whiteSpace: 'nowrap',
+                }}
+              >
+                {otherSideLabel}
+              </button>
+            )}
           </span>
         )}
 

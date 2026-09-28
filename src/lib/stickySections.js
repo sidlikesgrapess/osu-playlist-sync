@@ -15,11 +15,23 @@ export const DEFAULT_DOCK_TOP = 56;
 // Sub pixel layout and rounding can leave a resting header a fraction off its natural spot.
 const EPSILON = 0.5;
 
+/**
+ * How far a docked header tucks up under the search bar's bottom border. The bar's height is
+ * fractional and the header's top is snapped to device pixels, so butting the two edges
+ * exactly can leave a hairline of page showing between them; overlapping by one pixel under
+ * the bar (which is stacked above the headers) cannot.
+ */
+export const DOCK_OVERLAP = 1;
+
+/** The data attribute on <html> that says a player section header is docked under the bar. */
+export const SECTION_DOCKED_ATTR = 'data-player-section-docked';
+
 /** The value to publish: where the bar sticks plus how tall it is right now. */
 export function dockTopFrom({ stickyTop, height }) {
   const top = Number.isFinite(stickyTop) ? stickyTop : DEFAULT_DOCK_TOP;
   const h = Number.isFinite(height) && height > 0 ? height : 0;
-  return Math.round((top + h) * 100) / 100;
+  // Nothing measured yet means no bar to tuck under: sit on the navbar line itself.
+  return Math.round((top + (h > 0 ? h - DOCK_OVERLAP : 0)) * 100) / 100;
 }
 
 /** Reads the published variable back ('123.5px', '', undefined) as a number. */

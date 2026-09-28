@@ -277,6 +277,14 @@ button, a, input, select {
   }
 }
 
+/* A docked player section header meets the docked search bar as one piece (PlayerSections
+   sets the attribute). The bar's inline transition animates both changes. */
+html[data-player-section-docked] .pi-dock-card {
+  box-shadow: none !important;
+  border-bottom-left-radius: 0 !important;
+  border-bottom-right-radius: 0 !important;
+}
+
 /* Compact search bar for narrow (mobile-portrait) viewports */
 @media (max-width: 480px) {
   /* The search type toggle keeps its words, which say what the modes are; only its icons go,

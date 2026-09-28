@@ -120,7 +120,7 @@ export default function PlaylistInput({ onFetch, isLoading, hasSongs, searchMode
     const root = document.documentElement;
     const publish = () => {
       const stickyTop = parseFloat(window.getComputedStyle(el).top);
-      root.style.setProperty(DOCK_TOP_VAR, `${dockTopFrom({ stickyTop, height: el.offsetHeight })}px`);
+      root.style.setProperty(DOCK_TOP_VAR, `${dockTopFrom({ stickyTop, height: el.getBoundingClientRect().height })}px`);
     };
     publish();
     const observer = typeof ResizeObserver === 'function' ? new ResizeObserver(publish) : null;
@@ -198,7 +198,7 @@ export default function PlaylistInput({ onFetch, isLoading, hasSongs, searchMode
   };
 
   return (
-    <div ref={dockRef} style={{
+    <div ref={dockRef} className="pi-dock" style={{
       maxWidth: '1240px',
       margin: '0 auto 18px',
       position: 'sticky',
@@ -206,7 +206,7 @@ export default function PlaylistInput({ onFetch, isLoading, hasSongs, searchMode
       zIndex: 45,
       transition: 'all 0.3s cubic-bezier(0.16, 1, 0.3, 1)',
     }}>
-      <div style={{
+      <div className="pi-dock-card" style={{
         background: isDocked ? '#181620' : '#1e1c26',
         border: `1px solid ${isDocked ? 'rgba(255, 102, 170, 0.35)' : 'rgba(255, 255, 255, 0.08)'}`,
         borderRadius: '10px',

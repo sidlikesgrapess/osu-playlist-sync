@@ -11,7 +11,7 @@ import { OverrideMark, OverrideNotice } from './MatchNotice';
 import { osuAudio } from '@/lib/soundEffects';
 import { getStarColor, formatCompactNumber, getStatusBadgeStyle } from '@/lib/beatmapFormat';
 import { useAudioPreview } from '@/lib/useAudioPreview';
-import { DOCK_TOP_VAR, parseDockTop, isHeaderDocked, collapseScrollTarget } from '@/lib/stickySections';
+import { DOCK_TOP_VAR, SECTION_DOCKED_ATTR, parseDockTop, isHeaderDocked, collapseScrollTarget } from '@/lib/stickySections';
 
 const SECTION_META = {
   best: { label: 'Best Performances', icon: Trophy, color: '#ffbb22' },
@@ -430,6 +430,16 @@ export default function PlayerSections({
   }, [openKey]);
   const dockedTypes = new Set(dockedKey ? dockedKey.split(',') : []);
 
+  // A docked header joins the search bar as one piece: PlaylistInput's card drops its shadow
+  // and squares its bottom corners while this is set (globals.css), so neither the shadow
+  // nor a rounded corner lies over the header.
+  useEffect(() => {
+    const root = document.documentElement;
+    if (dockedKey) root.setAttribute(SECTION_DOCKED_ATTR, '');
+    else root.removeAttribute(SECTION_DOCKED_ATTR);
+  }, [dockedKey]);
+  useEffect(() => () => document.documentElement.removeAttribute(SECTION_DOCKED_ATTR), []);
+
   const handleToggle = (type, isOpen) => {
     osuAudio.playClick();
     // Collapsing a docked section: jump so the collapsed header lands where the docked one
@@ -499,7 +509,9 @@ export default function PlayerSections({
                 background: isOpen ? '#232030' : 'transparent',
                 borderBottom: `1px solid ${isOpen ? 'rgba(255, 255, 255, 0.07)' : 'transparent'}`,
                 borderRadius: isOpen
-                  ? (isDocked ? '0px' : `${INNER_RADIUS}px ${INNER_RADIUS}px 0 0`)
+                  // Docked, the top meets the bar's squared bottom and the bottom rounds off
+                  // over the rows scrolling under it.
+                  ? (isDocked ? `0 0 ${INNER_RADIUS}px ${INNER_RADIUS}px` : `${INNER_RADIUS}px ${INNER_RADIUS}px 0 0`)
                   : `${INNER_RADIUS}px`,
                 boxShadow: isDocked ? '0 10px 22px rgba(0, 0, 0, 0.5)' : '0 0 0 rgba(0, 0, 0, 0)',
                 transition: reducedMotion
