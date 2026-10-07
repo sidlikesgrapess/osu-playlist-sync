@@ -1,7 +1,7 @@
 import { test } from 'node:test';
 import assert from 'node:assert/strict';
 
-import { makeSong, songKey, mergeSongs } from '../src/lib/song.js';
+import { makeSong, songKey, mergeSongs, songSubtitle } from '../src/lib/song.js';
 
 test('makeSong requires a valid source and rejects anything else', () => {
   assert.throws(() => makeSong({ title: 'no source' }), /source/);
@@ -101,4 +101,15 @@ test('mergeSongs never mutates the existing array it was given', () => {
   const before = JSON.stringify(existing);
   mergeSongs(existing, [{ id: 'yt_2', title: 'Two' }]);
   assert.equal(JSON.stringify(existing), before);
+});
+
+test('songSubtitle shows the artist, else where the song came from, for every source', () => {
+  assert.equal(songSubtitle({ source: 'spotify', channelTitle: 'Monii' }), 'Monii');
+  for (const source of ['spotify', 'apple', 'youtube', 'query', 'osu-player']) {
+    const label = songSubtitle(makeSong({ source }));
+    assert.ok(label, source);
+    if (source !== 'youtube') assert.doesNotMatch(label, /YouTube/, source);
+    assert.doesNotMatch(label, /[\u2013\u2014]| - /, source);
+  }
+  assert.equal(songSubtitle(makeSong({ source: 'spotify' })), 'Spotify track');
 });

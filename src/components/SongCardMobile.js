@@ -4,6 +4,7 @@ import { useState, memo } from 'react';
 import { Download, ExternalLink, Loader2, Music, Layers, Edit3, Check, X } from 'lucide-react';
 import { osuAudio } from '@/lib/soundEffects';
 import { getStarColor, getStatusBadgeStyle, describeRejection } from '@/lib/beatmapFormat';
+import { songSubtitle } from '@/lib/song';
 import OsuCheckbox from './OsuCheckbox';
 import BeatmapCover from './BeatmapCover';
 import { OverrideMark, OverrideNotice } from './MatchNotice';
@@ -123,7 +124,7 @@ function SongCardMobile({
             {song.title}
           </div>
           <div style={{ fontSize: '0.68rem', color: '#8b7d95', fontWeight: 600, whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>
-            {song.channelTitle || 'Source Track'}
+            {songSubtitle(song)}
           </div>
         </div>
       </div>

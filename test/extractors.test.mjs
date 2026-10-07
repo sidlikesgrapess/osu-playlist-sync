@@ -1,7 +1,9 @@
 import { test, afterEach } from 'node:test';
 import assert from 'node:assert/strict';
 
-import { extractMusicData, ExtractionError } from '../src/lib/extractors.js';
+import { readFileSync } from 'node:fs';
+
+import { extractMusicData, ExtractionError, parseSpotifyEmbed } from '../src/lib/extractors.js';
 import { ValidationError } from '../src/lib/validate.js';
 import { UA_PROFILES } from '../src/lib/http.js';
 
@@ -80,4 +82,45 @@ test('an osu! profile link is refused here; it belongs to the player view', asyn
   const calls = stubFetch(() => new Response('should not happen'));
   await assert.rejects(extractMusicData('https://osu.ppy.sh/users/2'), ValidationError);
   assert.equal(calls.length, 0);
+});
+
+// Captured 2026-10-08 from open.spotify.com/embed/track/51kTzw2J1el6vN2qpNTtAR and (cut to three
+// tracks) /embed/playlist/37i9dQZF1DXcBWIGoYBM5M.
+const SPOTIFY_TRACK_EMBED = readFileSync(new URL('./fixtures/spotify-track-embed.html', import.meta.url), 'utf8');
+const SPOTIFY_PLAYLIST_EMBED = readFileSync(new URL('./fixtures/spotify-playlist-embed.html', import.meta.url), 'utf8');
+
+test('a Spotify track is read from its embed page, with its artist and cover', async () => {
+  const calls = stubFetch(() => new Response(SPOTIFY_TRACK_EMBED, { status: 200 }));
+  const out = await extractMusicData('https://open.spotify.com/track/51kTzw2J1el6vN2qpNTtAR?si=14eed5c735d54264');
+  assert.equal(calls.length, 1);
+  assert.equal(calls[0].url, 'https://open.spotify.com/embed/track/51kTzw2J1el6vN2qpNTtAR');
+  assert.equal(out.platform, 'spotify');
+  assert.equal(out.isSingleTrack, true);
+  assert.equal(out.playlistTitle, 'atrophy');
+  const [song] = out.songs;
+  assert.equal(song.title, 'atrophy');
+  assert.equal(song.channelTitle, 'Monii');
+  assert.equal(song.extractedArtist, 'Monii');
+  assert.equal(song.artistFromTitle, false);
+  assert.equal(song.duration, 202402);
+  // the 300px image, not the 64px or 640px one
+  assert.match(song.thumbnail, /^https:\/\/image-cdn-[a-z]+\.spotifycdn\.com\/image\/ab67616d00001e02/);
+});
+
+test('a Spotify playlist keeps its per track artists and the playlist cover', () => {
+  const out = parseSpotifyEmbed(SPOTIFY_PLAYLIST_EMBED, 'playlist');
+  assert.equal(out.title, 'Today’s Top Hits');
+  assert.deepEqual(out.songs.map((s) => [s.title, s.channelTitle]), [
+    ['Patient Zero', 'Taylor Swift'],
+    ['the cure', 'Olivia Rodrigo'],
+    ['Nicole Kidman', 'ADÉLA'],
+  ]);
+  assert.ok(out.songs.every((s) => s.thumbnail === 'https://i.scdn.co/image/ab67706f0000000271992d3b45eb1297df9c6bf7'));
+});
+
+test('a Spotify link from a localized page (/intl-xx/) is the same link', async () => {
+  const calls = stubFetch(() => new Response(SPOTIFY_TRACK_EMBED, { status: 200 }));
+  const out = await extractMusicData('https://open.spotify.com/intl-de/track/51kTzw2J1el6vN2qpNTtAR');
+  assert.equal(calls[0].url, 'https://open.spotify.com/embed/track/51kTzw2J1el6vN2qpNTtAR');
+  assert.equal(out.songs[0].channelTitle, 'Monii');
 });

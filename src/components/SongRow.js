@@ -4,6 +4,7 @@ import { useState, memo } from 'react';
 import { Download, ExternalLink, Loader2, Music, Layers, Edit3, Check, X } from 'lucide-react';
 import { osuAudio } from '@/lib/soundEffects';
 import { getStarColor, getStatusBadgeStyle, describeRejection } from '@/lib/beatmapFormat';
+import { songSubtitle } from '@/lib/song';
 import OsuCheckbox from './OsuCheckbox';
 import BeatmapCover from './BeatmapCover';
 import { OverrideMark, OverrideNotice } from './MatchNotice';
@@ -75,7 +76,7 @@ function SongRow({
         {song.position !== undefined ? song.position + 1 : song.index}
       </td>
 
-      {/* YouTube Track Info */}
+      {/* Source track info */}
       <td style={{ padding: '8px 12px', maxWidth: '280px' }}>
         <div style={{ display: 'flex', gap: '10px', alignItems: 'center' }}>
           <div className="osu-thumb-container" style={{ width: '52px', height: '34px', borderRadius: '4px', flexShrink: 0 }}>
@@ -122,7 +123,7 @@ function SongRow({
               {song.title}
             </div>
             <div style={{ fontSize: '0.72rem', color: '#8b7d95', fontWeight: 600 }}>
-              {song.channelTitle || 'YouTube Track'}
+              {songSubtitle(song)}
             </div>
 
             {/* Clean Query Tag with Inline Edit Button */}

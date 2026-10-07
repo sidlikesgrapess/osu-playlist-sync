@@ -30,62 +30,65 @@ const OEMBED = { profile: 'server' };
 // Sources whose tracks carry the provider's own artist field.
 const STRUCTURED_PLATFORMS = new Set(['spotify', 'apple']);
 
-const SPOTIFY_PATH =/^\/(playlist|album|track)\/([A-Za-z0-9]+)\/?$/;
+// A share link from a localized page carries an `/intl-xx/` segment before the entity.
+const SPOTIFY_PATH = /^\/(?:intl-[a-z-]+\/)?(playlist|album|track)\/([A-Za-z0-9]+)\/?$/;
 const APPLE_PATH = /^\/([a-z]{2})\/(playlist|album|song)\/(?:([^/]+)\/)?([A-Za-z0-9.]+)\/?$/;
 
-// Helper to fetch Spotify playlist / album / track metadata without API keys
+const SPOTIFY_TYPE_LABEL = { playlist: 'Playlist', album: 'Album', track: 'Track' };
+
+// Fetches a Spotify playlist / album / track through its embed page, without API keys.
+// One path for all three: the oEmbed endpoint has no artist field, so a track read from it
+// arrived with no artist and was matched on its title alone.
 async function fetchSpotifyEntity(url) {
   const match = new URL(url).pathname.match(SPOTIFY_PATH);
   if (!match) throw new ValidationError('That Spotify link is not a playlist, album or track');
-
-  const type = match[1];
-  const id = match[2];
-
-  if (type === 'track') {
-    // 1. Single Spotify Track via oEmbed / embed page
-    try {
-      const trackUrl = buildProviderUrl('spotify', `track/${id}`);
-      const data = await fetchJson(`https://open.spotify.com/oembed?url=${encodeURIComponent(trackUrl)}`, OEMBED);
-      return {
-        title: data.title || 'Spotify Track',
-        songs: [{
-          title: data.title,
-          channelTitle: data.author_name || '',
-          thumbnail: data.thumbnail_url,
-        }],
-      };
-    } catch (e) {
-      console.warn('[Spotify oEmbed Error]:', e.message);
-    }
-  }
-
-  // 2. Spotify Playlist / Album via Embed page HTML (contains __NEXT_DATA__ JSON with all tracks)
+  const [, type, id] = match;
   const html = await fetchText(buildProviderUrl('spotify', `embed/${type}/${id}`), SPOTIFY_PAGE);
+  return parseSpotifyEmbed(html, type);
+}
+
+/**
+ * The cover the row shows: the smallest image at least 100px wide, else the first listed.
+ * A playlist lists `coverArt.sources` (often with no sizes), a track `visualIdentity.image`.
+ */
+function spotifyCover(entity) {
+  const images = entity?.coverArt?.sources || entity?.visualIdentity?.image || [];
+  const width = (img) => img?.maxWidth ?? img?.width ?? 0;
+  const fit = images.filter((img) => width(img) >= 100).sort((a, b) => width(a) - width(b))[0];
+  return (fit || images[0])?.url || null;
+}
+
+/**
+ * The songs in a Spotify embed page's `__NEXT_DATA__`. A playlist or album lists them in
+ * `trackList`; a track's entity is the song itself.
+ */
+export function parseSpotifyEmbed(html, type) {
+  const fallbackTitle = `Spotify ${SPOTIFY_TYPE_LABEL[type] || 'Playlist'}`;
   const nextDataMatch = html.match(/<script id="__NEXT_DATA__" type="application\/json">([\s\S]*?)<\/script>/);
 
   if (nextDataMatch) {
     try {
       const parsed = JSON.parse(nextDataMatch[1]);
       const entity = parsed.props?.pageProps?.state?.data?.entity;
-      const title = entity?.name || `Spotify ${type === 'album' ? 'Album' : 'Playlist'}`;
-      const rawTracks = entity?.trackList || [];
+      const thumbnail = spotifyCover(entity);
+      const rawTracks = type === 'track' ? (entity ? [entity] : []) : entity?.trackList || [];
 
       const songs = rawTracks.map(t => ({
         title: t.title || t.name,
         channelTitle: t.subtitle || (t.artists ? t.artists.map(a => a.name).join(', ') : ''),
-        thumbnail: entity?.coverArt?.sources?.[0]?.url,
+        thumbnail,
         duration: t.duration,
       }));
 
-      return { title, songs };
+      return { title: entity?.name || fallbackTitle, songs };
     } catch (e) {
       console.warn('[Spotify NEXT_DATA Parse Error]:', e.message);
     }
   }
 
-  // Fallback: regex search for tracks in embed HTML
+  // Fallback: the page title, and no songs
   const titleMatch = html.match(/<title>([^<]+)<\/title>/i);
-  const pageTitle = titleMatch ? titleMatch[1].replace(' | Spotify', '') : `Spotify ${type}`;
+  const pageTitle = titleMatch ? titleMatch[1].replace(' | Spotify', '') : fallbackTitle;
   return { title: pageTitle, songs: [] };
 }
 

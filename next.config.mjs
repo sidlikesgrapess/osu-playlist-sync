@@ -12,6 +12,7 @@ const CSP_SOURCES = {
     'https://i.ytimg.com',
     'https://lh3.googleusercontent.com',
     'https://i.scdn.co',
+    'https://*.spotifycdn.com',
     'https://*.mzstatic.com',
   ],
   // beatmap audio previews

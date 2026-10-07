@@ -1,0 +1,21 @@
+[
+  {"label":"YT song 1","url":"https://www.youtube.com/watch?v=ZRtdQ81jPUQ"},
+  {"label":"YT song 2 (youtu.be + si)","url":"https://youtu.be/dQw4w9WgXcQ?si=AbCdEfGh12345678"},
+  {"label":"YT song 3","url":"https://www.youtube.com/watch?v=fJ9rUzIMcZQ"},
+  {"label":"YTM song 1 (Topic)","url":"https://music.youtube.com/watch?v=6kmHfIkDhO0"},
+  {"label":"YTM song 2 (+si)","url":"https://music.youtube.com/watch?v=idINGrIe9M8&si=AbCdEfGh12345678"},
+  {"label":"YTM song 3","url":"https://music.youtube.com/watch?v=SzHXW_vK93U"},
+  {"label":"YTM playlist","url":"https://music.youtube.com/playlist?list=PLJU2iuLr5pzzwD1BjsQSX4Exb-w1Wc2Kp"},
+  {"label":"Spotify song 1 (bug, +si)","url":"https://open.spotify.com/track/51kTzw2J1el6vN2qpNTtAR?si=14eed5c735d54264"},
+  {"label":"Spotify song 2","url":"https://open.spotify.com/track/4EoJ151oQ5jY48z4RhSE96"},
+  {"label":"Spotify song 3 (3 artists)","url":"https://open.spotify.com/track/3h5T5JypYU7huFiVYhv1dr"},
+  {"label":"Spotify playlist","url":"https://open.spotify.com/playlist/37i9dQZF1DXcBWIGoYBM5M"},
+  {"label":"Apple song 1 (album?i=)","url":"https://music.apple.com/us/album/idol/1679278166?i=1679278167"},
+  {"label":"Apple song 2 (album?i=&uo)","url":"https://music.apple.com/us/album/kick-back/1648272179?i=1648272180&uo=4"},
+  {"label":"Apple song 3 (album?i=)","url":"https://music.apple.com/us/album/ghost/1176411990?i=1176412476"},
+  {"label":"Apple playlist","url":"https://music.apple.com/us/playlist/todays-hits/pl.f4d106fed2bd41149aaacabb233eb5eb"},
+  {"label":"EXTRA YT watch+list","url":"https://www.youtube.com/watch?v=PGG9StqI5Cw&list=PLJU2iuLr5pzzwD1BjsQSX4Exb-w1Wc2Kp&index=1"},
+  {"label":"EXTRA YTM radio mix","url":"https://music.youtube.com/watch?v=6kmHfIkDhO0&list=RDAMVM6kmHfIkDhO0"},
+  {"label":"EXTRA Spotify intl path","url":"https://open.spotify.com/intl-de/track/4EoJ151oQ5jY48z4RhSE96"},
+  {"label":"EXTRA Apple /song/ path","url":"https://music.apple.com/us/song/idol/1679278167"}
+]

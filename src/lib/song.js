@@ -5,7 +5,19 @@
  * rest-state defaults.
  */
 
-const VALID_SOURCES = ['spotify', 'apple', 'youtube', 'query', 'osu-player'];
+// Every valid source, with what a row says about where it came from when it has no artist.
+const SOURCE_LABELS = {
+  spotify: 'Spotify track',
+  apple: 'Apple Music track',
+  youtube: 'YouTube video',
+  query: 'Typed search',
+  'osu-player': 'osu! beatmap',
+};
+
+const VALID_SOURCES = Object.keys(SOURCE_LABELS);
+
+/** The line under a row's title: its artist or channel, else where the song came from. */
+export const songSubtitle = (song) => song?.channelTitle || SOURCE_LABELS[song?.source] || '';
 
 /**
  * Builds one song object. `source` is required and must be one of `VALID_SOURCES` -- it is

@@ -36,6 +36,13 @@
   ends the next card docks to the top like Functions in an IDE like VSCode. done
 
 - need to redo F-46 with a better approach. (confirm approach with user) done
+- BUG: a Spotify track link gave a row with no artist, no cover and the label "YouTube Track".
+  Cause: tracks were read from Spotify's oEmbed, which has no artist field, and its cover host
+  (image-cdn-*.spotifycdn.com) was blocked by the CSP. Tracks now use the same embed page as
+  playlists, the CSP allows *.spotifycdn.com, the row label comes from the song's source
+  (songSubtitle in song.js), and /intl-xx/ Spotify links are accepted. Test set and before /
+  after in todo-run/bug4/. done
+
 ## Remaining
 
 - Remove redundant code. No line budget: the goal is that no logic is written twice and
@@ -54,6 +61,18 @@
   - page.js (1,545 lines) may hold per side copies of selection and download handling.
   - the same inline style objects (buttons, badges, cards) rewritten across components.
   - leftover helpers, props and exports nothing uses any more.
+
+- Add OAuth for playlists sync.
+
+- After OAuth: suggest songs from the user's most listened to artists (needs the OAuth item above).
+
+- Apple Music rows have no cover: every Apple song and playlist row shows the music note
+  placeholder (found by the bug 4 test set, todo-run/bug4/after.json). The CSP already allows
+  *.mzstatic.com; the parser just never reads an image (og:image or the ld+json `image`).
+
+- A YouTube Music "radio" link (watch?v=X&list=RDAMVM...) fails with "Could not read that
+  YouTube playlist", because any `list=` wins over `v=`. General fix: when a watch link's list
+  cannot be read, fall back to its video. Do not add an RD prefix rule.
 
 ## Long term goals
 

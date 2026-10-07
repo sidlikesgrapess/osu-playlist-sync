@@ -1,0 +1,494 @@
+[
+  {
+    "label": "YT song 1",
+    "url": "https://www.youtube.com/watch?v=ZRtdQ81jPUQ",
+    "ok": true,
+    "platform": "youtube",
+    "isSingleTrack": true,
+    "playlistTitle": "YOASOBI「アイドル」 Official Music Video",
+    "count": 1,
+    "sample": [
+      {
+        "title": "YOASOBI「アイドル」 Official Music Video",
+        "channel": "YOASOBI",
+        "artist": "YOASOBI",
+        "artistFromTitle": true,
+        "query": "YOASOBI アイドル",
+        "cover": "i.ytimg.com"
+      }
+    ],
+    "noArtist": 0,
+    "noCover": 0,
+    "coverHosts": [
+      "i.ytimg.com"
+    ]
+  },
+  {
+    "label": "YT song 2 (youtu.be + si)",
+    "url": "https://youtu.be/dQw4w9WgXcQ?si=AbCdEfGh12345678",
+    "ok": true,
+    "platform": "youtube",
+    "isSingleTrack": true,
+    "playlistTitle": "Rick Astley - Never Gonna Give You Up (Official Video) (4K Remaster)",
+    "count": 1,
+    "sample": [
+      {
+        "title": "Rick Astley - Never Gonna Give You Up (Official Video) (4K Remaster)",
+        "channel": "Rick Astley",
+        "artist": "Rick Astley",
+        "artistFromTitle": true,
+        "query": "Rick Astley Never Gonna Give You Up",
+        "cover": "i.ytimg.com"
+      }
+    ],
+    "noArtist": 0,
+    "noCover": 0,
+    "coverHosts": [
+      "i.ytimg.com"
+    ]
+  },
+  {
+    "label": "YT song 3",
+    "url": "https://www.youtube.com/watch?v=fJ9rUzIMcZQ",
+    "ok": true,
+    "platform": "youtube",
+    "isSingleTrack": true,
+    "playlistTitle": "Queen – Bohemian Rhapsody (Official Video Remastered)",
+    "count": 1,
+    "sample": [
+      {
+        "title": "Queen – Bohemian Rhapsody (Official Video Remastered)",
+        "channel": "Queen Official",
+        "artist": "Queen",
+        "artistFromTitle": true,
+        "query": "Queen Bohemian Rhapsody",
+        "cover": "i.ytimg.com"
+      }
+    ],
+    "noArtist": 0,
+    "noCover": 0,
+    "coverHosts": [
+      "i.ytimg.com"
+    ]
+  },
+  {
+    "label": "YTM song 1 (Topic)",
+    "url": "https://music.youtube.com/watch?v=6kmHfIkDhO0",
+    "ok": true,
+    "platform": "youtube",
+    "isSingleTrack": true,
+    "playlistTitle": "Celsius",
+    "count": 1,
+    "sample": [
+      {
+        "title": "Celsius",
+        "channel": "nihmune - Topic",
+        "artist": "nihmune",
+        "artistFromTitle": false,
+        "query": "nihmune Celsius",
+        "cover": "i.ytimg.com"
+      }
+    ],
+    "noArtist": 0,
+    "noCover": 0,
+    "coverHosts": [
+      "i.ytimg.com"
+    ]
+  },
+  {
+    "label": "YTM song 2 (+si)",
+    "url": "https://music.youtube.com/watch?v=idINGrIe9M8&si=AbCdEfGh12345678",
+    "ok": true,
+    "platform": "youtube",
+    "isSingleTrack": true,
+    "playlistTitle": "Reverie",
+    "count": 1,
+    "sample": [
+      {
+        "title": "Reverie",
+        "channel": "Release - Topic",
+        "artist": "Release",
+        "artistFromTitle": false,
+        "query": "Release Reverie",
+        "cover": "i.ytimg.com"
+      }
+    ],
+    "noArtist": 0,
+    "noCover": 0,
+    "coverHosts": [
+      "i.ytimg.com"
+    ]
+  },
+  {
+    "label": "YTM song 3",
+    "url": "https://music.youtube.com/watch?v=SzHXW_vK93U",
+    "ok": true,
+    "platform": "youtube",
+    "isSingleTrack": true,
+    "playlistTitle": "Paparazzi (Dubstep)",
+    "count": 1,
+    "sample": [
+      {
+        "title": "Paparazzi (Dubstep)",
+        "channel": "Alximo - Topic",
+        "artist": "Alximo",
+        "artistFromTitle": false,
+        "query": "Alximo Paparazzi",
+        "cover": "i.ytimg.com"
+      }
+    ],
+    "noArtist": 0,
+    "noCover": 0,
+    "coverHosts": [
+      "i.ytimg.com"
+    ]
+  },
+  {
+    "label": "YTM playlist",
+    "url": "https://music.youtube.com/playlist?list=PLJU2iuLr5pzzwD1BjsQSX4Exb-w1Wc2Kp",
+    "ok": true,
+    "platform": "youtube",
+    "isSingleTrack": false,
+    "playlistTitle": "Why does my breakcore playlist have drums and bass?",
+    "count": 8,
+    "sample": [
+      {
+        "title": "i fell asleep in a sea of clouds",
+        "channel": "Deathbrain",
+        "artist": "Deathbrain",
+        "artistFromTitle": false,
+        "query": "Deathbrain i fell asleep in a sea of clouds",
+        "cover": "i.ytimg.com"
+      },
+      {
+        "title": "Celsius",
+        "channel": "nihmune - Topic",
+        "artist": "nihmune",
+        "artistFromTitle": false,
+        "query": "nihmune Celsius",
+        "cover": "i.ytimg.com"
+      },
+      {
+        "title": "Lavender Sky - Patterns ft @rino",
+        "channel": "Patterns",
+        "artist": "Lavender Sky",
+        "artistFromTitle": true,
+        "query": "Lavender Sky Patterns ft @rino",
+        "cover": "i.ytimg.com"
+      }
+    ],
+    "noArtist": 0,
+    "noCover": 0,
+    "coverHosts": [
+      "i.ytimg.com"
+    ]
+  },
+  {
+    "label": "Spotify song 1 (bug, +si)",
+    "url": "https://open.spotify.com/track/51kTzw2J1el6vN2qpNTtAR?si=14eed5c735d54264",
+    "ok": true,
+    "platform": "spotify",
+    "isSingleTrack": true,
+    "playlistTitle": "atrophy",
+    "count": 1,
+    "sample": [
+      {
+        "title": "atrophy",
+        "channel": "Monii",
+        "artist": "Monii",
+        "artistFromTitle": false,
+        "query": "Monii atrophy",
+        "cover": "image-cdn-ak.spotifycdn.com"
+      }
+    ],
+    "noArtist": 0,
+    "noCover": 0,
+    "coverHosts": [
+      "image-cdn-ak.spotifycdn.com"
+    ]
+  },
+  {
+    "label": "Spotify song 2",
+    "url": "https://open.spotify.com/track/4EoJ151oQ5jY48z4RhSE96",
+    "ok": true,
+    "platform": "spotify",
+    "isSingleTrack": true,
+    "playlistTitle": "the cure",
+    "count": 1,
+    "sample": [
+      {
+        "title": "the cure",
+        "channel": "Olivia Rodrigo",
+        "artist": "Olivia Rodrigo",
+        "artistFromTitle": false,
+        "query": "Olivia Rodrigo the cure",
+        "cover": "image-cdn-ak.spotifycdn.com"
+      }
+    ],
+    "noArtist": 0,
+    "noCover": 0,
+    "coverHosts": [
+      "image-cdn-ak.spotifycdn.com"
+    ]
+  },
+  {
+    "label": "Spotify song 3 (3 artists)",
+    "url": "https://open.spotify.com/track/3h5T5JypYU7huFiVYhv1dr",
+    "ok": true,
+    "platform": "spotify",
+    "isSingleTrack": true,
+    "playlistTitle": "BbY WOW",
+    "count": 1,
+    "sample": [
+      {
+        "title": "BbY WOW",
+        "channel": "KAROL G, Judeline, rusowsky",
+        "artist": "KAROL G, Judeline, rusowsky",
+        "artistFromTitle": false,
+        "query": "KAROL G, Judeline, rusowsky BbY WOW",
+        "cover": "image-cdn-ak.spotifycdn.com"
+      }
+    ],
+    "noArtist": 0,
+    "noCover": 0,
+    "coverHosts": [
+      "image-cdn-ak.spotifycdn.com"
+    ]
+  },
+  {
+    "label": "Spotify playlist",
+    "url": "https://open.spotify.com/playlist/37i9dQZF1DXcBWIGoYBM5M",
+    "ok": true,
+    "platform": "spotify",
+    "isSingleTrack": false,
+    "playlistTitle": "Today’s Top Hits",
+    "count": 50,
+    "sample": [
+      {
+        "title": "Patient Zero",
+        "channel": "Taylor Swift",
+        "artist": "Taylor Swift",
+        "artistFromTitle": false,
+        "query": "Taylor Swift Patient Zero",
+        "cover": "i.scdn.co"
+      },
+      {
+        "title": "the cure",
+        "channel": "Olivia Rodrigo",
+        "artist": "Olivia Rodrigo",
+        "artistFromTitle": false,
+        "query": "Olivia Rodrigo the cure",
+        "cover": "i.scdn.co"
+      },
+      {
+        "title": "Nicole Kidman",
+        "channel": "ADÉLA",
+        "artist": "ADÉLA",
+        "artistFromTitle": false,
+        "query": "ADÉLA Nicole Kidman",
+        "cover": "i.scdn.co"
+      }
+    ],
+    "noArtist": 0,
+    "noCover": 0,
+    "coverHosts": [
+      "i.scdn.co"
+    ]
+  },
+  {
+    "label": "Apple song 1 (album?i=)",
+    "url": "https://music.apple.com/us/album/idol/1679278166?i=1679278167",
+    "ok": true,
+    "platform": "apple",
+    "isSingleTrack": true,
+    "playlistTitle": "Idol by YOASOBI",
+    "count": 1,
+    "sample": [
+      {
+        "title": "Idol",
+        "channel": "YOASOBI",
+        "artist": "YOASOBI",
+        "artistFromTitle": false,
+        "query": "YOASOBI Idol",
+        "cover": null
+      }
+    ],
+    "noArtist": 0,
+    "noCover": 1,
+    "coverHosts": []
+  },
+  {
+    "label": "Apple song 2 (album?i=&uo)",
+    "url": "https://music.apple.com/us/album/kick-back/1648272179?i=1648272180&uo=4",
+    "ok": true,
+    "platform": "apple",
+    "isSingleTrack": true,
+    "playlistTitle": "KICK BACK by Kenshi Yonezu",
+    "count": 1,
+    "sample": [
+      {
+        "title": "KICK BACK",
+        "channel": "Kenshi Yonezu",
+        "artist": "Kenshi Yonezu",
+        "artistFromTitle": false,
+        "query": "Kenshi Yonezu KICK BACK",
+        "cover": null
+      }
+    ],
+    "noArtist": 0,
+    "noCover": 1,
+    "coverHosts": []
+  },
+  {
+    "label": "Apple song 3 (album?i=)",
+    "url": "https://music.apple.com/us/album/ghost/1176411990?i=1176412476",
+    "ok": true,
+    "platform": "apple",
+    "isSingleTrack": true,
+    "playlistTitle": "Ghost by Camellia",
+    "count": 1,
+    "sample": [
+      {
+        "title": "Ghost",
+        "channel": "Camellia",
+        "artist": "Camellia",
+        "artistFromTitle": false,
+        "query": "Camellia Ghost",
+        "cover": null
+      }
+    ],
+    "noArtist": 0,
+    "noCover": 1,
+    "coverHosts": []
+  },
+  {
+    "label": "Apple playlist",
+    "url": "https://music.apple.com/us/playlist/todays-hits/pl.f4d106fed2bd41149aaacabb233eb5eb",
+    "ok": true,
+    "platform": "apple",
+    "isSingleTrack": false,
+    "playlistTitle": "Today’s Hits",
+    "count": 50,
+    "sample": [
+      {
+        "title": "Solar Eclipse",
+        "channel": "Drake, Don Toliver",
+        "artist": "Drake, Don Toliver",
+        "artistFromTitle": false,
+        "query": "Drake, Don Toliver Solar Eclipse",
+        "cover": null
+      },
+      {
+        "title": "Nicole Kidman",
+        "channel": "ADÉLA",
+        "artist": "ADÉLA",
+        "artistFromTitle": false,
+        "query": "ADÉLA Nicole Kidman",
+        "cover": null
+      },
+      {
+        "title": "Patient Zero",
+        "channel": "Taylor Swift",
+        "artist": "Taylor Swift",
+        "artistFromTitle": false,
+        "query": "Taylor Swift Patient Zero",
+        "cover": null
+      }
+    ],
+    "noArtist": 0,
+    "noCover": 50,
+    "coverHosts": []
+  },
+  {
+    "label": "EXTRA YT watch+list",
+    "url": "https://www.youtube.com/watch?v=PGG9StqI5Cw&list=PLJU2iuLr5pzzwD1BjsQSX4Exb-w1Wc2Kp&index=1",
+    "ok": true,
+    "platform": "youtube",
+    "isSingleTrack": false,
+    "playlistTitle": "Why does my breakcore playlist have drums and bass?",
+    "count": 8,
+    "sample": [
+      {
+        "title": "i fell asleep in a sea of clouds",
+        "channel": "Deathbrain",
+        "artist": "Deathbrain",
+        "artistFromTitle": false,
+        "query": "Deathbrain i fell asleep in a sea of clouds",
+        "cover": "i.ytimg.com"
+      },
+      {
+        "title": "Celsius",
+        "channel": "nihmune - Topic",
+        "artist": "nihmune",
+        "artistFromTitle": false,
+        "query": "nihmune Celsius",
+        "cover": "i.ytimg.com"
+      },
+      {
+        "title": "Lavender Sky - Patterns ft @rino",
+        "channel": "Patterns",
+        "artist": "Lavender Sky",
+        "artistFromTitle": true,
+        "query": "Lavender Sky Patterns ft @rino",
+        "cover": "i.ytimg.com"
+      }
+    ],
+    "noArtist": 0,
+    "noCover": 0,
+    "coverHosts": [
+      "i.ytimg.com"
+    ]
+  },
+  {
+    "label": "EXTRA YTM radio mix",
+    "url": "https://music.youtube.com/watch?v=6kmHfIkDhO0&list=RDAMVM6kmHfIkDhO0",
+    "ok": false,
+    "error": "ExtractionError: Could not read that YouTube playlist. Check that it is public or unlisted."
+  },
+  {
+    "label": "EXTRA Spotify intl path",
+    "url": "https://open.spotify.com/intl-de/track/4EoJ151oQ5jY48z4RhSE96",
+    "ok": true,
+    "platform": "spotify",
+    "isSingleTrack": true,
+    "playlistTitle": "the cure",
+    "count": 1,
+    "sample": [
+      {
+        "title": "the cure",
+        "channel": "Olivia Rodrigo",
+        "artist": "Olivia Rodrigo",
+        "artistFromTitle": false,
+        "query": "Olivia Rodrigo the cure",
+        "cover": "image-cdn-ak.spotifycdn.com"
+      }
+    ],
+    "noArtist": 0,
+    "noCover": 0,
+    "coverHosts": [
+      "image-cdn-ak.spotifycdn.com"
+    ]
+  },
+  {
+    "label": "EXTRA Apple /song/ path",
+    "url": "https://music.apple.com/us/song/idol/1679278167",
+    "ok": true,
+    "platform": "apple",
+    "isSingleTrack": true,
+    "playlistTitle": "Idol by YOASOBI",
+    "count": 1,
+    "sample": [
+      {
+        "title": "Idol",
+        "channel": "YOASOBI",
+        "artist": "YOASOBI",
+        "artistFromTitle": false,
+        "query": "YOASOBI Idol",
+        "cover": null
+      }
+    ],
+    "noArtist": 0,
+    "noCover": 1,
+    "coverHosts": []
+  }
+]
