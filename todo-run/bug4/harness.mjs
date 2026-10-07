@@ -1,10 +1,10 @@
 // Runs every link in cases.json through the real extractor (no osu! API), one at a time,
 // paced, and prints what each row would look like: source, title, artist, query, cover host.
-// Usage: node todo-run/bug4/harness.mjs [out.json]
+// Usage: [CASES=./cases2.json] node todo-run/bug4/harness.mjs [out.json]
 import { readFileSync, writeFileSync } from 'node:fs';
 import { extractMusicData } from '../../src/lib/extractors.js';
 
-const cases = JSON.parse(readFileSync(new URL('./cases.json', import.meta.url), 'utf8'));
+const cases = JSON.parse(readFileSync(new URL(process.env.CASES || './cases.json', import.meta.url), 'utf8'));
 const PAUSE_MS = 1500;
 const out = [];
 for (const c of cases) {
