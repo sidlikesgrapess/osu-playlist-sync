@@ -348,8 +348,11 @@ html[data-player-section-docked] .pi-dock-card {
   border: none;
 }
 
+/* WebKit puts the thumb's top edge on the track's top edge instead of centring it, so it
+   is pulled up by half the difference: (6px track - 12px thumb) / 2. Firefox centres it. */
 .osu-strictness::-webkit-slider-thumb {
   -webkit-appearance: none;
+  margin-top: -3px;
   width: 12px;
   height: 12px;
   border-radius: 50%;
