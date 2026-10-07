@@ -66,6 +66,11 @@
   - the same inline style objects (buttons, badges, cards) rewritten across components.
   - leftover helpers, props and exports nothing uses any more.
 
+- UI bugs found by the DESIGN.md audit (details in DESIGN.md section 9): the selected row /
+  card highlight never renders (an !important class wins over the inline style); every row
+  checkbox plays its click twice; with the table filter in use, paging lazily searches rows
+  that are not on screen; BeatmapRow's memo is defeated by raw callbacks.
+
 - Add OAuth for playlists sync.
 
 - After OAuth: suggest songs from the user's most listened to artists (needs the OAuth item above).
