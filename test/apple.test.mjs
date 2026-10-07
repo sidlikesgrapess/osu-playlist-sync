@@ -109,7 +109,7 @@ test('a single song: ld+json name is the title, og:title gives the artist in its
   // the real og:title writes "Apple Music" with a no-break space
   assert.match(SONG, /Apple Music/);
   const out = parseAppleHtml(SONG, { isSingle: true });
-  assert.deepEqual(out.songs, [{ title: 'Idol', channelTitle: 'YOASOBI' }]);
+  assert.deepEqual(out.songs, [{ title: 'Idol', channelTitle: 'YOASOBI', thumbnail: null }]);
 });
 
 test('a single whose og:title does not read "<name> by <artist> on Apple Music" gets no artist', () => {
@@ -126,7 +126,7 @@ test('a single whose og:title does not read "<name> by <artist> on Apple Music" 
 test('a title containing " by " is anchored on the ld+json name, never split on the first " by "', () => {
   const page = `<meta property="og:title" content="Stand by Me by Ben E. King on Apple Music">
 <script type="application/ld+json">${JSON.stringify({ '@type': 'MusicRecording', name: 'Stand by Me' })}</script>`;
-  assert.deepEqual(parseAppleHtml(page, { isSingle: true }).songs, [{ title: 'Stand by Me', channelTitle: 'Ben E. King' }]);
+  assert.deepEqual(parseAppleHtml(page, { isSingle: true }).songs, [{ title: 'Stand by Me', channelTitle: 'Ben E. King', thumbnail: null }]);
 });
 
 test('a single with no song ld+json throws', () => {

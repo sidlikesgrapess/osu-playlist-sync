@@ -3,7 +3,7 @@ import assert from 'node:assert/strict';
 
 import { readFileSync } from 'node:fs';
 
-import { extractMusicData, ExtractionError, parseSpotifyEmbed } from '../src/lib/extractors.js';
+import { extractMusicData, ExtractionError, parseSpotifyEmbed, parseAppleHtml } from '../src/lib/extractors.js';
 import { ValidationError } from '../src/lib/validate.js';
 import { UA_PROFILES } from '../src/lib/http.js';
 
@@ -45,7 +45,7 @@ test('a provider URL is rebuilt from its id, never fetched as typed', async () =
     ExtractionError,
   );
   assert.equal(calls.length, 1);
-  assert.equal(calls[0].url, 'https://music.apple.com/us/album/idol/1688334284?i=1688334537');
+  assert.equal(calls[0].url, 'https://music.apple.com/us/album/idol/1688334284?i=1688334537&l=en-US');
   assert.equal(calls[0].init.headers['User-Agent'], UA_PROFILES.browserLike);
 });
 
@@ -123,4 +123,45 @@ test('a Spotify link from a localized page (/intl-xx/) is the same link', async 
   const out = await extractMusicData('https://open.spotify.com/intl-de/track/51kTzw2J1el6vN2qpNTtAR');
   assert.equal(calls[0].url, 'https://open.spotify.com/embed/track/51kTzw2J1el6vN2qpNTtAR');
   assert.equal(out.songs[0].channelTitle, 'Monii');
+});
+
+test('a Spotify track with no title is skipped and counted', () => {
+  const nextData = (trackList) => `<script id="__NEXT_DATA__" type="application/json">${JSON.stringify({
+    props: { pageProps: { state: { data: { entity: { name: 'Radio', trackList } } } } },
+  })}</script>`;
+  const out = parseSpotifyEmbed(nextData([
+    { title: 'Idol', subtitle: 'YOASOBI' },
+    { title: '', subtitle: '' },
+    { title: 'Racing into the Night', subtitle: 'YOASOBI' },
+  ]), 'playlist');
+  assert.deepEqual(out.songs.map((s) => s.title), ['Idol', 'Racing into the Night']);
+  assert.deepEqual(out.counts, { unavailableCount: 1, loadedCount: 3 });
+});
+
+const APPLE_ALBUM = readFileSync(new URL('./fixtures/apple-album.html', import.meta.url), 'utf8');
+
+test('an Apple album lists its songs under `tracks` and every row gets the og:image cover', () => {
+  const out = parseAppleHtml(APPLE_ALBUM, { isSingle: false });
+  assert.equal(out.title, 'GUTS');
+  assert.equal(out.songs.length, 3);
+  assert.ok(out.songs.every((s) => s.channelTitle === 'Olivia Rodrigo'));
+  assert.ok(out.songs.every((s) => /^https:\/\/is1-ssl\.mzstatic\.com\/image\/thumb\/.+\.jpg\/1200x630wp-60\.jpg$/.test(s.thumbnail)));
+});
+
+test('a Mix link whose list cannot be read falls back to its video', async () => {
+  stubFetch((url) => (url.includes('/oembed')
+    ? Response.json({ title: 'YOASOBI - Idol', author_name: 'Ayase / YOASOBI' })
+    : new Response('{}', { status: 200 })));
+  const out = await extractMusicData('https://www.youtube.com/watch?v=ZRtdQ81jPUQ&list=RDZRtdQ81jPUQ&start_radio=1');
+  assert.equal(out.isSingleTrack, true);
+  assert.equal(out.songs.length, 1);
+  assert.equal(out.songs[0].title, 'YOASOBI - Idol');
+});
+
+test('an upstream failure on the oEmbed fallback is not swallowed into a success', async () => {
+  stubFetch(() => new Response('{}', { status: 429 }));
+  await assert.rejects(
+    extractMusicData('https://www.youtube.com/watch?v=ZRtdQ81jPUQ&list=RDZRtdQ81jPUQ'),
+    ExtractionError,
+  );
 });

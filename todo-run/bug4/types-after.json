@@ -1,0 +1,384 @@
+[
+  {
+    "label": "YT Mix (RD + start_radio)",
+    "url": "https://www.youtube.com/watch?v=ZRtdQ81jPUQ&list=RDZRtdQ81jPUQ&start_radio=1",
+    "ok": true,
+    "platform": "youtube",
+    "isSingleTrack": true,
+    "playlistTitle": "YOASOBI「アイドル」 Official Music Video",
+    "count": 1,
+    "unavailableCount": 0,
+    "sample": [
+      {
+        "title": "YOASOBI「アイドル」 Official Music Video",
+        "channel": "YOASOBI",
+        "artist": "YOASOBI",
+        "artistFromTitle": true,
+        "query": "YOASOBI アイドル",
+        "cover": "i.ytimg.com"
+      }
+    ],
+    "noArtist": 0,
+    "noCover": 0,
+    "coverHosts": [
+      "i.ytimg.com"
+    ]
+  },
+  {
+    "label": "YTM radio (RDAMVM)",
+    "url": "https://music.youtube.com/watch?v=6kmHfIkDhO0&list=RDAMVM6kmHfIkDhO0",
+    "ok": true,
+    "platform": "youtube",
+    "isSingleTrack": true,
+    "playlistTitle": "Celsius",
+    "count": 1,
+    "unavailableCount": 0,
+    "sample": [
+      {
+        "title": "Celsius",
+        "channel": "nihmune - Topic",
+        "artist": "nihmune",
+        "artistFromTitle": false,
+        "query": "nihmune Celsius",
+        "cover": "i.ytimg.com"
+      }
+    ],
+    "noArtist": 0,
+    "noCover": 0,
+    "coverHosts": [
+      "i.ytimg.com"
+    ]
+  },
+  {
+    "label": "YTM album (OLAK5uy)",
+    "url": "https://music.youtube.com/playlist?list=OLAK5uy_kb-CH5idCHOTq6jKlzaujmLAgUDa77nYQ",
+    "ok": true,
+    "platform": "youtube",
+    "isSingleTrack": false,
+    "playlistTitle": "Album - GUTS",
+    "count": 12,
+    "unavailableCount": 0,
+    "sample": [
+      {
+        "title": "all-american bitch",
+        "channel": "Olivia Rodrigo",
+        "artist": "Olivia Rodrigo",
+        "artistFromTitle": false,
+        "query": "Olivia Rodrigo all-american bitch",
+        "cover": "i.ytimg.com"
+      },
+      {
+        "title": "bad idea right?",
+        "channel": "Olivia Rodrigo",
+        "artist": "Olivia Rodrigo",
+        "artistFromTitle": false,
+        "query": "Olivia Rodrigo bad idea right?",
+        "cover": "i.ytimg.com"
+      },
+      {
+        "title": "vampire",
+        "channel": "Olivia Rodrigo",
+        "artist": "Olivia Rodrigo",
+        "artistFromTitle": false,
+        "query": "Olivia Rodrigo vampire",
+        "cover": "i.ytimg.com"
+      }
+    ],
+    "noArtist": 0,
+    "noCover": 0,
+    "coverHosts": [
+      "i.ytimg.com"
+    ]
+  },
+  {
+    "label": "YT channel uploads (UU)",
+    "url": "https://www.youtube.com/playlist?list=UUvpredjG93ifbCP1Y77JyFA",
+    "ok": true,
+    "platform": "youtube",
+    "isSingleTrack": false,
+    "playlistTitle": "Uploads from YOASOBI",
+    "count": 100,
+    "unavailableCount": 0,
+    "sample": [
+      {
+        "title": "NEVER ENDING STORIES -Seattle-",
+        "channel": "YOASOBI",
+        "artist": "NEVER ENDING STORIES",
+        "artistFromTitle": true,
+        "query": "NEVER ENDING STORIES Seattle",
+        "cover": "i.ytimg.com"
+      },
+      {
+        "title": "NEVER ENDING STORIES -Cruising in Seattle-",
+        "channel": "YOASOBI",
+        "artist": "NEVER ENDING STORIES",
+        "artistFromTitle": true,
+        "query": "NEVER ENDING STORIES Cruising in Seattle",
+        "cover": "i.ytimg.com"
+      },
+      {
+        "title": "ブルックリンでライブする一日ダイジェスト【北米ツアー2026】",
+        "channel": "YOASOBI",
+        "artist": "YOASOBI",
+        "artistFromTitle": false,
+        "query": "YOASOBI ブルックリンでライブする一日ダイジェスト",
+        "cover": "i.ytimg.com"
+      }
+    ],
+    "noArtist": 0,
+    "noCover": 0,
+    "coverHosts": [
+      "i.ytimg.com"
+    ]
+  },
+  {
+    "label": "YTM browse/VL playlist",
+    "url": "https://music.youtube.com/browse/VLPLJU2iuLr5pzzwD1BjsQSX4Exb-w1Wc2Kp",
+    "ok": false,
+    "error": "ValidationError: That YouTube link is not a playlist or a video"
+  },
+  {
+    "label": "YT shorts",
+    "url": "https://www.youtube.com/shorts/ZRtdQ81jPUQ",
+    "ok": true,
+    "platform": "youtube",
+    "isSingleTrack": true,
+    "playlistTitle": "YOASOBI「アイドル」 Official Music Video",
+    "count": 1,
+    "unavailableCount": 0,
+    "sample": [
+      {
+        "title": "YOASOBI「アイドル」 Official Music Video",
+        "channel": "YOASOBI",
+        "artist": "YOASOBI",
+        "artistFromTitle": true,
+        "query": "YOASOBI アイドル",
+        "cover": "i.ytimg.com"
+      }
+    ],
+    "noArtist": 0,
+    "noCover": 0,
+    "coverHosts": [
+      "i.ytimg.com"
+    ]
+  },
+  {
+    "label": "YT channel (@handle)",
+    "url": "https://www.youtube.com/@YOASOBI_Official",
+    "ok": false,
+    "error": "ValidationError: That YouTube link is not a playlist or a video"
+  },
+  {
+    "label": "YTM artist channel",
+    "url": "https://music.youtube.com/channel/UCvpredjG93ifbCP1Y77JyFA",
+    "ok": false,
+    "error": "ValidationError: That YouTube link is not a playlist or a video"
+  },
+  {
+    "label": "Spotify album",
+    "url": "https://open.spotify.com/album/1xhO0GSoezdPJcSuNe1ySv",
+    "ok": true,
+    "platform": "spotify",
+    "isSingleTrack": false,
+    "playlistTitle": "THE BOOK",
+    "count": 9,
+    "unavailableCount": 0,
+    "sample": [
+      {
+        "title": "Epilogue",
+        "channel": "YOASOBI",
+        "artist": "YOASOBI",
+        "artistFromTitle": false,
+        "query": "YOASOBI Epilogue",
+        "cover": "image-cdn-ak.spotifycdn.com"
+      },
+      {
+        "title": "アンコール",
+        "channel": "YOASOBI",
+        "artist": "YOASOBI",
+        "artistFromTitle": false,
+        "query": "YOASOBI アンコール",
+        "cover": "image-cdn-ak.spotifycdn.com"
+      },
+      {
+        "title": "ハルジオン",
+        "channel": "YOASOBI",
+        "artist": "YOASOBI",
+        "artistFromTitle": false,
+        "query": "YOASOBI ハルジオン",
+        "cover": "image-cdn-ak.spotifycdn.com"
+      }
+    ],
+    "noArtist": 0,
+    "noCover": 0,
+    "coverHosts": [
+      "image-cdn-ak.spotifycdn.com"
+    ]
+  },
+  {
+    "label": "Spotify album (intl-es)",
+    "url": "https://open.spotify.com/intl-es/album/3UnA9aW7n4bMQYKHv8nXci",
+    "ok": true,
+    "platform": "spotify",
+    "isSingleTrack": false,
+    "playlistTitle": "YOASOBI THE BOOK 2 SPOTIFY EDITION",
+    "count": 1,
+    "unavailableCount": 0,
+    "sample": [
+      {
+        "title": "「もしも命が描けたら」原作「もしも命が描けたら」鈴木おさむ",
+        "channel": "古川慎, 寿美菜子",
+        "artist": "古川慎, 寿美菜子",
+        "artistFromTitle": false,
+        "query": "古川慎, 寿美菜子 「もしも命が描けたら」原作「もしも命が描けたら」鈴木おさむ",
+        "cover": "image-cdn-ak.spotifycdn.com"
+      }
+    ],
+    "noArtist": 0,
+    "noCover": 0,
+    "coverHosts": [
+      "image-cdn-ak.spotifycdn.com"
+    ]
+  },
+  {
+    "label": "Spotify radio playlist (37i9dQZF1E4)",
+    "url": "https://open.spotify.com/playlist/37i9dQZF1E4yECoBSV4t3b",
+    "ok": true,
+    "platform": "spotify",
+    "isSingleTrack": false,
+    "playlistTitle": ". Radio",
+    "count": 41,
+    "unavailableCount": 9,
+    "sample": [
+      {
+        "title": "Voy a Vos",
+        "channel": "Vilma Palma e Vampiros",
+        "artist": "Vilma Palma e Vampiros",
+        "artistFromTitle": false,
+        "query": "Vilma Palma e Vampiros Voy a Vos",
+        "cover": "pickasso.spotifycdn.com"
+      },
+      {
+        "title": "Irremediablemente Tarde",
+        "channel": "Verde 70",
+        "artist": "Verde 70",
+        "artistFromTitle": false,
+        "query": "Verde 70 Irremediablemente Tarde",
+        "cover": "pickasso.spotifycdn.com"
+      },
+      {
+        "title": "Tratar de Estar Mejor",
+        "channel": "Diego Torres",
+        "artist": "Diego Torres",
+        "artistFromTitle": false,
+        "query": "Diego Torres Tratar de Estar Mejor",
+        "cover": "pickasso.spotifycdn.com"
+      }
+    ],
+    "noArtist": 0,
+    "noCover": 0,
+    "coverHosts": [
+      "pickasso.spotifycdn.com"
+    ]
+  },
+  {
+    "label": "Spotify artist",
+    "url": "https://open.spotify.com/artist/39eXCLDRq77yDYPvL5stQA",
+    "ok": false,
+    "error": "ValidationError: That Spotify link is not a playlist, album or track"
+  },
+  {
+    "label": "Apple album (full)",
+    "url": "https://music.apple.com/us/album/guts/1694767605?uo=4",
+    "ok": true,
+    "platform": "apple",
+    "isSingleTrack": false,
+    "playlistTitle": "GUTS",
+    "count": 11,
+    "unavailableCount": 0,
+    "sample": [
+      {
+        "title": "bad idea right?",
+        "channel": "Olivia Rodrigo",
+        "artist": "Olivia Rodrigo",
+        "artistFromTitle": false,
+        "query": "Olivia Rodrigo bad idea right?",
+        "cover": "is1-ssl.mzstatic.com"
+      },
+      {
+        "title": "vampire",
+        "channel": "Olivia Rodrigo",
+        "artist": "Olivia Rodrigo",
+        "artistFromTitle": false,
+        "query": "Olivia Rodrigo vampire",
+        "cover": "is1-ssl.mzstatic.com"
+      },
+      {
+        "title": "lacy",
+        "channel": "Olivia Rodrigo",
+        "artist": "Olivia Rodrigo",
+        "artistFromTitle": false,
+        "query": "Olivia Rodrigo lacy",
+        "cover": "is1-ssl.mzstatic.com"
+      }
+    ],
+    "noArtist": 0,
+    "noCover": 0,
+    "coverHosts": [
+      "is1-ssl.mzstatic.com"
+    ]
+  },
+  {
+    "label": "Apple playlist (jp storefront)",
+    "url": "https://music.apple.com/jp/playlist/todays-hits/pl.f4d106fed2bd41149aaacabb233eb5eb",
+    "ok": true,
+    "platform": "apple",
+    "isSingleTrack": false,
+    "playlistTitle": "Today’s Hits",
+    "count": 50,
+    "unavailableCount": 0,
+    "sample": [
+      {
+        "title": "Solar Eclipse",
+        "channel": "Drake, Don Toliver",
+        "artist": "Drake, Don Toliver",
+        "artistFromTitle": false,
+        "query": "Drake, Don Toliver Solar Eclipse",
+        "cover": "is1-ssl.mzstatic.com"
+      },
+      {
+        "title": "Nicole Kidman",
+        "channel": "ADÉLA",
+        "artist": "ADÉLA",
+        "artistFromTitle": false,
+        "query": "ADÉLA Nicole Kidman",
+        "cover": "is1-ssl.mzstatic.com"
+      },
+      {
+        "title": "Patient Zero",
+        "channel": "Taylor Swift",
+        "artist": "Taylor Swift",
+        "artistFromTitle": false,
+        "query": "Taylor Swift Patient Zero",
+        "cover": "is1-ssl.mzstatic.com"
+      }
+    ],
+    "noArtist": 0,
+    "noCover": 0,
+    "coverHosts": [
+      "is1-ssl.mzstatic.com"
+    ]
+  },
+  {
+    "label": "Apple artist station (radio)",
+    "url": "https://music.apple.com/us/station/frank-sinatra-similar-artists-station/ra.171366",
+    "ok": false,
+    "error": "ValidationError: That Apple Music link is not a playlist, album or song"
+  },
+  {
+    "label": "Apple artist",
+    "url": "https://music.apple.com/us/artist/yoasobi/1490256993",
+    "ok": false,
+    "error": "ValidationError: That Apple Music link is not a playlist, album or song"
+  }
+]

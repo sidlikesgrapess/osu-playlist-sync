@@ -73,14 +73,20 @@ export function parseSpotifyEmbed(html, type) {
       const thumbnail = spotifyCover(entity);
       const rawTracks = type === 'track' ? (entity ? [entity] : []) : entity?.trackList || [];
 
-      const songs = rawTracks.map(t => ({
+      // Spotify sends a song that is unavailable in this country with an empty title.
+      const named = rawTracks.filter(t => t.title || t.name);
+      const songs = named.map(t => ({
         title: t.title || t.name,
         channelTitle: t.subtitle || (t.artists ? t.artists.map(a => a.name).join(', ') : ''),
         thumbnail,
         duration: t.duration,
       }));
 
-      return { title: entity?.name || fallbackTitle, songs };
+      return {
+        title: entity?.name || fallbackTitle,
+        songs,
+        counts: { unavailableCount: rawTracks.length - named.length, loadedCount: rawTracks.length },
+      };
     } catch (e) {
       console.warn('[Spotify NEXT_DATA Parse Error]:', e.message);
     }
@@ -103,7 +109,8 @@ function appleProviderUrl(url) {
   if (!match) throw new ValidationError('That Apple Music link is not a playlist, album or song');
   const [, storefront, kind, slug, id] = match;
   const songId = parsed.searchParams.get('i');
-  const query = songId && /^\d+$/.test(songId) ? `?i=${songId}` : '';
+  // l=en-US asks for English names; other storefronts otherwise answer in their own script.
+  const query = `?${songId && /^\d+$/.test(songId) ? `i=${songId}&` : ''}l=en-US`;
   return buildProviderUrl('apple', `${storefront}/${kind}/${slug ? `${slug}/` : ''}${id}${query}`);
 }
 
@@ -161,13 +168,13 @@ function parseJsonBlocks(bodies) {
   return out;
 }
 
-/** The content of `<meta property="og:title">`, attributes in any order, or ''. */
-function ogTitle(html) {
+/** The content of `<meta property="{property}">` (og:title, og:image), attributes in any order, or ''. */
+function ogMeta(html, property) {
   const re = /<meta\b([^>]*)>/gi;
   let m;
   while ((m = re.exec(html)) !== null) {
     const attrs = parseAttributes(m[1]);
-    if (attrs.property === 'og:title') return attrs.content || '';
+    if (attrs.property === property) return attrs.content || '';
   }
   return '';
 }
@@ -244,6 +251,8 @@ const OG_SUFFIX = ' on Apple Music';
 export function parseAppleHtml(html, { isSingle }) {
   const blocks = parseJsonBlocks(scriptBodies(html, { type: 'application/ld+json' }));
 
+  const thumbnail = ogMeta(html, 'og:image') || null;
+
   if (isSingle) {
     const song = blocks.find((b) => hasType(b, APPLE_SINGLE_TYPES) && typeof b.name === 'string' && b.name.trim());
     if (!song) throw new ExtractionError('Could not read that Apple Music song. Check that the link is public.');
@@ -251,16 +260,18 @@ export function parseAppleHtml(html, { isSingle }) {
     // The artist is read from og:title only in its exact form, anchored on the known title,
     // so "<name> by <artist> on Apple Music" can never be split in the wrong place. Apple
     // writes a no-break space in "Apple Music", so whitespace is compared as one space.
-    const og = ogTitle(html).replace(/\s+/g, ' ').trim();
+    const og = ogMeta(html, 'og:title').replace(/\s+/g, ' ').trim();
     const prefix = `${name} by `;
     const artist = og.startsWith(prefix) && og.endsWith(OG_SUFFIX)
       ? og.slice(prefix.length, og.length - OG_SUFFIX.length).trim()
       : '';
-    return { title: artist ? `${name} by ${artist}` : name, songs: [{ title: name, channelTitle: artist }] };
+    return { title: artist ? `${name} by ${artist}` : name, songs: [{ title: name, channelTitle: artist, thumbnail }] };
   }
 
-  const collection = blocks.find((b) => hasType(b, APPLE_COLLECTION_TYPES) || Array.isArray(b?.track));
-  const tracks = (Array.isArray(collection?.track) ? collection.track : [])
+  const collection = blocks.find((b) => hasType(b, APPLE_COLLECTION_TYPES) || Array.isArray(b?.track) || Array.isArray(b?.tracks));
+  // A playlist lists its songs under `track`, an album under `tracks`.
+  const listed = collection?.track || collection?.tracks;
+  const tracks = (Array.isArray(listed) ? listed : [])
     .filter((t) => typeof t?.name === 'string' && t.name.trim());
   if (tracks.length === 0) {
     throw new ExtractionError('Could not read the tracks of that Apple Music link. Check that it is public.');
@@ -273,6 +284,7 @@ export function parseAppleHtml(html, { isSingle }) {
   const songs = titles.map((title, i) => ({
     title,
     channelTitle: joined[i] || artistNames(tracks[i].byArtist) || albumArtist,
+    thumbnail,
   }));
   const name = typeof collection.name === 'string' ? collection.name.trim() : '';
   return { title: name || 'Apple Music Collection', songs };
@@ -304,7 +316,7 @@ async function extractByKind(input) {
     case 'spotify': {
       const isSingle = SPOTIFY_PATH.exec(new URL(input.url).pathname)?.[1] === 'track';
       const data = await fetchSpotifyEntity(input.url);
-      return { title: data.title, platform: 'spotify', songs: data.songs, isSingleTrack: isSingle };
+      return { title: data.title, platform: 'spotify', songs: data.songs, isSingleTrack: isSingle, counts: data.counts };
     }
     case 'apple': {
       const parsed = new URL(input.url);
@@ -314,8 +326,19 @@ async function extractByKind(input) {
     }
     case 'youtube': {
       const playlistId = extractPlaylistId(input.url);
+      const videoId = extractVideoId(input.url);
+      let data;
       if (playlistId) {
-        const data = await fetchPlaylistItems(playlistId);
+        try {
+          data = await fetchPlaylistItems(playlistId);
+        } catch (err) {
+          // A Mix or radio list (watch?v=X&list=RD...) is not a readable playlist, but the
+          // link still names a video. fetchPlaylistItems reports any failed read (a timeout
+          // included) as an ExtractionError, so every unreadable list falls back to the video.
+          if (!(err instanceof ExtractionError) || !videoId) throw err;
+        }
+      }
+      if (data) {
         return {
           title: data.playlistTitle,
           platform: 'youtube',
@@ -331,10 +354,9 @@ async function extractByKind(input) {
           },
         };
       }
-      const videoId = extractVideoId(input.url);
       if (!videoId) throw new ValidationError('That YouTube link is not a playlist or a video');
-      const data = await fetchYouTubeSingleVideo(videoId);
-      return { title: data.title, platform: 'youtube', songs: data.songs, isSingleTrack: true };
+      const video = await fetchYouTubeSingleVideo(videoId);
+      return { title: video.title, platform: 'youtube', songs: video.songs, isSingleTrack: true };
     }
     case 'query':
       // Raw Text Query (e.g. "YOASOBI - Idol")
@@ -421,9 +443,9 @@ export async function extractMusicData(inputUrlOrQuery) {
 }
 
 /**
- * What the page reports about the fetched playlist. Only a YouTube playlist can hold
- * unavailable items or be cut short (at its `loadCap`, youtube.js PLAYLIST_LOAD_CAP); every
- * other source returns all it read and states no separate length or cap.
+ * What the page reports about the fetched playlist. A YouTube or Spotify playlist can hold
+ * unavailable items; only a YouTube one can be cut short (at its `loadCap`, youtube.js
+ * PLAYLIST_LOAD_CAP). Every other source returns all it read and states no separate length or cap.
  */
 function windowCounts(result, returnedCount) {
   const counts = result.counts || {};

@@ -15,7 +15,7 @@ for (const c of cases) {
     row = {
       label: c.label, url: c.url, ok: true,
       platform: r.platform, isSingleTrack: r.isSingleTrack, playlistTitle: r.playlistTitle,
-      count: s.length,
+      count: s.length, unavailableCount: r.unavailableCount,
       sample: s.slice(0, 3).map((x) => ({
         title: x.title, channel: x.channelTitle, artist: x.extractedArtist,
         artistFromTitle: x.artistFromTitle, query: x.cleanQuery,

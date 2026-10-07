@@ -43,6 +43,10 @@
   (songSubtitle in song.js), and /intl-xx/ Spotify links are accepted. Test set and before /
   after in todo-run/bug4/. done
 
+- Apple album links, Apple covers, Apple storefront names (l=en-US), Spotify unavailable
+  tracks (skipped and counted) and YouTube Mix / radio links (fall back to the video). Before /
+  after in todo-run/bug4/types.json, types-after.json, after.json, after2.json. done
+
 ## Remaining
 
 - Remove redundant code. No line budget: the goal is that no logic is written twice and
@@ -65,28 +69,6 @@
 - Add OAuth for playlists sync.
 
 - After OAuth: suggest songs from the user's most listened to artists (needs the OAuth item above).
-
-- Apple Music rows have no cover: every Apple song and playlist row shows the music note
-  placeholder (found by the bug 4 test set, todo-run/bug4/after.json). The CSP already allows
-  *.mzstatic.com; the parser just never reads an image (og:image or the ld+json `image`).
-
-- A YouTube "Mix" or YouTube Music "radio" link (watch?v=X&list=RD...) fails with "Could not
-  read that YouTube playlist", because any `list=` wins over `v=` and a mix is not a readable
-  playlist. General fix: when a watch link's list cannot be read, fall back to its video. Do
-  not add an RD prefix rule. (todo-run/bug4/types.json)
-
-- BUG: every Apple Music album link without `?i=` fails ("Could not read the tracks"). Apple
-  writes an album's songs under ld+json `tracks`, a playlist's under `track`; parseAppleHtml
-  (extractors.js) only reads `track`. Same page also has `image`, which would fix Apple covers.
-
-- BUG: a Spotify playlist with country restricted tracks gives blank rows (title undefined, no
-  artist): 9 of 50 on 37i9dQZF1E4yECoBSV4t3b. Those entries have `title: ""` and
-  `playabilityReason: COUNTRY_RESTRICTED`. Skip a track with no title and count it as
-  unavailable, the way YouTube already reports unavailable items.
-
-- An Apple link from another storefront (e.g. /jp/) returns localized artist names
-  (ドレイク for Drake), which osu! will not match. Checked: adding `?l=en-US` to the rebuilt
-  URL (appleProviderUrl) returns the English names on the same /jp/ page.
 
 - Not supported, and refused with a clear message today: Spotify artist pages, Apple artist
   pages, Apple radio stations (no track list), YouTube channel and @handle pages, and YouTube

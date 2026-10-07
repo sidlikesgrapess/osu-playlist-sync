@@ -561,7 +561,7 @@ export default function Home() {
         const from = data.playlistTitle ? ` from ${data.playlistTitle}` : '';
         const parts = [`Added ${added} song${added === 1 ? '' : 's'}${from}`];
         if (skipped > 0) parts.push(`${skipped} ${skipped === 1 ? 'was' : 'were'} already in the queue`);
-        if (unavailable > 0) parts.push(`${unavailable} ${unavailable === 1 ? 'is' : 'are'} unavailable on YouTube`);
+        if (unavailable > 0) parts.push(`${unavailable} ${unavailable === 1 ? 'is' : 'are'} unavailable`);
         pushToast(
           added > 0 ? 'Added to queue bottom' : 'Nothing new to add',
           parts.join(' · '),
@@ -1443,8 +1443,8 @@ export default function Home() {
               </div>
             )}
 
-            {/* REBUILD_PLAN.md 2.1 item 5: "Showing X of Y songs. N are unavailable on
-                YouTube." -- only worth saying when something was actually dropped. */}
+            {/* REBUILD_PLAN.md 2.1 item 5: "Showing X of Y songs. N are unavailable." -- only
+                worth saying when something was actually dropped. */}
             {songs.length > 0 && playlistMeta?.unavailableCount > 0 && (
               <div style={{
                 maxWidth: '1240px',
@@ -1454,7 +1454,7 @@ export default function Home() {
                 color: '#9a90a6',
               }}>
                 Showing {playlistMeta.returnedCount} of {playlistMeta.loadedCount} songs.{' '}
-                {playlistMeta.unavailableCount} {playlistMeta.unavailableCount === 1 ? 'is' : 'are'} unavailable on YouTube.
+                {playlistMeta.unavailableCount} {playlistMeta.unavailableCount === 1 ? 'is' : 'are'} unavailable.
               </div>
             )}
 
