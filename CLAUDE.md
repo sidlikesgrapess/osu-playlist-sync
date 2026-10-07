@@ -229,8 +229,6 @@ The osu! API rate-limits aggressively, and two conventions exist to stay under i
 
 ## Conventions
 
-- **Read `DESIGN.md` before writing any UI, style, animation or row logic.** It lists the
-  canonical tokens, motion, components and helpers to reuse, and the duplicates not to copy.
 - **Read `DESIGN.md` before any UI work.** It names the canonical token, class, component and
   helper for each job, and lists the known duplicates; reuse from it, never add another copy.
 - **Styling is inline `style={{}}` objects**, not a CSS framework. `src/app/globals.css`
