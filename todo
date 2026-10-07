@@ -85,8 +85,8 @@
   unavailable, the way YouTube already reports unavailable items.
 
 - An Apple link from another storefront (e.g. /jp/) returns localized artist names
-  (ドレイク for Drake), which osu! will not match. Check whether `?l=en-US` on the rebuilt URL
-  gives the English names.
+  (ドレイク for Drake), which osu! will not match. Checked: adding `?l=en-US` to the rebuilt
+  URL (appleProviderUrl) returns the English names on the same /jp/ page.
 
 - Not supported, and refused with a clear message today: Spotify artist pages, Apple artist
   pages, Apple radio stations (no track list), YouTube channel and @handle pages, and YouTube
