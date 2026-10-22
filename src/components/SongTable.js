@@ -36,6 +36,7 @@ export default function SongTable({
   const { isPlaying, isBuffering, hasError, toggle } = useAudioPreview();
   const [altPickerSong, setAltPickerSong] = useState(null);
   const [filterText, setFilterText] = useState('');
+  const [matchedOnly, setMatchedOnly] = useState(false);
 
   // These identities matter because SongRow/SongCardMobile are React.memo'd (F-19): without
   // useStableCallback here, a fresh function every SongTable render would defeat that memo on
@@ -63,17 +64,17 @@ export default function SongTable({
   const showDeselect = selectedIds.size > 0 && (confirmedSelected || confirmedIds.length === 0);
   const selectConfirmedDisabled = !showDeselect && confirmedIds.length === 0;
 
-  // Filter songs by search term
-  const filteredSongs = filterText.trim()
-    ? songs.filter(s =>
-        s.title.toLowerCase().includes(filterText.toLowerCase()) ||
-        (s.matchedBeatmap && (
-          s.matchedBeatmap.title.toLowerCase().includes(filterText.toLowerCase()) ||
-          s.matchedBeatmap.artist.toLowerCase().includes(filterText.toLowerCase()) ||
-          s.matchedBeatmap.creator.toLowerCase().includes(filterText.toLowerCase())
-        ))
-      )
-    : songs;
+  const searchText = filterText.trim().toLowerCase();
+  const filteredSongs = songs.filter(s =>
+    (!matchedOnly || !!s.matchedBeatmap) &&
+    (!searchText ||
+      s.title.toLowerCase().includes(searchText) ||
+      (s.matchedBeatmap && (
+        s.matchedBeatmap.title.toLowerCase().includes(searchText) ||
+        s.matchedBeatmap.artist.toLowerCase().includes(searchText) ||
+        s.matchedBeatmap.creator.toLowerCase().includes(searchText)
+      )))
+  );
 
   // Calculate Pagination Slicing
   const totalItems = filteredSongs.length;
@@ -140,6 +141,29 @@ export default function SongTable({
             {selectedIds.size} of {matchedSongs.length} selected
           </span>
         </div>
+
+        <button
+          type="button"
+          aria-pressed={matchedOnly}
+          onClick={() => {
+            osuAudio.playClick();
+            setMatchedOnly(value => !value);
+          }}
+          className="osu-btn-interactive osu-glass-card"
+          style={{
+            color: matchedOnly ? '#ffffff' : '#c0b4c8',
+            background: matchedOnly ? '#b83b78' : undefined,
+            borderRadius: '6px',
+            padding: '6px 10px',
+            fontSize: '0.76rem',
+            fontWeight: 800,
+            cursor: 'pointer',
+            fontFamily: 'inherit',
+            marginLeft: 'auto',
+          }}
+        >
+          Matched only ({matchedSongs.length})
+        </button>
 
         {/* Frosted Filter input */}
         <div className="osu-glass-card" style={{
@@ -259,6 +283,12 @@ export default function SongTable({
           />
         ))}
       </div>
+
+      {totalItems === 0 && (
+        <div style={{ padding: '24px', textAlign: 'center', color: '#c0b4c8', fontSize: '0.82rem' }}>
+          {matchedOnly && matchedSongs.length === 0 ? 'No matched songs yet.' : 'No songs match these filters.'}
+        </div>
+      )}
 
       {/* Clean Solid Pagination Bar */}
       {totalItems > 0 && (
