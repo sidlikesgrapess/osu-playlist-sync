@@ -3,48 +3,43 @@ import { test } from 'node:test';
 import assert from 'node:assert/strict';
 
 import { truncationMessage } from '../src/lib/truncationNotice.js';
-import { PLAYLIST_LOAD_CAP } from '../src/lib/youtube.js';
 
 const DASHES = /[-‐-―−]/;
 
-test('with a readable length past the cap, the copy names both numbers', () => {
+test('with a readable length, the copy names both numbers', () => {
   assert.equal(
-    truncationMessage({ playlistLength: 800, loadedCount: 500, loadCap: PLAYLIST_LOAD_CAP }),
-    'This playlist has 800 songs. osu!Sync loads the first 500.',
+    truncationMessage({ playlistLength: 800, loadedCount: 500 }),
+    'This playlist has 800 songs. osu!Sync could only load the first 500 this time.',
   );
 });
 
-test('without a length, the copy says more than the cap', () => {
+test('without a length, the copy says more than the loaded count', () => {
   assert.equal(
-    truncationMessage({ playlistLength: null, loadedCount: 500, loadCap: PLAYLIST_LOAD_CAP }),
-    'This playlist has more than 500 songs. osu!Sync loads the first 500.',
+    truncationMessage({ playlistLength: null, loadedCount: 500 }),
+    'This playlist has more than 500 songs. osu!Sync could only load the first 500 this time.',
   );
 });
 
-test('the number follows the loadCap field, never a constant in the copy', () => {
+test('the number follows the loadedCount field', () => {
   assert.equal(
-    truncationMessage({ playlistLength: 300, loadedCount: 100, loadCap: 100 }),
-    'This playlist has 300 songs. osu!Sync loads the first 100.',
-  );
-});
-
-test('a walk cut short before the cap does not claim the cap', () => {
-  assert.equal(
-    truncationMessage({ playlistLength: 300, loadedCount: 100, loadCap: 500 }),
+    truncationMessage({ playlistLength: 300, loadedCount: 100 }),
     'This playlist has 300 songs. osu!Sync could only load the first 100 this time.',
   );
+});
+
+test('a partial load does not claim a fixed cap', () => {
   assert.equal(
-    truncationMessage({ playlistLength: null, loadedCount: 200, loadCap: 500 }),
+    truncationMessage({ playlistLength: null, loadedCount: 200 }),
     'This playlist has more than 200 songs. osu!Sync could only load the first 200 this time.',
   );
 });
 
 test('no variant uses a dash as punctuation', () => {
   for (const args of [
-    { playlistLength: 800, loadedCount: 500, loadCap: 500 },
-    { playlistLength: null, loadedCount: 500, loadCap: 500 },
-    { playlistLength: 300, loadedCount: 100, loadCap: 500 },
-    { playlistLength: null, loadedCount: 100, loadCap: 500 },
+    { playlistLength: 800, loadedCount: 500 },
+    { playlistLength: null, loadedCount: 500 },
+    { playlistLength: 300, loadedCount: 100 },
+    { playlistLength: null, loadedCount: 100 },
   ]) {
     assert.doesNotMatch(truncationMessage(args), DASHES);
   }

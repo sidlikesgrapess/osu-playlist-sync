@@ -5,11 +5,9 @@ import { osuAudio } from '@/lib/soundEffects';
 
 /**
  * REBUILD_PLAN.md 2.1 item 5 / 2.4: "a small dialog with an OK button, not an
- * auto-dismissing toast", shown once per fetch (first load or append) whenever the
- * playlist extractor reports `truncated`, which since F-18 was raised to 500 means the
- * playlist runs past the load cap (`loadCap`, youtube.js PLAYLIST_LOAD_CAP) or YouTube cut
- * the continuation walk short. `message` is built by the caller with truncationNotice.js
- * from `playlistLength`/`loadedCount`/`loadCap`, so this component only displays it.
+ * auto-dismissing toast", shown when the playlist extractor reports more entries but
+ * cannot provide a usable next page. `message` is built by the caller
+ * from the playlist length and loaded count, so this component only displays it.
  *
  * Same overlay and card conventions as ExportModal/SetupGuideModal, sized down for a
  * one-line notice with a single acknowledging action.

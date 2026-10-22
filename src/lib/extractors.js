@@ -311,7 +311,7 @@ async function fetchYouTubeSingleVideo(videoId) {
 }
 
 /** Routes one classified input to its provider. */
-async function extractByKind(input) {
+async function extractByKind(input, { youtubeContinuation } = {}) {
   switch (input.kind) {
     case 'spotify': {
       const isSingle = SPOTIFY_PATH.exec(new URL(input.url).pathname)?.[1] === 'track';
@@ -330,12 +330,12 @@ async function extractByKind(input) {
       let data;
       if (playlistId) {
         try {
-          data = await fetchPlaylistItems(playlistId);
+          data = await fetchPlaylistItems(playlistId, undefined, { singleWindow: true, continuation: youtubeContinuation });
         } catch (err) {
           // A Mix or radio list (watch?v=X&list=RD...) is not a readable playlist, but the
           // link still names a video. fetchPlaylistItems reports any failed read (a timeout
           // included) as an ExtractionError, so every unreadable list falls back to the video.
-          if (!(err instanceof ExtractionError) || !videoId) throw err;
+          if (youtubeContinuation || !(err instanceof ExtractionError) || !videoId) throw err;
         }
       }
       if (data) {
@@ -351,6 +351,7 @@ async function extractByKind(input) {
             truncated: data.truncated,
             playlistLength: data.playlistLength,
             loadCap: data.loadCap,
+            nextContinuation: data.nextContinuation,
           },
         };
       }
@@ -381,13 +382,13 @@ async function extractByKind(input) {
  * non-2xx, over the byte cap) is wrapped rather than echoed, since its message carries the
  * upstream URL.
  */
-export async function extractMusicData(inputUrlOrQuery) {
+export async function extractMusicData(inputUrlOrQuery, options = {}) {
   const trimmed = (inputUrlOrQuery || '').trim();
   if (!trimmed) throw new ValidationError('Please provide a music link or search query');
 
   let result;
   try {
-    result = await extractByKind(classifyInput(trimmed));
+    result = await extractByKind(classifyInput(trimmed), options);
   } catch (err) {
     if (err instanceof ValidationError || err instanceof ExtractionError) throw err;
     console.warn('[Extractor] upstream failure:', err.message);
@@ -443,9 +444,8 @@ export async function extractMusicData(inputUrlOrQuery) {
 }
 
 /**
- * What the page reports about the fetched playlist. A YouTube or Spotify playlist can hold
- * unavailable items; only a YouTube one can be cut short (at its `loadCap`, youtube.js
- * PLAYLIST_LOAD_CAP). Every other source returns all it read and states no separate length or cap.
+ * What the page reports about the fetched window. YouTube carries an opaque continuation
+ * for the next window; other providers return everything they supplied in one response.
  */
 function windowCounts(result, returnedCount) {
   const counts = result.counts || {};
@@ -456,5 +456,6 @@ function windowCounts(result, returnedCount) {
     truncated: counts.truncated ?? false,
     playlistLength: counts.playlistLength ?? null,
     loadCap: counts.loadCap ?? null,
+    nextContinuation: counts.nextContinuation ?? null,
   };
 }

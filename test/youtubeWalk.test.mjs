@@ -40,6 +40,7 @@ const pageHeader = (rows) => ({
 const counts = (out) => [out.returnedCount, out.loadedCount, out.unavailableCount, out.truncated, out.playlistLength];
 const vid = (i) => `v${String(i).padStart(10, '0')}`;
 const tokenItem = (token) => ({ continuationItemRenderer: { continuationEndpoint: { continuationCommand: { token } } } });
+const modernTokenItem = (token) => ({ continuationItemViewModel: { continuationCommand: { innertubeCommand: { continuationCommand: { token } } } } });
 const contPage = (items) => ({ onResponseReceivedActions: [{ appendContinuationItemsAction: { continuationItems: items } }] });
 
 function stubFetch(respond) {
@@ -81,14 +82,99 @@ function fakeClock() {
   return { sleeps, now: () => t, sleep: async (ms) => { sleeps.push(ms); t += ms; } };
 }
 
-test('the load cap is 500 by default, and extractMusicData inherits it', async () => {
+test('the legacy whole playlist helper still caps a single walk at 500', async () => {
   assert.equal(PLAYLIST_LOAD_CAP, 500);
   fakePlaylist(700);
-  // extractMusicData uses the real clock, so this one test sleeps 4 x 750 ms for real.
-  const yt = await extractMusicData('https://www.youtube.com/playlist?list=PLMC9KNkIncKtPzgY-5rmhvj7fax8fdxoj');
+  const yt = await fetchPlaylistItems('PLsomething00', undefined, fakeClock());
   assert.equal(yt.loadedCount, 500);
   assert.equal(yt.loadCap, 500);
   assert.equal(yt.truncated, true);
+});
+
+test('the existing whole playlist helper can walk past 500 with a larger limit', async () => {
+  const calls = fakePlaylist(700);
+  const out = await fetchPlaylistItems('PLsomething00', 700, fakeClock());
+  assert.equal(out.loadedCount, 700);
+  assert.equal(out.truncated, false);
+  assert.equal(calls.length, 7);
+});
+
+test('extractMusicData fetches one window per request and continues beyond 500', async () => {
+  const calls = fakePlaylist(700);
+  const url = 'https://www.youtube.com/playlist?list=PLMC9KNkIncKtPzgY-5rmhvj7fax8fdxoj';
+  let continuation = null;
+  for (let page = 0; page < 7; page += 1) {
+    const yt = await extractMusicData(url, { youtubeContinuation: continuation });
+    assert.equal(calls.length, page + 1);
+    assert.equal(yt.songs.length, 100);
+    assert.equal(yt.songs[0].id, vid(page * 100));
+    assert.equal(yt.truncated, page < 6);
+    continuation = yt.nextContinuation;
+  }
+  assert.equal(continuation, null);
+  assert.deepEqual(calls.map(({ init }) => JSON.parse(init.body).continuation || null),
+    [null, 'T1', 'T2', 'T3', 'T4', 'T5', 'T6']);
+});
+
+test('the next window accepts endpoint and legacy continuation response shapes', async () => {
+  for (const shape of ['onResponseReceivedEndpoints', 'continuationContents']) {
+    const first = browse([lockup(vid(0), 'A'), tokenItem('T1')]);
+    const second = shape === 'continuationContents'
+      ? { continuationContents: { playlistVideoListContinuation: { contents: [lockup(vid(1), 'B')] } } }
+      : { onResponseReceivedEndpoints: [{ appendContinuationItemsAction: { continuationItems: [lockup(vid(1), 'B')] } }] };
+    const calls = stubFetch((_url, init) => Response.json(JSON.parse(init.body).browseId ? first : second));
+    const url = 'https://www.youtube.com/playlist?list=PLMC9KNkIncKtPzgY-5rmhvj7fax8fdxoj';
+    const initial = await extractMusicData(url);
+    const next = await extractMusicData(url, { youtubeContinuation: initial.nextContinuation });
+    assert.equal(next.songs[0].id, vid(1));
+    assert.equal(calls.length, 2);
+  }
+});
+
+test('modern continuationItemViewModel exposes the next page', async () => {
+  const first = browse([lockup(vid(0), 'A'), modernTokenItem('T1')]);
+  const second = contPage([lockup(vid(1), 'B')]);
+  const calls = stubFetch((_url, init) => Response.json(JSON.parse(init.body).browseId ? first : second));
+  const url = 'https://www.youtube.com/playlist?list=PLMC9KNkIncKtPzgY-5rmhvj7fax8fdxoj';
+  const initial = await extractMusicData(url);
+  assert.equal(initial.nextContinuation, 'T1');
+  const next = await extractMusicData(url, { youtubeContinuation: initial.nextContinuation });
+  assert.equal(next.songs[0].id, vid(1));
+  assert.equal(calls.length, 2);
+});
+
+test('an oversized window stops at 100 without exposing a cursor that skips songs', async () => {
+  const first = browse([
+    ...Array.from({ length: 120 }, (_, i) => lockup(vid(i), `Song ${i}`)),
+    tokenItem('after-120'),
+  ]);
+  stubFetch(() => Response.json(first));
+  const out = await extractMusicData('https://www.youtube.com/playlist?list=PLMC9KNkIncKtPzgY-5rmhvj7fax8fdxoj');
+  assert.equal(out.songs.length, 100);
+  assert.equal(out.truncated, true);
+  assert.equal(out.nextContinuation, null);
+});
+
+test('a failed next window can be retried with the same cursor', async () => {
+  let attempts = 0;
+  const calls = fakePlaylist(200, { fail: (page) => page === 1 && attempts++ === 0 });
+  const url = 'https://www.youtube.com/playlist?list=PLMC9KNkIncKtPzgY-5rmhvj7fax8fdxoj';
+  const first = await extractMusicData(url);
+  await assert.rejects(extractMusicData(url, { youtubeContinuation: first.nextContinuation }));
+  const second = await extractMusicData(url, { youtubeContinuation: first.nextContinuation });
+  assert.equal(second.songs[0].id, vid(100));
+  assert.equal(second.nextContinuation, null);
+  assert.equal(calls.length, 3);
+});
+
+test('a continuation that repeats its own cursor is refused', async () => {
+  const first = browse([lockup(vid(0), 'A'), tokenItem('T1')]);
+  const repeated = contPage([lockup(vid(0), 'A'), tokenItem('T1')]);
+  const calls = stubFetch((_url, init) => Response.json(JSON.parse(init.body).browseId ? first : repeated));
+  const url = 'https://www.youtube.com/playlist?list=PLMC9KNkIncKtPzgY-5rmhvj7fax8fdxoj';
+  const initial = await extractMusicData(url);
+  await assert.rejects(extractMusicData(url, { youtubeContinuation: initial.nextContinuation }));
+  assert.equal(calls.length, 2);
 });
 
 test('a 250 item playlist is walked in full over 3 requests, positions contiguous, not truncated', async () => {

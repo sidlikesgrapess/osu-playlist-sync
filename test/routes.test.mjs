@@ -96,6 +96,57 @@ test('/api/playlist: a success carries the songs and the window counts', async (
   assert.equal(body.truncated, false);
 });
 
+test('/api/playlist: each request loads only the next YouTube window', async () => {
+  const item = (i) => ({ lockupViewModel: {
+    contentId: `v${String(i).padStart(10, '0')}`,
+    metadata: { lockupMetadataViewModel: { title: { content: `Song ${i}` } } },
+  } });
+  const first = {
+    header: { pageHeaderRenderer: { pageTitle: 'Long list' } },
+    contents: { twoColumnBrowseResultsRenderer: { tabs: [{ tabRenderer: { content: {
+      sectionListRenderer: { contents: [{ itemSectionRenderer: { contents: [
+        ...Array.from({ length: 100 }, (_, i) => item(i)),
+        { continuationItemRenderer: { continuationEndpoint: { continuationCommand: { token: 'next-1' } } } },
+      ] } }] },
+    } } }] } },
+  };
+  const calls = stubFetch((_url, init) => {
+    const body = JSON.parse(init.body);
+    if (body.browseId) return Response.json(first);
+    const start = body.continuation === 'next-1' ? 100 : 200;
+    return Response.json({ onResponseReceivedActions: [{ appendContinuationItemsAction: { continuationItems: [
+      ...Array.from({ length: start === 100 ? 100 : 50 }, (_, i) => item(start + i)),
+      ...(start === 100 ? [{ continuationItemRenderer: { continuationEndpoint: { continuationCommand: { token: 'next-2' } } } }] : []),
+    ] } }] });
+  });
+  const req = clientFor();
+  const path = '/api/playlist?url=' + encodeURIComponent('https://www.youtube.com/playlist?list=PLsomething00');
+  const initial = await (await playlist.GET(req(path))).json();
+  assert.equal(initial.songs.length, 100);
+  assert.equal(initial.truncated, true);
+  assert.equal(initial.nextContinuation, 'next-1');
+  assert.equal(calls.length, 1);
+
+  const second = await (await playlist.GET(req(path + '&continuation=next-1'))).json();
+  assert.equal(second.songs.length, 100);
+  assert.equal(second.songs[0].id, 'v0000000100');
+  assert.equal(second.nextContinuation, 'next-2');
+  assert.equal(calls.length, 2);
+
+  const third = await (await playlist.GET(req(path + '&continuation=next-2'))).json();
+  assert.equal(third.songs.length, 50);
+  assert.equal(third.songs[0].id, 'v0000000200');
+  assert.equal(third.nextContinuation, null);
+  assert.equal(third.truncated, false);
+  assert.equal(calls.length, 3);
+
+  const bad = await playlist.GET(req('/api/playlist?q=hello&continuation=next-1'));
+  assert.equal(bad.status, 400);
+  const oversized = await playlist.GET(req(path + '&continuation=' + 'x'.repeat(4097)));
+  assert.equal(oversized.status, 400);
+  assert.equal(calls.length, 3);
+});
+
 const ghCommit = (sha, message) => ({
   sha,
   html_url: `https://github.com/x/y/commit/${sha}`,

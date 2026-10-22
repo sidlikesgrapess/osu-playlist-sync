@@ -115,7 +115,9 @@ const realSleep = (ms) => new Promise((resolve) => setTimeout(resolve, ms));
 /**
  * Fetches the songs of a public/unlisted YouTube playlist: the first window, then each
  * continuation page in turn, one paced request per extra 100 items, until there is no
- * continuation token or `maxVideos` items are loaded.
+ * continuation token or `maxVideos` items are loaded. In `singleWindow` mode, it reads one
+ * response and returns `nextContinuation` for the next user action; earlier pages are not
+ * fetched again. The app uses this mode so there is no fixed playlist cap.
  *
  * Returns the songs plus the counts the page reports:
  * - `loadedCount`: video items across every loaded page, plus any YouTube hid from them,
@@ -133,43 +135,62 @@ const realSleep = (ms) => new Promise((resolve) => setTimeout(resolve, ms));
  *
  * @param {string} playlistId - Extracted YouTube playlist ID
  * @param {number} [maxVideos=PLAYLIST_LOAD_CAP]
- * @param {{ sleep?: (ms: number) => Promise<void>, now?: () => number }} [clock] - for tests
+ * @param {{ sleep?: (ms: number) => Promise<void>, now?: () => number, singleWindow?: boolean, continuation?: string|null }} [options]
  */
-export async function fetchPlaylistItems(playlistId, maxVideos = PLAYLIST_LOAD_CAP, { sleep = realSleep, now = Date.now } = {}) {
+export async function fetchPlaylistItems(playlistId, maxVideos = PLAYLIST_LOAD_CAP, { sleep = realSleep, now = Date.now, singleWindow = false, continuation = null } = {}) {
   if (!playlistId || !PLAYLIST_ID.test(playlistId)) {
     throw new ExtractionError('Please provide a valid YouTube playlist URL');
   }
+  if (continuation !== null && (!singleWindow || typeof continuation !== 'string' || !continuation || continuation.length > 4096)) {
+    throw new ExtractionError('Could not continue that YouTube playlist');
+  }
 
   // The sample playlist offered by the input box is a preset, asked for by its id.
-  if (playlistId === 'PLosu_banger_showcase_01' || playlistId === 'DEMO_PLAYLIST_ID') {
-    return getDemoPlaylist();
+  if (!continuation && (playlistId === 'PLosu_banger_showcase_01' || playlistId === 'DEMO_PLAYLIST_ID')) {
+    return singleWindow ? { ...getDemoPlaylist(), loadCap: null, nextContinuation: null } : getDemoPlaylist();
   }
 
   const deadline = now() + PLAYLIST_WALK_DEADLINE_MS;
-  const attempts = [
-    ['Innertube', () => fetchFromInnertube(playlistId)],
-    ['HTML scrape', () => fetchFromHtmlScrape(playlistId)],
-  ];
+  const attempts = continuation
+    ? [['continuation', () => postJson(INNERTUBE_BROWSE, { context: INNERTUBE_CONTEXT, continuation }, INNERTUBE_REQUEST)]]
+    : [['Innertube', () => fetchFromInnertube(playlistId)], ['HTML scrape', () => fetchFromHtmlScrape(playlistId)]];
   for (const [name, load] of attempts) {
     try {
       const first = await load();
-      const walk = startWalk(first, maxVideos);
-      addPage(walk, playlistWindow(first));
-      if (walk.loadedCount === 0) {
+      const items = continuation ? continuationWindow(first) : playlistWindow(first);
+      if (!items) continue;
+      const walk = startWalk(first, singleWindow ? 100 : maxVideos);
+      addPage(walk, items);
+      if (walk.loadedCount === 0 && !continuation) {
         console.warn(`[YouTube Extractor] ${name} returned no playlist items`);
         continue;
       }
+      if (singleWindow && continuation && walk.token === continuation) {
+        throw new ExtractionError('YouTube did not advance the playlist');
+      }
       // Both paths carry the same continuation token, so the page scrape pages on through
       // Innertube exactly as the Innertube path does.
-      await followContinuations(walk, { sleep, now, deadline });
+      if (!singleWindow) await followContinuations(walk, { sleep, now, deadline });
       const parsed = finishWalk(walk);
-      return { playlistId, totalSongs: parsed.returnedCount, isDemo: false, ...parsed };
+      return {
+        playlistId, totalSongs: parsed.returnedCount, isDemo: false, ...parsed,
+        ...(singleWindow ? {
+          playlistTitle: continuation ? null : parsed.playlistTitle,
+          playlistLength: continuation ? null : parsed.playlistLength,
+          loadCap: null,
+          // A malformed oversized page may hold a token beyond entries we did not return;
+          // following it would silently skip those entries.
+          nextContinuation: walk.cut ? null : walk.token,
+        } : {}),
+      };
     } catch (err) {
       console.warn(`[YouTube Extractor] ${name} attempt error:`, err.message);
     }
   }
 
-  throw new ExtractionError('Could not read that YouTube playlist. Check that it is public or unlisted.');
+  throw new ExtractionError(continuation
+    ? 'Could not load the next part of that YouTube playlist. Try again.'
+    : 'Could not read that YouTube playlist. Check that it is public or unlisted.');
 }
 
 /**
@@ -272,11 +293,16 @@ function playlistWindow(data) {
  * carries, or null when it carries none (a shape we cannot read, never "no more items").
  */
 function continuationWindow(data) {
-  const actions = Array.isArray(data?.onResponseReceivedActions) ? data.onResponseReceivedActions : [];
+  const actions = [
+    ...(Array.isArray(data?.onResponseReceivedActions) ? data.onResponseReceivedActions : []),
+    ...(Array.isArray(data?.onResponseReceivedEndpoints) ? data.onResponseReceivedEndpoints : []),
+  ];
   const lists = actions
     .map((a) => a?.appendContinuationItemsAction?.continuationItems)
     .filter(Array.isArray);
-  return lists.length > 0 ? lists.flat() : null;
+  if (lists.length > 0) return lists.flat();
+  const legacy = data?.continuationContents?.playlistVideoListContinuation?.contents;
+  return Array.isArray(legacy) ? legacy : null;
 }
 
 /** The first `continuationCommand.token` anywhere under `node`, depth first, or null. */
@@ -369,9 +395,10 @@ function addPage(walk, items) {
   walk.openEnded = false;
   walk.token = null;
   for (const item of items) {
-    if (item?.continuationItemRenderer) {
+    const continuationItem = item?.continuationItemRenderer || item?.continuationItemViewModel;
+    if (continuationItem) {
       walk.openEnded = true;
-      walk.token = findContinuationToken(item.continuationItemRenderer);
+      walk.token = findContinuationToken(continuationItem);
       continue;
     }
     const read = readWindowItem(item, walk.loadedCount);

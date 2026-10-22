@@ -151,9 +151,13 @@ export default function Home() {
   // Download completion toasts
   const [toasts, setToasts] = useState([]);
 
-  // The YouTube truncation popup (2.1 item 5 / 2.4 item 9). Unlike `playlistMeta`, this is
-  // set on every fetch that comes back `truncated`, appends included, and clears on OK.
+  // Warn when YouTube reports more entries but provides no usable next page.
   const [truncationNotice, setTruncationNotice] = useState(null);
+  const [loadMoreSource, setLoadMoreSource] = useState(null);
+  const songsLeft = loadMoreSource?.playlistLength == null
+    ? null
+    : Math.max(0, loadMoreSource.playlistLength - loadMoreSource.loadedCount);
+  const nextWindowSize = songsLeft > 0 ? Math.min(100, songsLeft) : null;
 
   // osu! player search state
   const [playerResults, setPlayerResults] = useState([]);
@@ -490,17 +494,20 @@ export default function Home() {
     setErrorMessage('');
   };
 
-  // Handle fetching a YouTube playlist. When songs already exist, new results are
-  // appended instead of replacing the current list. The player side is never touched.
-  const handleFetchPlaylist = async (url) => {
+  // Fetch a playlist or song. A later load, including more of the same YouTube playlist,
+  // adds new rows to the queue and keeps its existing matches and selections.
+  const handleFetchPlaylist = async (url, { more = false } = {}) => {
+    if (isLoading) return;
+    const moreSource = more ? loadMoreSource : null;
+    if (more && (!moreSource?.continuation || moreSource.url !== url)) return;
     const isAppending = songs.length > 0;
 
     setIsLoading(true);
     setErrorMessage('');
-    if (!isAppending) dropPlaylist();
+    if (!isAppending && !more) dropPlaylist();
 
     try {
-      const fetchUrl = `/api/playlist?url=${encodeURIComponent(url)}`;
+      const fetchUrl = `/api/playlist?url=${encodeURIComponent(url)}${more ? `&continuation=${encodeURIComponent(moreSource.continuation)}` : ''}`;
       const res = await fetch(fetchUrl);
       const data = await res.json();
 
@@ -508,30 +515,60 @@ export default function Home() {
         throw new Error(data.error || 'Could not load playlist items');
       }
 
-      // Once per fetch, first load or append alike -- an append still hits the same
-      // load cap (`loadCap`, 500), and the user needs to know the same way. `truncated` is
-      // structural, so a playlist the walk loaded in full never raises it.
-      if (data.truncated) {
+      const playlistLength = more ? moreSource.playlistLength : data.playlistLength;
+      const returnedCount = (more ? moreSource.returnedCount : 0) + data.returnedCount;
+      let loadedCount = (more ? moreSource.loadedCount : 0) + data.loadedCount;
+      let unavailableCount = (more ? moreSource.unavailableCount : 0) + data.unavailableCount;
+      if (more && !data.truncated && playlistLength > loadedCount) {
+        unavailableCount += playlistLength - loadedCount;
+        loadedCount = playlistLength;
+      }
+
+      // A continuation with no usable cursor cannot be resumed. Keep the songs already
+      // fetched and explain the partial result.
+      if (data.truncated && !data.nextContinuation) {
         setTruncationNotice(truncationMessage({
-          playlistLength: data.playlistLength,
-          loadedCount: data.loadedCount,
-          loadCap: data.loadCap,
+          playlistLength,
+          loadedCount,
         }));
+      }
+      if (data.platform === 'youtube' && data.nextContinuation) {
+        setLoadMoreSource({
+          url,
+          title: more ? moreSource.title : data.playlistTitle,
+          continuation: data.nextContinuation,
+          returnedCount,
+          loadedCount,
+          unavailableCount,
+          playlistLength,
+        });
+      } else {
+        setLoadMoreSource(null);
       }
 
       if (!isAppending) {
         setPlaylistMeta({
           id: data.playlistId,
+          sourceUrl: url,
           title: data.playlistTitle,
           platform: data.platform,
           isSingleTrack: data.isSingleTrack,
           isDemo: data.isDemo,
-          returnedCount: data.returnedCount,
-          loadedCount: data.loadedCount,
-          unavailableCount: data.unavailableCount,
+          returnedCount,
+          loadedCount,
+          unavailableCount,
           truncated: data.truncated,
-          playlistLength: data.playlistLength,
+          playlistLength,
         });
+      } else if (more && playlistMeta?.sourceUrl === url) {
+        setPlaylistMeta(prev => ({
+          ...prev,
+          returnedCount,
+          loadedCount,
+          unavailableCount,
+          truncated: data.truncated,
+          playlistLength,
+        }));
       }
 
       // page.js is the one place a song id is made: a provider id when there is one, else a
@@ -548,7 +585,7 @@ export default function Home() {
       // repeats a song already in the queue, and a playlist that lists one video twice keeps
       // one row, so two rows can never share a React key. Existing rows win, keeping their
       // matches and selection, and positions are given to the additions only.
-      const { songs: combinedSongs, added, skipped } = mergeSongLists(isAppending ? songs : [], fetched);
+      const { songs: combinedSongs, added, skipped } = mergeSongLists(isAppending ? songsRef.current : [], fetched);
       setSongs(combinedSongs);
       setIsLoading(false);
 
@@ -557,7 +594,13 @@ export default function Home() {
       // playlist needs no toast because it fills the whole table. An append where every song
       // was already queued still says so, since otherwise nothing at all would happen.
       const unavailable = data.unavailableCount || 0;
-      if (isAppending && (added > 0 || skipped > 0 || unavailable > 0)) {
+      if (more) {
+        pushToast(
+          added > 0 ? 'More songs loaded' : 'No new songs loaded',
+          added > 0 ? `Added ${added} song${added === 1 ? '' : 's'} from ${moreSource.title}` : 'The playlist did not return any new songs.',
+          'queue',
+        );
+      } else if (isAppending && (added > 0 || skipped > 0 || unavailable > 0)) {
         const from = data.playlistTitle ? ` from ${data.playlistTitle}` : '';
         const parts = [`Added ${added} song${added === 1 ? '' : 's'}${from}`];
         if (skipped > 0) parts.push(`${skipped} ${skipped === 1 ? 'was' : 'were'} already in the queue`);
@@ -584,7 +627,8 @@ export default function Home() {
     }
   };
 
-  // Search osu! API for specific target song IDs in controlled batches
+  // Search the visible rows in one browser request per group of ten. The server searches
+  // each song under its own rate-limit budget and returns one result per row.
   const searchTargetSongs = async (baseSongs, targetIds, currentMode, currentStatus, explicitStrictness = null) => {
     if (!targetIds || targetIds.length === 0) return;
     const targetSet = new Set(targetIds);
@@ -1027,6 +1071,7 @@ export default function Home() {
     setSongs([]);
     setPlaylistSelectedIds(new Set());
     setPlaylistMeta(null);
+    setLoadMoreSource(null);
     setCurrentPage(1);
   };
 
@@ -1455,6 +1500,34 @@ export default function Home() {
               }}>
                 Showing {playlistMeta.returnedCount} of {playlistMeta.loadedCount} songs.{' '}
                 {playlistMeta.unavailableCount} {playlistMeta.unavailableCount === 1 ? 'is' : 'are'} unavailable.
+              </div>
+            )}
+
+            {songs.length > 0 && loadMoreSource && (
+              <div style={{
+                maxWidth: '1240px',
+                margin: '0 auto 12px',
+                display: 'flex',
+                alignItems: 'center',
+                gap: '10px',
+                flexWrap: 'wrap',
+                color: '#bdb4c8',
+                fontSize: '0.78rem',
+              }}>
+                <span>
+                  Loaded {loadMoreSource.loadedCount}{loadMoreSource.playlistLength ? ` of ${loadMoreSource.playlistLength}` : ''} from {loadMoreSource.title}.
+                </span>
+                <button
+                  type="button"
+                  className="osu-btn-interactive osu-btn-pink"
+                  disabled={isLoading}
+                  onClick={() => handleFetchPlaylist(loadMoreSource.url, { more: true })}
+                  style={{ border: 'none', borderRadius: '6px', padding: '6px 12px', fontSize: '0.78rem', fontWeight: 800, cursor: isLoading ? 'wait' : 'pointer' }}
+                >
+                  {isLoading ? 'Loading more...' : nextWindowSize === null
+                    ? 'Load more songs'
+                    : `Load ${nextWindowSize} more ${nextWindowSize === 1 ? 'song' : 'songs'}`}
+                </button>
               </div>
             )}
 

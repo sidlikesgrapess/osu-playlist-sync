@@ -1,6 +1,8 @@
 import { extractMusicData, ExtractionError } from '@/lib/extractors';
 import { checkRateLimit, rateLimitResponse } from '@/lib/rateLimit';
 import { boundedString, ValidationError } from '@/lib/validate';
+import { classifyInput } from '@/lib/platform';
+import { extractPlaylistId } from '@/lib/youtube';
 
 export const dynamic = 'force-dynamic';
 
@@ -19,7 +21,13 @@ export async function GET(request) {
       { name: 'A playlist link, track link or song title' },
     );
 
-    const musicData = await extractMusicData(input);
+    const continuation = boundedString(searchParams.get('continuation'), {
+      name: 'A YouTube continuation', max: 4096, required: false,
+    });
+    if (continuation && (classifyInput(input).kind !== 'youtube' || !extractPlaylistId(input))) {
+      throw new ValidationError('A continuation needs a YouTube playlist link');
+    }
+    const musicData = await extractMusicData(input, { youtubeContinuation: continuation || null });
     return Response.json(musicData);
   } catch (error) {
     // The caller's own mistake: safe to say exactly what was wrong.
