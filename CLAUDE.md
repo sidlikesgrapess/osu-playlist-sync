@@ -76,8 +76,11 @@ Components receive songs and call back up; they never fetch.
 ### Two entry paths, one pipeline
 
 1. **Playlist / track / text search** — `/api/playlist` → `extractMusicData`
-   (`src/lib/extractors.js`) → per-track `cleanSongTitle` → songs with no match yet →
-   client fans out to `/api/osu/search` at concurrency 3.
+   (`src/lib/extractors.js`) → `preparePlaylist` (`src/lib/song.js`, per-track
+   `cleanSongTitle`) → songs with no match yet → client fans out to `/api/osu/search` at
+   concurrency 3. An uploaded **Exportify CSV** joins this path in the browser:
+   `readExportifyFile` (`src/lib/exportify.js`) builds the same answer through
+   `preparePlaylist` with `source: 'spotify'`, and `page.js`'s `loadPlaylist` takes either.
 
 2. **osu! player** — `/api/osu/player` resolves a profile, `/api/osu/player/beatmaps`
    fetches best / most-played / favourites.

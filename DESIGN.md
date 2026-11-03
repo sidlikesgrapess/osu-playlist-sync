@@ -323,7 +323,8 @@ the mobile cards; CSS hides one (`SongTable.js:186`, `:244`).
 | Beatmap cover + preview play | `BeatmapCover` (`components/BeatmapCover.js`) | the only place that registers with the preview stop rule; pass `key={coverUrl}` |
 | Flagged match | `OverrideMark` + `OverrideNotice` (`components/MatchNotice.js`) | always as a pair |
 | Toast | `DownloadToast` (`TOAST_KINDS`) | add a kind, not a component |
-| Must acknowledge notice | `TruncationDialog` pattern | on the shared modal shell once it exists |
+| Modal | `Modal` (`components/Modal.js`): backdrop, panel, header + close X, body, optional `footer`; portalled to `<body>`, Escape closes | every new modal. First user: `CsvGuideModal`. The four older modals still inline their own copy (section 9) |
+| Must acknowledge notice | `TruncationDialog` pattern | move it onto `Modal` |
 | Spinner | lucide `Loader2` + `.spin-slow` | colour `#ffbb22` for loading |
 | Platform logo | `components/Icons.js` | |
 | Status badge colours | `getStatusBadgeStyle` | there is no `<StatusBadge>` yet (4 inline copies) |
@@ -332,8 +333,7 @@ the mobile cards; CSS hides one (`SongTable.js:186`, `:244`).
 | Beatmapset link | `beatmapsetPage(id)` (`lib/mirrors.js:54`) | four places hardcode the URL instead |
 
 Missing shared pieces (every one exists as 3 or 4 inline copies; see section 9). **The next person
-who needs one of these builds the shared version and migrates the copies:** modal shell (backdrop,
-panel, header, close X, footer), status badge, star badge with one range format, dark chip button,
+who needs one of these builds the shared version and migrates the copies:** status badge, star badge with one range format, dark chip button,
 pager prev/next, "view on osu!" icon link, download `.OSZ` button, "Preview unavailable" line,
 error banner, uppercase metric label, source thumbnail with fallback, tinted tag pill.
 
@@ -351,6 +351,8 @@ Recipes in use for those buttons today (match them exactly until the shared vers
 | Need | Use | Where |
 |---|---|---|
 | Build a song object | `makeSong` | `lib/song.js` |
+| Clean a read playlist's tracks into the /api/playlist answer | `preparePlaylist` | `lib/song.js` (server for links, browser for a CSV) |
+| Read an Exportify CSV (Spotify) into that answer | `readExportifyFile` / `parseExportifyCsv` / `parseCsv` | `lib/exportify.js` |
 | Add songs to a list | `mergeSongs` / `songKey` | `lib/song.js` (page.js has a second `mergeSongs`; don't use it for new code) |
 | Line under a song title | `songSubtitle(song)` | `lib/song.js` |
 | Player collection → rows | `visibleItemsFor` (filter, then dedupe) / `beatmapToSong` | `lib/collection.js` |
@@ -414,7 +416,8 @@ the "Remove redundant code" item in `todo`; it starts with the user picking what
 
 ### Components
 - Modal shell ×4: `ExportModal.js:49-71`, `SetupGuideModal.js:60-82`, `TruncationDialog.js:21-43`,
-  `SongTable.js:437-459` (plus 3 headers, 3 close buttons, 2 footers in different colours).
+  `SongTable.js:437-459` (plus 3 headers, 3 close buttons, 2 footers in different colours). The
+  shared `Modal` now exists; these four are the copies to migrate onto it.
 - Status badge ×4, star badge ×4 with three text formats (`min - max`, `min-max`, collapsed at 1 or
   2 decimals).
 - Dark chip button ×6, pager prev/next ×2, Retry/Search mini button ×4, "view on osu!" link ×3,

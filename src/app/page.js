@@ -28,6 +28,7 @@ import {
 import { osuFilename, sanitizeStem } from '@/lib/filename';
 import { beatmapsetPage } from '@/lib/mirrors';
 import { mergeSongs as mergeSongLists } from '@/lib/song';
+import { readExportifyFile } from '@/lib/exportify';
 import { buildSearchRequest } from '@/lib/searchRequest';
 import { visibleItemsFor } from '@/lib/collection';
 import { truncationMessage } from '@/lib/truncationNotice';
@@ -490,9 +491,23 @@ export default function Home() {
     setErrorMessage('');
   };
 
-  // Handle fetching a YouTube playlist. When songs already exist, new results are
+  const handleFetchPlaylist = (url) => loadPlaylist(async () => {
+    const res = await fetch(`/api/playlist?url=${encodeURIComponent(url)}`);
+    const data = await res.json();
+    if (!res.ok) throw new Error(data.error || 'Could not load playlist items');
+    return data;
+  });
+
+  // An Exportify CSV is read in the browser into the same answer /api/playlist gives, so it
+  // appends, dedupes and searches exactly like a pasted Spotify playlist.
+  const handleUploadCsv = (file) => {
+    setSearchMode('songs');
+    return loadPlaylist(() => readExportifyFile(file));
+  };
+
+  // Loads one playlist answer from `readPlaylist`. When songs already exist, new results are
   // appended instead of replacing the current list. The player side is never touched.
-  const handleFetchPlaylist = async (url) => {
+  const loadPlaylist = async (readPlaylist) => {
     const isAppending = songs.length > 0;
 
     setIsLoading(true);
@@ -500,13 +515,7 @@ export default function Home() {
     if (!isAppending) dropPlaylist();
 
     try {
-      const fetchUrl = `/api/playlist?url=${encodeURIComponent(url)}`;
-      const res = await fetch(fetchUrl);
-      const data = await res.json();
-
-      if (!res.ok) {
-        throw new Error(data.error || 'Could not load playlist items');
-      }
+      const data = await readPlaylist();
 
       // Once per fetch, first load or append alike -- an append still hits the same
       // load cap (`loadCap`, 500), and the user needs to know the same way. `truncated` is
@@ -1326,6 +1335,7 @@ export default function Home() {
         {/* Liquid Glass Search & Filter Dock */}
         <PlaylistInput
           onFetch={handleSubmitInput}
+          onUploadCsv={handleUploadCsv}
           isLoading={isLoading}
           hasSongs={!isPlayerView && songs.length > 0}
           searchMode={searchMode}

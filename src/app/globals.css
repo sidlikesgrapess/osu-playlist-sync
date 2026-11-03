@@ -285,8 +285,20 @@ html[data-player-section-docked] .pi-dock-card {
   border-bottom-right-radius: 0 !important;
 }
 
+/* The CSV guide link closes the samples row, pushed to its right edge. */
+.pi-csv-guide {
+  margin-left: auto;
+}
+
 /* Compact search bar for narrow (mobile-portrait) viewports */
 @media (max-width: 480px) {
+  /* The samples row scrolls sideways here, so the guide link leads it instead of hiding
+     past the right edge. */
+  .pi-csv-guide {
+    order: -1;
+    margin-left: 0;
+  }
+
   /* The search type toggle keeps its words, which say what the modes are; only its icons go,
      so the input keeps its room. */
   .pi-search-mode-icon,
@@ -309,7 +321,8 @@ html[data-player-section-docked] .pi-dock-card {
     padding: 2px 1px !important;
   }
 
-  #find-beatmaps-btn {
+  #find-beatmaps-btn,
+  #upload-csv-btn {
     padding: 6px !important;
   }
 }

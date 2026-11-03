@@ -5,6 +5,8 @@
  * rest-state defaults.
  */
 
+import { cleanSongTitle, cleanPlaylistTitles } from './titleCleaner.js';
+
 // Every valid source, with what a row says about where it came from when it has no artist.
 const SOURCE_LABELS = {
   spotify: 'Spotify track',
@@ -54,6 +56,81 @@ export function makeSong(input = {}) {
     allMatches: [],
     rejection: null,
     ...input,
+  };
+}
+
+// Sources whose tracks carry the provider's own artist field.
+const STRUCTURED_PLATFORMS = new Set(['spotify', 'apple']);
+
+/**
+ * The /api/playlist answer for one read playlist: every track cleaned for osu! matching,
+ * plus what the page reports about the read. Runs on the server for a pasted link
+ * (extractMusicData) and in the browser for an uploaded CSV (exportify.js), so both land
+ * in the page as the same shape.
+ * @param {{ platform: string, title: string, songs: object[], isSingleTrack?: boolean, isDemo?: boolean, counts?: object }} result
+ */
+export function preparePlaylist(result) {
+  const structured = STRUCTURED_PLATFORMS.has(result.platform);
+  // F-46: a tag that repeats across the playlist is the uploader's house style, not part of
+  // a song's name. Counted once here and shared by every track.
+  const playlistTitles = cleanPlaylistTitles((result.songs || []).map((song) => song.title));
+  const processedSongs = (result.songs || []).map((song, index) => {
+    // Spotify and Apple hand over a real artist field; the cleaner must not split another
+    // artist out of the title when one is there. YouTube and a typed query have none.
+    const cleaned = cleanSongTitle(song.title, song.channelTitle, {
+      source: result.platform,
+      ...(structured ? { providerArtist: song.channelTitle || '' } : {}),
+      playlistTitles,
+    });
+    return {
+      ...song,
+      // Only a provider id is set here. A row with none gets its id in page.js, the one
+      // place ids are made, and is deduped on title and artist (songKey below).
+      id: song.id || null,
+      index: index + 1,
+      position: index,
+      // Where the metadata came from. Spotify/Apple hand us a real artist field, so the
+      // matcher may trust it enough to reject on; a YouTube channel name it may not.
+      source: result.platform,
+      cleanQuery: cleaned.cleanQuery,
+      extractedArtist: cleaned.artist,
+      // True when that artist was split out of the title text rather than handed over by
+      // the provider, so the matcher must not give it a provider's trust.
+      artistFromTitle: cleaned.artistFromTitle,
+      extractedTitle: cleaned.title,
+      // The title with its ambiguous tags kept, or '' when that is the same (F-46).
+      altTitle: cleaned.altTitle,
+      fallbacks: cleaned.fallbacks,
+      queries: cleaned.queries,
+    };
+  });
+
+  return {
+    success: true,
+    platform: result.platform,
+    playlistTitle: result.title,
+    isSingleTrack: result.isSingleTrack,
+    isDemo: result.isDemo || false,
+    totalSongs: processedSongs.length,
+    songs: processedSongs,
+    ...windowCounts(result, processedSongs.length),
+  };
+}
+
+/**
+ * What the page reports about the read playlist. A YouTube or Spotify playlist can hold
+ * unavailable items; only a YouTube one can be cut short (at its `loadCap`, youtube.js
+ * PLAYLIST_LOAD_CAP). Every other source returns all it read and states no separate length or cap.
+ */
+function windowCounts(result, returnedCount) {
+  const counts = result.counts || {};
+  return {
+    returnedCount,
+    loadedCount: counts.loadedCount ?? returnedCount,
+    unavailableCount: counts.unavailableCount ?? 0,
+    truncated: counts.truncated ?? false,
+    playlistLength: counts.playlistLength ?? null,
+    loadCap: counts.loadCap ?? null,
   };
 }
 

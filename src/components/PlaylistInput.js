@@ -1,8 +1,9 @@
 'use client';
 
 import { useState, useEffect, useRef } from 'react';
-import { Loader2, Sparkles, ArrowRight, Plus, User } from 'lucide-react';
+import { Loader2, Sparkles, ArrowRight, Plus, User, Upload, CircleHelp } from 'lucide-react';
 import { YouTubeIcon, SpotifyIcon, AppleMusicIcon, MusicNoteIcon } from './Icons';
+import CsvGuideModal from './CsvGuideModal';
 import { osuAudio } from '@/lib/soundEffects';
 import { strictnessLabel, strictnessSummary } from '@/lib/matchStrictness';
 import { submitPlatform } from '@/lib/platform';
@@ -83,12 +84,34 @@ const sampleButtonStyle = {
   whiteSpace: 'nowrap',
 };
 
+// The dark chip recipe (DESIGN.md section 6), sized to sit beside Find in the search bar.
+const uploadButtonStyle = (disabled) => ({
+  background: '#262232',
+  border: '1px solid rgba(255, 255, 255, 0.08)',
+  borderRadius: '6px',
+  color: '#c0b4c8',
+  fontWeight: 800,
+  fontSize: '0.78rem',
+  padding: '6px 10px',
+  cursor: disabled ? 'not-allowed' : 'pointer',
+  opacity: disabled ? 0.6 : 1,
+  display: 'inline-flex',
+  alignItems: 'center',
+  gap: '5px',
+  fontFamily: 'inherit',
+  flexShrink: 0,
+  minHeight: '34px',
+  whiteSpace: 'nowrap',
+});
+
 // `searchMode` ('songs' | 'player') is owned by page.js, because it is also which result set
 // is on screen (todo item 09). Flipping it never fetches or drops anything.
-export default function PlaylistInput({ onFetch, isLoading, hasSongs, searchMode, onSearchModeChange, mode, setMode, statusFilter, setStatusFilter, matchThreshold, setMatchThreshold, canRefetchStrictness, onStrictnessRefetch }) {
+export default function PlaylistInput({ onFetch, onUploadCsv, isLoading, hasSongs, searchMode, onSearchModeChange, mode, setMode, statusFilter, setStatusFilter, matchThreshold, setMatchThreshold, canRefetchStrictness, onStrictnessRefetch }) {
   const [url, setUrl] = useState('');
   const [isDocked, setIsDocked] = useState(false);
+  const [isCsvGuideOpen, setIsCsvGuideOpen] = useState(false);
   const dockRef = useRef(null);
+  const csvInputRef = useRef(null);
 
   useEffect(() => {
     let ticking = false;
@@ -185,6 +208,15 @@ export default function PlaylistInput({ onFetch, isLoading, hasSongs, searchMode
     // search goes where the sample went.
     osuAudio.playClick();
     onFetch(sampleVal, platform);
+  };
+
+  const openCsvPicker = () => csvInputRef.current?.click();
+
+  const handleCsvChosen = (e) => {
+    const file = e.target.files?.[0];
+    // Cleared so picking the same file again still fires a change.
+    e.target.value = '';
+    if (file) onUploadCsv(file);
   };
 
   const handleModeChange = (newMode) => {
@@ -462,6 +494,31 @@ export default function PlaylistInput({ onFetch, isLoading, hasSongs, searchMode
                 Clear
               </button>
             )}
+            {searchMode === 'songs' && (
+              <button
+                id="upload-csv-btn"
+                type="button"
+                disabled={isLoading}
+                className="osu-btn-interactive"
+                onClick={() => {
+                  osuAudio.playClick();
+                  openCsvPicker();
+                }}
+                onMouseEnter={() => osuAudio.playHover()}
+                title="Upload a Spotify playlist CSV made with Exportify"
+                style={uploadButtonStyle(isLoading)}
+              >
+                <Upload size={13} />
+                <span className="pi-submit-label">Upload CSV</span>
+              </button>
+            )}
+            <input
+              ref={csvInputRef}
+              type="file"
+              accept=".csv,text/csv"
+              onChange={handleCsvChosen}
+              hidden
+            />
             <button
               id="find-beatmaps-btn"
               type="submit"
@@ -542,10 +599,29 @@ export default function PlaylistInput({ onFetch, isLoading, hasSongs, searchMode
                 <span>{label}</span>
               </button>
             ))}
+            <button
+              id="csv-guide-btn"
+              type="button"
+              className="osu-btn-interactive pi-csv-guide"
+              onClick={() => {
+                osuAudio.playClick();
+                setIsCsvGuideOpen(true);
+              }}
+              onMouseEnter={() => osuAudio.playHover()}
+              style={{ ...sampleButtonStyle, color: '#c6b8ce' }}
+            >
+              <CircleHelp size={12} color="#1db954" />
+              <span>How to get a Spotify CSV</span>
+            </button>
           </div>
 
         </form>
       </div>
+      <CsvGuideModal
+        isOpen={isCsvGuideOpen}
+        onClose={() => setIsCsvGuideOpen(false)}
+        onUpload={openCsvPicker}
+      />
     </div>
   );
 }
