@@ -63,6 +63,7 @@ Understanding it explains most of the codebase:
   (also manualQuery)                                     // a query the user typed; sent as-is from then on
   (also altTitle)                                        // H1: the title with its ambiguous tags kept ('' when same as H0)
   (also playerMeta, playerSection)                       // osu! player path only: pp/playcount, which section
+  (also sourceFile)                                      // the uploaded CSV it was read from, else null; the table groups by it
 ```
 
 `source` is load-bearing, not decoration: it decides whether the artist is trusted enough to
@@ -78,9 +79,12 @@ Components receive songs and call back up; they never fetch.
 1. **Playlist / track / text search** — `/api/playlist` → `extractMusicData`
    (`src/lib/extractors.js`) → `preparePlaylist` (`src/lib/song.js`, per-track
    `cleanSongTitle`) → songs with no match yet → client fans out to `/api/osu/search` at
-   concurrency 3. An uploaded **Exportify CSV** joins this path in the browser:
-   `readExportifyFile` (`src/lib/exportify.js`) builds the same answer through
-   `preparePlaylist` with `source: 'spotify'`, and `page.js`'s `loadPlaylist` takes either.
+   concurrency 3. Uploaded **Exportify CSVs** (several at once, or its Export All .zip)
+   join this path in the browser: `readPlaylistFiles` (`src/lib/exportify.js`) builds one
+   answer per playlist through `preparePlaylist` with `source: 'spotify'`, each cleaned as
+   its own playlist. More than one opens `CsvChooserModal`, and the picked ones go through
+   `combinePlaylists` into a **single** `loadPlaylist` call (two calls in one render would
+   not see each other's songs).
 
 2. **osu! player** — `/api/osu/player` resolves a profile, `/api/osu/player/beatmaps`
    fetches best / most-played / favourites.

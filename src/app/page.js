@@ -13,6 +13,7 @@ import PlayerResults, { PlayerBackChip } from '@/components/PlayerResults';
 import PlayerSections from '@/components/PlayerSections';
 import DownloadToast from '@/components/DownloadToast';
 import TruncationDialog from '@/components/TruncationDialog';
+import CsvChooserModal from '@/components/CsvChooserModal';
 import { GitHubIcon } from '@/components/Icons';
 import { Star } from 'lucide-react';
 import { osuAudio } from '@/lib/soundEffects';
@@ -28,7 +29,7 @@ import {
 import { osuFilename, sanitizeStem } from '@/lib/filename';
 import { beatmapsetPage } from '@/lib/mirrors';
 import { mergeSongs as mergeSongLists } from '@/lib/song';
-import { readExportifyFile } from '@/lib/exportify';
+import { readPlaylistFiles, combinePlaylists, failureMessage } from '@/lib/exportify';
 import { buildSearchRequest } from '@/lib/searchRequest';
 import { visibleItemsFor } from '@/lib/collection';
 import { truncationMessage } from '@/lib/truncationNotice';
@@ -155,6 +156,8 @@ export default function Home() {
   // The YouTube truncation popup (2.1 item 5 / 2.4 item 9). Unlike `playlistMeta`, this is
   // set on every fetch that comes back `truncated`, appends included, and clears on OK.
   const [truncationNotice, setTruncationNotice] = useState(null);
+  // What an upload of several playlists read, while the user picks which to load.
+  const [csvChoice, setCsvChoice] = useState(null);
 
   // osu! player search state
   const [playerResults, setPlayerResults] = useState([]);
@@ -498,11 +501,29 @@ export default function Home() {
     return data;
   });
 
-  // An Exportify CSV is read in the browser into the same answer /api/playlist gives, so it
-  // appends, dedupes and searches exactly like a pasted Spotify playlist.
-  const handleUploadCsv = (file) => {
+  // Exportify CSVs (or its Export All .zip) are read in the browser into the same answer
+  // /api/playlist gives, so they append, dedupe and search exactly like a pasted Spotify
+  // playlist. One readable playlist loads at once; more, or any file that failed, opens the
+  // chooser, and whatever is picked there loads as one batch (loadPlaylist runs once, since
+  // a second call in the same render would not see the first one's songs).
+  const handleUploadCsv = async (files) => {
     setSearchMode('songs');
-    return loadPlaylist(() => readExportifyFile(file));
+    setErrorMessage('');
+    setIsLoading(true);
+    const read = await readPlaylistFiles(files);
+    setIsLoading(false);
+    if (read.playlists.length === 0) {
+      setErrorMessage(failureMessage(read.failures));
+    } else if (read.playlists.length === 1 && read.failures.length === 0) {
+      loadPlaylist(() => read.playlists[0]);
+    } else {
+      setCsvChoice(read);
+    }
+  };
+
+  const handleLoadCsvChoice = (picked) => {
+    setCsvChoice(null);
+    loadPlaylist(() => combinePlaylists(picked));
   };
 
   // Loads one playlist answer from `readPlaylist`. When songs already exist, new results are
@@ -1550,6 +1571,15 @@ export default function Home() {
         message={truncationNotice}
         onClose={() => setTruncationNotice(null)}
       />
+      {csvChoice && (
+        <CsvChooserModal
+          playlists={csvChoice.playlists}
+          failures={csvChoice.failures}
+          isAppending={songs.length > 0}
+          onClose={() => setCsvChoice(null)}
+          onLoad={handleLoadCsvChoice}
+        />
+      )}
     </div>
   );
 }

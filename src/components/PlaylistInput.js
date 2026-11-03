@@ -213,10 +213,11 @@ export default function PlaylistInput({ onFetch, onUploadCsv, isLoading, hasSong
   const openCsvPicker = () => csvInputRef.current?.click();
 
   const handleCsvChosen = (e) => {
-    const file = e.target.files?.[0];
-    // Cleared so picking the same file again still fires a change.
+    // Copied before the value is cleared (which empties the list), so picking the same
+    // files again still fires a change.
+    const files = [...(e.target.files || [])];
     e.target.value = '';
-    if (file) onUploadCsv(file);
+    if (files.length > 0) onUploadCsv(files);
   };
 
   const handleModeChange = (newMode) => {
@@ -505,7 +506,7 @@ export default function PlaylistInput({ onFetch, onUploadCsv, isLoading, hasSong
                   openCsvPicker();
                 }}
                 onMouseEnter={() => osuAudio.playHover()}
-                title="Upload a Spotify playlist CSV made with Exportify"
+                title="Upload Spotify playlist CSVs made with Exportify, or its Export All .zip"
                 style={uploadButtonStyle(isLoading)}
               >
                 <Upload size={13} />
@@ -515,7 +516,8 @@ export default function PlaylistInput({ onFetch, onUploadCsv, isLoading, hasSong
             <input
               ref={csvInputRef}
               type="file"
-              accept=".csv,text/csv"
+              accept=".csv,.zip,text/csv,application/zip"
+              multiple
               onChange={handleCsvChosen}
               hidden
             />

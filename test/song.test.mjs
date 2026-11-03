@@ -1,7 +1,7 @@
 import { test } from 'node:test';
 import assert from 'node:assert/strict';
 
-import { makeSong, songKey, mergeSongs, songSubtitle } from '../src/lib/song.js';
+import { makeSong, songKey, mergeSongs, songSubtitle, fileRuns } from '../src/lib/song.js';
 
 test('makeSong requires a valid source and rejects anything else', () => {
   assert.throws(() => makeSong({ title: 'no source' }), /source/);
@@ -112,4 +112,18 @@ test('songSubtitle shows the artist, else where the song came from, for every so
     assert.doesNotMatch(label, /[\u2013\u2014]| - /, source);
   }
   assert.equal(songSubtitle(makeSong({ source: 'spotify' })), 'Spotify track');
+});
+
+test('fileRuns frames consecutive songs from one file and leaves other rows unframed', () => {
+  const song = (id, sourceFile) => ({ id, sourceFile });
+  const runs = fileRuns([
+    song(1, 'a.csv'), song(2, 'a.csv'), song(3, 'b.csv'), song(4), song(5), song(6, 'a.csv'),
+  ]);
+  assert.deepEqual(runs.map((r) => [r.sourceFile, r.songs.map((s) => s.id)]), [
+    ['a.csv', [1, 2]],
+    ['b.csv', [3]],
+    [null, [4, 5]],
+    ['a.csv', [6]],
+  ]);
+  assert.deepEqual(fileRuns([]), []);
 });

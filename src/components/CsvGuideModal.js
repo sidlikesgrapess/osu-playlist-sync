@@ -18,19 +18,21 @@ const STEPS = [
     {' '}and click <b>Get Started</b>. Log in with Spotify and allow it to read your playlists.
   </>,
   <>
-    Find the playlist and click <b>Export</b> next to it. A <b>.csv</b> file downloads.
-    {' '}<b>Export All</b> saves every playlist in one .zip; unzip it and pick one file.
+    Click <b>Export</b> next to a playlist to get its <b>.csv</b> file, or <b>Export All</b> for
+    one <b>.zip</b> holding every playlist.
   </>,
   <>
-    Come back here, click <b>Upload CSV</b> and choose that file. Every track is matched to
-    osu! beatmaps, just like a pasted playlist.
+    Come back here, click <b>Upload CSV</b> and choose the file. You can pick several .csv
+    files at once, or the .zip as it is, and then tick the playlists you want. Every track
+    is matched to osu! beatmaps, just like a pasted playlist.
   </>,
 ];
 
 const NOTES = [
   'Works for private playlists and your Liked Songs, which a link cannot open.',
-  'With songs already in the list, the CSV adds to the bottom, like Add More Songs.',
-  'The file is read here in your browser and is never uploaded. Only the song names are searched on osu!.',
+  'With songs already in the list, the upload adds to the bottom, like Add More Songs.',
+  'A song in more than one playlist is listed once.',
+  'Files are read here in your browser and never leave it. Only the song names are searched on osu!.',
 ];
 
 /** How to make an Exportify CSV of a Spotify playlist, with a button that opens the picker. */

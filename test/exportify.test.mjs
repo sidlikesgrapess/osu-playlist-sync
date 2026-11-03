@@ -1,7 +1,11 @@
 import { test } from 'node:test';
 import assert from 'node:assert/strict';
 
-import { parseCsv, parseExportifyCsv, readExportifyFile, MAX_CSV_BYTES } from '../src/lib/exportify.js';
+import JSZip from 'jszip';
+
+import {
+  parseCsv, parseExportifyCsv, readPlaylistFiles, combinePlaylists, failureMessage, MAX_CSV_BYTES,
+} from '../src/lib/exportify.js';
 
 // The first rows of a real Exportify export (2026 column set), CRLF line ends and a BOM.
 const HEADER = 'Track URI,ISRC,Track Name,Album Name,Artist Name(s),Release Date,Duration (ms),Popularity,Explicit,Added By,Added At,Genres,Record Label,Danceability,Energy,Key,Loudness,Mode,Speechiness,Acousticness,Instrumentalness,Liveness,Valence,Tempo,Time Signature';
@@ -56,9 +60,68 @@ test('a CSV that is not an Exportify export, or has no tracks, says so', () => {
   assert.throws(() => parseExportifyCsv(''), /Track Name/);
 });
 
-test('readExportifyFile refuses an oversized file before reading it', async () => {
-  const huge = { size: MAX_CSV_BYTES + 1, name: 'big.csv', text: () => assert.fail('read') };
-  await assert.rejects(readExportifyFile(huge), /too large/);
-  const data = await readExportifyFile(new Blob([EXPORT]));
-  assert.equal(data.songs.length, 3);
+const OTHER = `${HEADER}\nspotify:track:1,,"Idol","THE BOOK 3","YOASOBI",2023-04-12,213000\nspotify:track:2,,"Honeymoon","Horizon","Neovaii",2018-09-28,210000\n`;
+
+test('several CSVs are read in order, each as its own playlist', async () => {
+  const { playlists, failures } = await readPlaylistFiles([
+    new File([EXPORT], 'Banggers.csv'),
+    new File([OTHER], 'chill.csv'),
+  ]);
+  assert.deepEqual(failures, []);
+  assert.deepEqual(playlists.map((p) => [p.playlistTitle, p.songs.length]), [['Banggers', 3], ['chill', 2]]);
+});
+
+test('an Export All .zip is opened and every .csv inside becomes a playlist', async () => {
+  const zip = new JSZip();
+  zip.file('spotify_playlists/Banggers.csv', EXPORT);
+  zip.file('spotify_playlists/chill.csv', OTHER);
+  zip.file('__MACOSX/spotify_playlists/._chill.csv', 'junk');
+  zip.file('readme.txt', 'not a playlist');
+  const bytes = await zip.generateAsync({ type: 'uint8array' });
+  const { playlists, failures } = await readPlaylistFiles([new File([bytes], 'spotify_playlists.zip')]);
+  assert.deepEqual(failures, []);
+  assert.deepEqual(playlists.map((p) => p.playlistTitle), ['Banggers', 'chill']);
+  // Each song remembers the file it came from, so the table can frame it under that name.
+  assert.deepEqual([...new Set(playlists.flatMap((p) => p.songs.map((s) => s.sourceFile)))], ['Banggers.csv', 'chill.csv']);
+});
+
+test('an unreadable file is reported by name and never stops the rest', async () => {
+  const empty = await new JSZip().generateAsync({ type: 'uint8array' });
+  const huge = { name: 'big.csv', size: MAX_CSV_BYTES + 1, text: () => assert.fail('read') };
+  const { playlists, failures } = await readPlaylistFiles([
+    new File(['Title,Artist\nIdol,YOASOBI\n'], 'other.csv'),
+    huge,
+    new File(['not a zip'], 'broken.zip'),
+    new File([empty], 'empty.zip'),
+    new File(['x'], 'cover.png'),
+    new File([EXPORT], 'Banggers.csv'),
+  ]);
+  assert.deepEqual(playlists.map((p) => p.playlistTitle), ['Banggers']);
+  assert.deepEqual(failures.map((f) => f.name), ['other.csv', 'big.csv', 'broken.zip', 'empty.zip', 'cover.png']);
+  assert.match(failures[1].error, /too large/);
+  assert.match(failures[2].error, /could not be opened/);
+  assert.match(failures[3].error, /no \.csv files/);
+  assert.match(failures[4].error, /Only \.csv and \.zip/);
+});
+
+test('failureMessage names the file only when there is more than one', () => {
+  assert.equal(failureMessage([{ name: 'a.csv', error: 'Bad.' }]), 'Bad.');
+  assert.equal(
+    failureMessage([{ name: 'a.csv', error: 'Bad.' }, { name: 'b.zip', error: 'Worse.' }]),
+    'None of the 2 files could be read. a.csv: Bad.',
+  );
+});
+
+test('combinePlaylists loads several as one answer, numbered straight through', () => {
+  const a = parseExportifyCsv(EXPORT, 'Banggers.csv');
+  const b = parseExportifyCsv(OTHER, 'chill.csv');
+  assert.equal(combinePlaylists([a]), a);
+  const both = combinePlaylists([a, b]);
+  assert.equal(both.playlistTitle, 'Banggers and 1 more playlist');
+  assert.equal(both.platform, 'spotify');
+  assert.equal(both.returnedCount, 5);
+  assert.deepEqual(both.songs.map((s) => s.index), [1, 2, 3, 4, 5]);
+  // Cleaned per playlist, so a song keeps what its own playlist made of it.
+  assert.deepEqual(both.songs[3], { ...b.songs[0], index: 4, position: 3 });
+  assert.equal(combinePlaylists([a, b, b]).playlistTitle, 'Banggers and 2 more playlists');
 });

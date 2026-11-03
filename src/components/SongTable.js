@@ -5,11 +5,39 @@ import SongRow from './SongRow';
 import SongCardMobile from './SongCardMobile';
 import OsuCheckbox from './OsuCheckbox';
 import BeatmapCover from './BeatmapCover';
-import { X, Check, Search, ChevronLeft, ChevronRight, Heart, Play } from 'lucide-react';
+import { X, Check, Search, ChevronLeft, ChevronRight, Heart, Play, FileSpreadsheet } from 'lucide-react';
 import { osuAudio } from '@/lib/soundEffects';
 import { getStarColor, formatCompactNumber, getStatusBadgeStyle, confirmedMatchIds } from '@/lib/beatmapFormat';
 import { useAudioPreview } from '@/lib/useAudioPreview';
 import { useStableCallback } from '@/lib/useStableCallback';
+import { fileRuns } from '@/lib/song';
+import SectionTitle from './SectionTitle';
+
+/**
+ * The "From <file>" heading over a file's songs, on the table and the phone cards. It is the
+ * player sections' header (SectionTitle on the same band), as a row instead of its own card.
+ * The stripe beside the file's songs is `.osu-file-group` / `.osu-file-cards` (globals.css).
+ */
+function FileHeading({ name, count, style }) {
+  return (
+    <div style={{
+      display: 'flex',
+      alignItems: 'center',
+      gap: '10px',
+      padding: '12px 16px',
+      whiteSpace: 'nowrap',
+      background: '#232030',
+      ...style,
+    }}>
+      <SectionTitle
+        icon={FileSpreadsheet}
+        color="#1db954"
+        label={<><span style={{ color: '#887c93' }}>From </span>{name}</>}
+        count={`${count} song${count === 1 ? '' : 's'}`}
+      />
+    </div>
+  );
+}
 
 export default function SongTable({
   songs,
@@ -82,6 +110,46 @@ export default function SongTable({
   const validCurrentPage = Math.min(Math.max(1, currentPage), Math.max(1, totalPages));
   const startIndex = pageSize === 'all' ? 0 : (validCurrentPage - 1) * numericPageSize;
   const paginatedSongs = pageSize === 'all' ? filteredSongs : filteredSongs.slice(startIndex, startIndex + numericPageSize);
+
+  // Songs from one uploaded file sit under its name with a stripe down their left edge; the
+  // stripe ends at the file's last song on the page, and rows added any other way have none.
+  const runs = fileRuns(paginatedSongs);
+  // A file's heading counts all of its songs, not just the ones on this page.
+  const fileSongCount = (name) => songs.filter((s) => s.sourceFile === name).length;
+
+  const renderRow = (song) => (
+    <SongRow
+      key={song.id || song.index || song.position}
+      song={song}
+      isSelected={selectedIds.has(song.id)}
+      onToggleSelect={stableToggleSelect}
+      isPlaying={isPlaying(song.matchedBeatmap?.previewUrl)}
+      isPreviewLoading={isBuffering(song.matchedBeatmap?.previewUrl)}
+      hasPreviewError={hasError(song.matchedBeatmap?.previewUrl)}
+      onTogglePreview={toggle}
+      onDownloadSingle={stableDownloadSingle}
+      isDownloading={downloadingIds.has(song.id)}
+      onOpenAltPicker={stableOpenAltPicker}
+      onManualSearch={stableManualSearch}
+    />
+  );
+
+  const renderCard = (song) => (
+    <SongCardMobile
+      key={`mobile-${song.id || song.index || song.position}`}
+      song={song}
+      isSelected={selectedIds.has(song.id)}
+      onToggleSelect={stableToggleSelect}
+      isPlaying={isPlaying(song.matchedBeatmap?.previewUrl)}
+      isPreviewLoading={isBuffering(song.matchedBeatmap?.previewUrl)}
+      hasPreviewError={hasError(song.matchedBeatmap?.previewUrl)}
+      onTogglePreview={toggle}
+      onDownloadSingle={stableDownloadSingle}
+      isDownloading={downloadingIds.has(song.id)}
+      onOpenAltPicker={stableOpenAltPicker}
+      onManualSearch={stableManualSearch}
+    />
+  );
 
   // Generate page numbers for navigation (e.g. 1, 2, 3...)
   const getPageNumbers = () => {
@@ -218,46 +286,44 @@ export default function SongTable({
                 <th style={{ padding: '12px 14px', textAlign: 'right', width: '130px' }}>Action</th>
               </tr>
             </thead>
-            <tbody>
-              {paginatedSongs.map((song) => (
-                <SongRow
-                  key={song.id || song.index || song.position}
-                  song={song}
-                  isSelected={selectedIds.has(song.id)}
-                  onToggleSelect={stableToggleSelect}
-                  isPlaying={isPlaying(song.matchedBeatmap?.previewUrl)}
-                  isPreviewLoading={isBuffering(song.matchedBeatmap?.previewUrl)}
-                  hasPreviewError={hasError(song.matchedBeatmap?.previewUrl)}
-                  onTogglePreview={toggle}
-                  onDownloadSingle={stableDownloadSingle}
-                  isDownloading={downloadingIds.has(song.id)}
-                  onOpenAltPicker={stableOpenAltPicker}
-                  onManualSearch={stableManualSearch}
-                />
-              ))}
-            </tbody>
+            {/* One tbody per run, so a file's stripe runs exactly the length of its rows. */}
+            {runs.map((run) => (
+              <tbody
+                key={`run-${run.songs[0].id || run.songs[0].position}`}
+                className={run.sourceFile ? 'osu-file-group' : undefined}
+              >
+                {run.sourceFile && (
+                  <tr>
+                    <td colSpan={5} style={{ padding: 0, borderBottom: '1px solid rgba(255, 255, 255, 0.07)' }}>
+                      {/* A collapsed table does not paint this cell's shadow, so the heading
+                          draws its own stretch of the stripe. */}
+                      <FileHeading
+                        name={run.sourceFile}
+                        count={fileSongCount(run.sourceFile)}
+                        style={{ boxShadow: 'inset 3px 0 0 var(--file-stripe)' }}
+                      />
+                    </td>
+                  </tr>
+                )}
+                {run.songs.map(renderRow)}
+              </tbody>
+            ))}
           </table>
         </div>
       </div>
 
       {/* Frosted Glass Mobile Card List (Mobile Screens <= 768px) */}
       <div className="osu-table-mobile">
-        {paginatedSongs.map((song) => (
-          <SongCardMobile
-            key={`mobile-${song.id || song.index || song.position}`}
-            song={song}
-            isSelected={selectedIds.has(song.id)}
-            onToggleSelect={stableToggleSelect}
-            isPlaying={isPlaying(song.matchedBeatmap?.previewUrl)}
-            isPreviewLoading={isBuffering(song.matchedBeatmap?.previewUrl)}
-            hasPreviewError={hasError(song.matchedBeatmap?.previewUrl)}
-            onTogglePreview={toggle}
-            onDownloadSingle={stableDownloadSingle}
-            isDownloading={downloadingIds.has(song.id)}
-            onOpenAltPicker={stableOpenAltPicker}
-            onManualSearch={stableManualSearch}
-          />
-        ))}
+        {runs.map((run) => (run.sourceFile ? (
+          <div key={`run-${run.songs[0].id || run.songs[0].position}`} className="osu-file-cards">
+            <FileHeading
+              name={run.sourceFile}
+              count={fileSongCount(run.sourceFile)}
+              style={{ padding: '10px 12px', borderRadius: '8px' }}
+            />
+            {run.songs.map(renderCard)}
+          </div>
+        ) : run.songs.map(renderCard)))}
       </div>
 
       {/* Clean Solid Pagination Bar */}

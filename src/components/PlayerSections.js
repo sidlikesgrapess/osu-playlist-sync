@@ -8,6 +8,7 @@ import {
 import OsuCheckbox from './OsuCheckbox';
 import BeatmapCover from './BeatmapCover';
 import { OverrideMark, OverrideNotice } from './MatchNotice';
+import SectionTitle from './SectionTitle';
 import { osuAudio } from '@/lib/soundEffects';
 import { getStarColor, formatCompactNumber, getStatusBadgeStyle } from '@/lib/beatmapFormat';
 import { useAudioPreview } from '@/lib/useAudioPreview';
@@ -541,29 +542,7 @@ export default function PlayerSections({
                   whiteSpace: 'nowrap',
                 }}
               >
-                <Icon size={16} color={meta.color} style={{ flexShrink: 0 }} />
-                <span style={{
-                  fontSize: '0.92rem',
-                  fontWeight: 900,
-                  color: '#ffffff',
-                  minWidth: 0,
-                  overflow: 'hidden',
-                  textOverflow: 'ellipsis',
-                }}>
-                  {meta.label}
-                </span>
-                <span style={{
-                  fontSize: '0.7rem',
-                  fontWeight: 800,
-                  color: '#887c93',
-                  background: 'rgba(0, 0, 0, 0.3)',
-                  border: '1px solid rgba(255, 255, 255, 0.07)',
-                  padding: '2px 7px',
-                  borderRadius: '4px',
-                  flexShrink: 0,
-                }}>
-                  {countLabel}
-                </span>
+                <SectionTitle icon={Icon} color={meta.color} label={meta.label} count={countLabel} />
 
                 <span style={{ flex: 1 }} />
 

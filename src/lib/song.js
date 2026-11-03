@@ -55,6 +55,8 @@ export function makeSong(input = {}) {
     matchedBeatmap: null,
     allMatches: [],
     rejection: null,
+    // The uploaded file the song was read from (exportify.js), else null.
+    sourceFile: null,
     ...input,
   };
 }
@@ -132,6 +134,22 @@ function windowCounts(result, returnedCount) {
     playlistLength: counts.playlistLength ?? null,
     loadCap: counts.loadCap ?? null,
   };
+}
+
+/**
+ * A page of rows split into runs of consecutive songs from the same uploaded file
+ * (`sourceFile`), so the table can group each file's songs under its name. Rows that came any
+ * other way form runs with `sourceFile: null`, which get no heading or stripe.
+ */
+export function fileRuns(songs) {
+  const runs = [];
+  for (const song of songs) {
+    const sourceFile = song.sourceFile || null;
+    const last = runs[runs.length - 1];
+    if (last && last.sourceFile === sourceFile) last.songs.push(song);
+    else runs.push({ sourceFile, songs: [song] });
+  }
+  return runs;
 }
 
 // extractors.js's fallback id for a row with no provider id of its own: `track_<index>_<Date.now()>`.

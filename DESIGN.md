@@ -86,6 +86,8 @@ code for the same role; don't add more uses of them.
 | Raised card (`.osu-glass-card`) | `#252230` | `#252130`, `#201d29` |
 | Table row / hover | `#211e2b` / `#2c2838` (`.osu-table-row`) | |
 | Modal header / footer band | `#171520` | `#18171c` (ExportModal footer) |
+| Section header band | `#232030` | |
+| Uploaded file stripe | `rgba(29,185,84,.55)` (`--file-stripe`), Spotify green muted | |
 | Text field well | `#18171c` | |
 | Dark chip button | `#262232` | |
 | Thumbnail / icon button placeholder | `#343040` | |
@@ -319,11 +321,13 @@ the mobile cards; CSS hides one (`SongTable.js:186`, `:244`).
 | Primary button | `osu-btn-interactive osu-btn-pink` + inline sizing only | don't repeat `border: 'none'` (the global button reset already does) |
 | Any other button | `osu-btn-interactive` + one of the recipes below | |
 | Segmented pills | `pillStyle()` (`PlaylistInput.js:42`) + `osu-pill-tab` | file local; promote before reuse |
+| Section heading (icon, title, count chip) | `SectionTitle` (`components/SectionTitle.js`) on the `#232030` band | player sections and the song table's "From <file>" rows |
+| Stripe beside one uploaded file's songs | `.osu-file-group` (a `<tbody>`) / `.osu-file-cards` (`globals.css`), split by `fileRuns` (`lib/song.js`) | an inset shadow on the first cell, since `.osu-table-row` paints over a row group's border |
 | Checkbox | `OsuCheckbox` (`components/OsuCheckbox.js`) | it plays its own click and ignores clicks when `disabled`; don't guard or click again in `onChange` |
 | Beatmap cover + preview play | `BeatmapCover` (`components/BeatmapCover.js`) | the only place that registers with the preview stop rule; pass `key={coverUrl}` |
 | Flagged match | `OverrideMark` + `OverrideNotice` (`components/MatchNotice.js`) | always as a pair |
 | Toast | `DownloadToast` (`TOAST_KINDS`) | add a kind, not a component |
-| Modal | `Modal` (`components/Modal.js`): backdrop, panel, header + close X, body, optional `footer`; portalled to `<body>`, Escape closes | every new modal. First user: `CsvGuideModal`. The four older modals still inline their own copy (section 9) |
+| Modal | `Modal` (`components/Modal.js`): backdrop, panel, header + close X, body, optional `footer`; portalled to `<body>`, Escape closes | every new modal. Users: `CsvGuideModal`, `CsvChooserModal`. The four older modals still inline their own copy (section 9) |
 | Must acknowledge notice | `TruncationDialog` pattern | move it onto `Modal` |
 | Spinner | lucide `Loader2` + `.spin-slow` | colour `#ffbb22` for loading |
 | Platform logo | `components/Icons.js` | |
@@ -351,8 +355,11 @@ Recipes in use for those buttons today (match them exactly until the shared vers
 | Need | Use | Where |
 |---|---|---|
 | Build a song object | `makeSong` | `lib/song.js` |
+| Split a page of rows by the file they came from | `fileRuns` | `lib/song.js` |
 | Clean a read playlist's tracks into the /api/playlist answer | `preparePlaylist` | `lib/song.js` (server for links, browser for a CSV) |
-| Read an Exportify CSV (Spotify) into that answer | `readExportifyFile` / `parseExportifyCsv` / `parseCsv` | `lib/exportify.js` |
+| Read picked Exportify CSVs and Export All .zips into those answers, failures kept apart | `readPlaylistFiles` (`failureMessage` when none read) | `lib/exportify.js` |
+| Several answers as one load | `combinePlaylists` | `lib/exportify.js` |
+| One CSV's text into that answer | `parseExportifyCsv` / `parseCsv` | `lib/exportify.js` |
 | Add songs to a list | `mergeSongs` / `songKey` | `lib/song.js` (page.js has a second `mergeSongs`; don't use it for new code) |
 | Line under a song title | `songSubtitle(song)` | `lib/song.js` |
 | Player collection → rows | `visibleItemsFor` (filter, then dedupe) / `beatmapToSong` | `lib/collection.js` |
