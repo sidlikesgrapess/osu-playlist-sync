@@ -1,11 +1,11 @@
 'use client';
 
-import { useState } from 'react';
+import { useState, Fragment } from 'react';
 import SongRow from './SongRow';
 import SongCardMobile from './SongCardMobile';
 import OsuCheckbox from './OsuCheckbox';
 import BeatmapCover from './BeatmapCover';
-import { X, Check, Search, ChevronLeft, ChevronRight, Heart, Play, FileSpreadsheet } from 'lucide-react';
+import { X, Check, Search, ChevronLeft, ChevronRight, ChevronDown, Heart, Play, FileSpreadsheet } from 'lucide-react';
 import { osuAudio } from '@/lib/soundEffects';
 import { getStarColor, formatCompactNumber, getStatusBadgeStyle, confirmedMatchIds } from '@/lib/beatmapFormat';
 import { useAudioPreview } from '@/lib/useAudioPreview';
@@ -15,27 +15,48 @@ import SectionTitle from './SectionTitle';
 
 /**
  * The "From <file>" heading over a file's songs, on the table and the phone cards. It is the
- * player sections' header (SectionTitle on the same band), as a row instead of its own card.
- * The stripe beside the file's songs is `.osu-file-group` / `.osu-file-cards` (globals.css).
+ * player sections' header (SectionTitle on the same band, the same chevron), as a row instead
+ * of its own card, and clicking it folds the file's songs away. The stripe beside the songs is
+ * `.osu-file-group` / `.osu-file-cards` (globals.css); the heading itself has none.
  */
-function FileHeading({ name, count, style }) {
+function FileHeading({ name, count, isOpen, onToggle, style }) {
   return (
-    <div style={{
-      display: 'flex',
-      alignItems: 'center',
-      gap: '10px',
-      padding: '12px 16px',
-      whiteSpace: 'nowrap',
-      background: '#232030',
-      ...style,
-    }}>
+    <button
+      type="button"
+      className="osu-btn-interactive"
+      aria-expanded={isOpen}
+      title={`${isOpen ? 'Hide' : 'Show'} the songs from ${name}`}
+      onClick={() => {
+        osuAudio.playClick();
+        onToggle(name);
+      }}
+      onMouseEnter={() => osuAudio.playHover()}
+      style={{
+        display: 'flex',
+        alignItems: 'center',
+        gap: '10px',
+        width: '100%',
+        padding: '12px 16px',
+        whiteSpace: 'nowrap',
+        background: '#232030',
+        cursor: 'pointer',
+        textAlign: 'left',
+        ...style,
+      }}
+    >
       <SectionTitle
         icon={FileSpreadsheet}
         color="#1db954"
         label={<><span style={{ color: '#887c93' }}>From </span>{name}</>}
         count={`${count} song${count === 1 ? '' : 's'}`}
       />
-    </div>
+      <span style={{ flex: 1 }} />
+      <ChevronDown
+        size={16}
+        color={isOpen ? '#c6b8ce' : '#887c93'}
+        style={{ flexShrink: 0, transform: isOpen ? 'rotate(180deg)' : 'none' }}
+      />
+    </button>
   );
 }
 
@@ -64,6 +85,14 @@ export default function SongTable({
   const { isPlaying, isBuffering, hasError, toggle } = useAudioPreview();
   const [altPickerSong, setAltPickerSong] = useState(null);
   const [filterText, setFilterText] = useState('');
+  // Uploaded files whose songs are folded away, by name. Only what is drawn changes: selection,
+  // the filter, paging, downloads and export all still see every song.
+  const [collapsedFiles, setCollapsedFiles] = useState(() => new Set());
+  const toggleFile = (name) => setCollapsedFiles((prev) => {
+    const next = new Set(prev);
+    if (!next.delete(name)) next.add(name);
+    return next;
+  });
 
   // These identities matter because SongRow/SongCardMobile are React.memo'd (F-19): without
   // useStableCallback here, a fresh function every SongTable render would defeat that memo on
@@ -116,6 +145,15 @@ export default function SongTable({
   const runs = fileRuns(paginatedSongs);
   // A file's heading counts all of its songs, not just the ones on this page.
   const fileSongCount = (name) => songs.filter((s) => s.sourceFile === name).length;
+  const renderHeading = (name, style) => (
+    <FileHeading
+      name={name}
+      count={fileSongCount(name)}
+      isOpen={!collapsedFiles.has(name)}
+      onToggle={toggleFile}
+      style={style}
+    />
+  );
 
   const renderRow = (song) => (
     <SongRow
@@ -295,17 +333,11 @@ export default function SongTable({
                 {run.sourceFile && (
                   <tr>
                     <td colSpan={5} style={{ padding: 0, borderBottom: '1px solid rgba(255, 255, 255, 0.07)' }}>
-                      {/* A collapsed table does not paint this cell's shadow, so the heading
-                          draws its own stretch of the stripe. */}
-                      <FileHeading
-                        name={run.sourceFile}
-                        count={fileSongCount(run.sourceFile)}
-                        style={{ boxShadow: 'inset 3px 0 0 var(--file-stripe)' }}
-                      />
+                      {renderHeading(run.sourceFile)}
                     </td>
                   </tr>
                 )}
-                {run.songs.map(renderRow)}
+                {!collapsedFiles.has(run.sourceFile) && run.songs.map(renderRow)}
               </tbody>
             ))}
           </table>
@@ -315,14 +347,12 @@ export default function SongTable({
       {/* Frosted Glass Mobile Card List (Mobile Screens <= 768px) */}
       <div className="osu-table-mobile">
         {runs.map((run) => (run.sourceFile ? (
-          <div key={`run-${run.songs[0].id || run.songs[0].position}`} className="osu-file-cards">
-            <FileHeading
-              name={run.sourceFile}
-              count={fileSongCount(run.sourceFile)}
-              style={{ padding: '10px 12px', borderRadius: '8px' }}
-            />
-            {run.songs.map(renderCard)}
-          </div>
+          <Fragment key={`run-${run.songs[0].id || run.songs[0].position}`}>
+            {renderHeading(run.sourceFile, { padding: '10px 12px', borderRadius: '8px' })}
+            {!collapsedFiles.has(run.sourceFile) && (
+              <div className="osu-file-cards">{run.songs.map(renderCard)}</div>
+            )}
+          </Fragment>
         ) : run.songs.map(renderCard)))}
       </div>
 

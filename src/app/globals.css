@@ -121,10 +121,10 @@ button, a, input, select {
   background: #2c2838 !important;
 }
 
-/* The stripe down the left of the songs read from one uploaded file, from its heading to
-   its last song (SongTable, fileRuns in song.js). On the table it is an inset shadow on each
-   song row's first cell, because the rows (position, z-index, an !important background) paint
-   over a row group's own border; the heading row draws its own. */
+/* The stripe down the left of the songs read from one uploaded file, from its first song to
+   its last (SongTable, fileRuns in song.js); the file's heading has none. On the table it is an
+   inset shadow on each song row's first cell, because the rows (position, z-index, an
+   !important background) paint over a row group's own border. */
 .osu-file-group,
 .osu-file-cards {
   --file-stripe: rgba(29, 185, 84, 0.55);
