@@ -41,6 +41,7 @@ Point it at a **YouTube / Spotify / Apple Music** playlist, a single song, or an
 - **Match Strictness slider** — 0 shows everything osu! returned, 100 shows only exact title-and-artist matches, and the middle is the balanced default. Each position says in words what it will do.
 - Filter by game mode (**osu!**, **taiko**, **catch**, **mania**) and status (**Ranked & Loved** or **All**) — applied server-side for playlist search, and to a player's own maps too.
 - Manual query editing and an alternative-beatmap picker when the top match isn't the one you want.
+- Playlist songs are searched in browser requests of up to 10, with per-song results and rate limits.
 
 ### Downloads
 - Only **ticked** beatmaps download — nothing downloads by accident, with a select-all per page.

@@ -14,7 +14,7 @@ let tokenExpiresAt = 0;
 /**
  * Get an osu! API v2 access token using Client Credentials.
  */
-export async function getOsuAccessToken() {
+export async function getOsuAccessToken({ signal } = {}) {
   const clientId = process.env.OSU_CLIENT_ID;
   const clientSecret = process.env.OSU_CLIENT_SECRET;
 
@@ -31,6 +31,7 @@ export async function getOsuAccessToken() {
     const response = await fetch('https://osu.ppy.sh/oauth/token', {
       method: 'POST',
       cache: 'no-store',
+      signal,
       headers: {
         'Content-Type': 'application/x-www-form-urlencoded',
         'Accept': 'application/json',
@@ -66,9 +67,10 @@ const OSU_API_BASE = 'https://osu.ppy.sh/api/v2';
  * Authenticated GET against the osu! API v2. Throws with `.status` so callers
  * can distinguish rate limits (429) from genuine misses.
  */
-async function osuApiGet(path, token) {
+async function osuApiGet(path, token, { signal } = {}) {
   const res = await fetch(`${OSU_API_BASE}${path}`, {
     cache: 'no-store',
+    signal,
     headers: {
       'Authorization': `Bearer ${token}`,
       'Accept': 'application/json',
@@ -521,7 +523,7 @@ export function aliasesFromSets(artist, sets) {
  * Uses the `artist=` search operator, verified live to be both supported and purer than a
  * bare text query.
  */
-export async function probeOsuArtist(artist, token) {
+export async function probeOsuArtist(artist, token, { signal } = {}) {
   const key = normalizeForComparison(artist);
   if (!key) return null;
   const cached = probeCacheGet(key);
@@ -530,11 +532,12 @@ export async function probeOsuArtist(artist, token) {
   let probe;
   try {
     const path = `/beatmapsets/search?q=${encodeURIComponent(`artist=${artist}`)}&sort=relevance_desc&s=any`;
-    const data = await osuApiGet(path, token);
+    const data = await osuApiGet(path, token, { signal });
     const sets = data.beatmapsets || [];
 
     probe = { artist, count: sets.length, aliases: aliasesFromSets(artist, sets) };
   } catch (e) {
+    if (signal?.aborted) throw e;
     // A failed probe must not be cached as "this artist does not exist" -- that would turn a
     // transient 429 into a confident, wrong rejection. Cache an explicit `failed` marker
     // instead: unknown for scoring purposes, but not re-requested for every remaining track
@@ -600,11 +603,11 @@ export function resolveArtistTrust(artist, candidates, probe) {
   return { artistConfidence: 'none', aliases: null };
 }
 
-async function verifyLowConfidenceArtist(artist, candidates, token) {
+async function verifyLowConfidenceArtist(artist, candidates, token, signal) {
   const fromPool = resolveArtistTrust(artist, candidates, undefined);
   if (!fromPool.needsProbe) return { ...fromPool, probed: false };
 
-  const probe = await probeOsuArtist(artist, token);
+  const probe = await probeOsuArtist(artist, token, { signal });
   return { ...resolveArtistTrust(artist, candidates, probe), probed: true };
 }
 
@@ -650,7 +653,9 @@ const STRUCTURED_SOURCES = new Set(['spotify', 'apple', 'osu-player']);
  * Search beatmapsets on osu! API v2 with smart fallbacks, mode filtering, and strict status filtering.
  */
 export async function searchOsuBeatmaps(query, options = {}) {
-  const token = await getOsuAccessToken();
+  const signal = options.signal;
+  const token = await getOsuAccessToken({ signal });
+  signal?.throwIfAborted();
 
   if (!token) {
     return { beatmapsets: [], total: 0, isDemo: true };
@@ -718,6 +723,7 @@ export async function searchOsuBeatmaps(query, options = {}) {
 
   const modeMap = { osu: '0', taiko: '1', fruits: '2', mania: '3' };
   const modeParam = options.mode && modeMap[options.mode] ? modeMap[options.mode] : null;
+  const selectedMode = modeParam ? options.mode : 'all';
 
   // 'ranked' is the "Ranked & Loved" filter: RANKED_LOVED_STATUSES (beatmapFormat.js). The
   // upstream `s=` is only a pool hint; the local isRankedStatus filter below decides.
@@ -749,8 +755,9 @@ export async function searchOsuBeatmaps(query, options = {}) {
 
     let data;
     try {
-      data = await osuApiGet(searchPath, token);
+      data = await osuApiGet(searchPath, token, { signal });
     } catch (e) {
+      if (signal?.aborted) throw e;
       if (e.status === 429) {
         console.warn(`[osu! Search] 429 for query "${q}" (rate limited)`);
         throw e;
@@ -762,6 +769,11 @@ export async function searchOsuBeatmaps(query, options = {}) {
     answered += 1;
 
     let sets = data?.beatmapsets || [];
+    // The upstream m= filter is a retrieval hint. Only a native difficulty in the
+    // requested ruleset qualifies a set for this search or its fallback results.
+    if (modeParam) {
+      sets = sets.filter(set => (set.beatmaps || []).some(beatmap => beatmap.mode === selectedMode));
+    }
     if (isRankedOnly) {
       sets = sets.filter(bm => isRankedStatus(bm.status));
     }
@@ -803,7 +815,7 @@ export async function searchOsuBeatmaps(query, options = {}) {
   // Rescoring is in-memory; the only possible extra network call is a single probe, and only
   // when no candidate named the artist exactly.
   if (targetArtist && !structuredArtist) {
-    const verdict = await verifyLowConfidenceArtist(targetArtist, [...allFoundSets, ...gatedOut], token);
+    const verdict = await verifyLowConfidenceArtist(targetArtist, [...allFoundSets, ...gatedOut], token, signal);
     artistConfidence = verdict.artistConfidence;
     aliases = verdict.aliases;
     scoreOptions = { artistConfidence, aliases, ...floors };
@@ -827,7 +839,7 @@ export async function searchOsuBeatmaps(query, options = {}) {
   const minThreshold = strict.minScore;
   const filteredSets = allFoundSets.filter(s => Number.isFinite(s._score) && s._score >= minThreshold);
 
-  const formatted = filteredSets.map(s => ({ ...formatBeatmapset(s), matchScore: s._score }));
+  const formatted = filteredSets.map(s => ({ ...formatBeatmapset(s, selectedMode), matchScore: s._score }));
 
   // Stage 4: when nothing passed, say *why*. "No beatmaps found" and "this song exists on
   // osu!, but not by this artist" are different answers, and the second one is the whole
@@ -864,7 +876,7 @@ export async function searchOsuBeatmaps(query, options = {}) {
       // cleared the cutoff.
       rejection = { kind: 'artist-unknown', artist: targetArtist };
       results = titleMatches.map(bm => ({
-        ...formatBeatmapset(bm),
+        ...formatBeatmapset(bm, selectedMode),
         matchScore: null,
         titleOnly: true,
       }));
@@ -874,7 +886,7 @@ export async function searchOsuBeatmaps(query, options = {}) {
       // Both return no beatmaps; they are very different things to show a user.
       let absent = false;
       if (targetArtist && artistConfidence === 'high') {
-        const probe = await probeOsuArtist(targetArtist, token);
+        const probe = await probeOsuArtist(targetArtist, token, { signal });
         absent = Boolean(probe && probe.count === 0);
       }
 
@@ -889,7 +901,7 @@ export async function searchOsuBeatmaps(query, options = {}) {
         // work normally -- but flagged. `artistOverride` is what stops page.js auto-selecting
         // them, and `matchScore: null` records that they never passed the gate.
         results = titleMatches.map(bm => ({
-          ...formatBeatmapset(bm),
+          ...formatBeatmapset(bm, selectedMode),
           matchScore: null,
           artistOverride: true,
         }));
@@ -913,8 +925,8 @@ export async function searchOsuBeatmaps(query, options = {}) {
 /**
  * Normalizes beatmapset object for frontend consumption.
  */
-function formatBeatmapset(set) {
-  const diffs = (set.beatmaps || []).map(b => ({
+function formatBeatmapset(set, mode = 'all') {
+  const diffs = (set.beatmaps || []).filter(b => !mode || mode === 'all' || b.mode === mode).map(b => ({
     id: b.id,
     difficultyRating: b.difficulty_rating,
     version: b.version,

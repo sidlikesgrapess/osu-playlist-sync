@@ -7,12 +7,115 @@ import { cleanSongTitle } from '@/lib/titleCleaner';
 
 export const dynamic = 'force-dynamic';
 
+const SEARCH_RATE_LIMIT = { bucket: 'osuSearch', limit: 60, windowMs: 60_000 };
+const BATCH_RATE_LIMIT = { bucket: 'osuSearchBatch', limit: 60, windowMs: 60_000 };
+const MAX_BATCH_SONGS = 10;
+const MAX_BATCH_BYTES = 40_000;
+const BATCH_DEADLINE_MS = 20_000;
+
+// Leave time to serialize a partial response after the search deadline.
+export const maxDuration = 30;
+
 export async function GET(request) {
-  const rate = checkRateLimit(request, { bucket: 'osuSearch', limit: 60, windowMs: 60_000 });
+  const rate = checkRateLimit(request, SEARCH_RATE_LIMIT);
   if (!rate.ok) return rateLimitResponse(rate.retryAfterSec);
 
   try {
     const { searchParams } = new URL(request.url);
+    return await searchFromParams(searchParams);
+  } catch (error) {
+    return toRouteError(error, { notFoundMessage: 'No beatmaps found' });
+  }
+}
+
+/** One browser request for a visible page; each song keeps its own validation and budget. */
+export async function POST(request) {
+  const rate = checkRateLimit(request, BATCH_RATE_LIMIT);
+  if (!rate.ok) return rateLimitResponse(rate.retryAfterSec);
+
+  try {
+    const reader = request.body?.getReader();
+    if (!reader) throw new ValidationError('A search batch is required');
+    let size = 0;
+    const chunks = [];
+    for (;;) {
+      const { done, value } = await reader.read();
+      if (done) break;
+      size += value.byteLength;
+      if (size > MAX_BATCH_BYTES) {
+        await reader.cancel().catch(() => {});
+        throw new ValidationError('Search batch is too large');
+      }
+      chunks.push(value);
+    }
+    let batch;
+    try {
+      batch = JSON.parse(Buffer.concat(chunks.map(chunk => Buffer.from(chunk))).toString('utf8'));
+    } catch {
+      throw new ValidationError('Search batch must be valid JSON');
+    }
+    if (!Array.isArray(batch?.queries) || batch.queries.length < 1 || batch.queries.length > MAX_BATCH_SONGS) {
+      throw new ValidationError(`Search batch must contain 1 to ${MAX_BATCH_SONGS} songs`);
+    }
+    const queries = batch.queries.map((item) => {
+      if (typeof item?.id !== 'string' || typeof item?.params !== 'string') {
+        throw new ValidationError('Each song needs a string id and search parameters');
+      }
+      return {
+        id: boundedString(item.id, { name: 'Song id', max: 100 }),
+        params: boundedString(item.params, { name: 'Search parameters', max: 4000 }),
+      };
+    });
+    if (new Set(queries.map(item => item.id)).size !== queries.length) {
+      throw new ValidationError('Search batch song ids must be unique');
+    }
+
+    const controller = new AbortController();
+    const onDisconnect = () => controller.abort();
+    request.signal.addEventListener('abort', onDisconnect, { once: true });
+    const deadline = setTimeout(() => controller.abort(), BATCH_DEADLINE_MS);
+    try {
+      if (!(await getOsuAccessToken({ signal: controller.signal }))) {
+        controller.signal.throwIfAborted();
+        return demoResponse({ results: [] });
+      }
+
+      const results = new Array(queries.length);
+      let next = 0;
+      async function worker() {
+        while (next < queries.length && !controller.signal.aborted) {
+          const index = next++;
+          const budget = checkRateLimit(request, SEARCH_RATE_LIMIT);
+          if (!budget.ok) {
+            results[index] = { id: queries[index].id, status: 429, retryAfterSec: budget.retryAfterSec, result: { error: 'Too many requests, try again shortly' } };
+            continue;
+          }
+          const response = await searchFromParams(new URLSearchParams(queries[index].params), { signal: controller.signal })
+            .catch(error => controller.signal.aborted
+              ? NextResponse.json({ error: 'Search timed out' }, { status: 504 })
+              : toRouteError(error, { notFoundMessage: 'No beatmaps found' }));
+          results[index] = {
+            id: queries[index].id,
+            status: response.status,
+            retryAfterSec: Number(response.headers.get('Retry-After')) || 0,
+            result: await response.json(),
+          };
+        }
+      }
+      await Promise.all(Array.from({ length: Math.min(3, queries.length) }, () => worker()));
+      return NextResponse.json({ results: queries.map((query, index) => results[index] || {
+        id: query.id, status: 504, result: { error: 'Search timed out' },
+      }) });
+    } finally {
+      clearTimeout(deadline);
+      request.signal.removeEventListener('abort', onDisconnect);
+    }
+  } catch (error) {
+    return toRouteError(error);
+  }
+}
+
+async function searchFromParams(searchParams, { signal } = {}) {
     const query = boundedString(searchParams.get('q'), { name: 'q', max: 500, required: false });
     let title = boundedString(searchParams.get('title'), { name: 'title', max: 500, required: false });
     let artist = boundedString(searchParams.get('artist'), { name: 'artist', max: 500, required: false });
@@ -66,7 +169,10 @@ export async function GET(request) {
       { name: 'fallbacks', maxItems: 8, maxLen: 200 },
     );
 
-    if (!(await getOsuAccessToken())) return demoResponse({ beatmapsets: [] });
+    if (!(await getOsuAccessToken({ signal }))) {
+      signal?.throwIfAborted();
+      return demoResponse({ beatmapsets: [] });
+    }
 
     // Run smart scored search
     const result = await searchOsuBeatmaps(query || title, {
@@ -79,7 +185,10 @@ export async function GET(request) {
       source,
       artistFromTitle,
       altTitle: altTitle || '',
+      signal,
     });
+
+    signal?.throwIfAborted();
 
     return NextResponse.json({
       success: true,
@@ -93,7 +202,4 @@ export async function GET(request) {
       rejection: result.rejection || null,
       artistConfidence: result.artistConfidence || null,
     });
-  } catch (error) {
-    return toRouteError(error, { notFoundMessage: 'No beatmaps found' });
-  }
 }

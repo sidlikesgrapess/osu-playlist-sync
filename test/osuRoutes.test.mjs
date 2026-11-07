@@ -80,6 +80,118 @@ test('demo mode: with no credentials all three osu! routes answer isDemo, with n
   assert.equal(calls.length, 0);
 });
 
+test('batch search reports missing credentials once and validates size before upstream work', async () => {
+  setCredentials('', '');
+  const calls = stubFetch(() => new Response('should not happen'));
+  const path = 'http://localhost/api/osu/search';
+  const headers = { 'content-type': 'application/json', 'x-forwarded-for': '198.51.100.241' };
+  const request = (body) => new Request(path, { method: 'POST', headers, body: JSON.stringify(body) });
+  const demo = await search.POST(request({ queries: [
+    { id: 'song-1', params: 'q=first' },
+    { id: 'song-2', params: 'q=second' },
+  ] }));
+  assert.equal(demo.status, 200);
+  assert.deepEqual(await demo.json(), { isDemo: true, results: [] });
+
+  const oversized = await search.POST(request({ queries: Array.from({ length: 11 }, (_, i) => ({ id: String(i), params: 'q=x' })) }));
+  assert.equal(oversized.status, 400);
+  const duplicate = await search.POST(request({ queries: [{ id: 'x', params: 'q=a' }, { id: 'x', params: 'q=b' }] }));
+  assert.equal(duplicate.status, 400);
+  const wrongType = await search.POST(request({ queries: [{ id: {}, params: 'q=a' }] }));
+  assert.equal(wrongType.status, 400);
+  const tooManyBytes = await search.POST(request({ queries: [{ id: 'x', params: 'q=' + 'x'.repeat(40_001) }] }));
+  assert.equal(tooManyBytes.status, 400);
+  assert.equal(calls.length, 0);
+});
+
+test('batch search returns a separate result for each song', async () => {
+  const calls = withOsu(() => Response.json({ beatmapsets: [], total: 0 }));
+  const request = new Request('http://localhost/api/osu/search', {
+    method: 'POST',
+    headers: { 'content-type': 'application/json', 'x-forwarded-for': '198.51.100.242' },
+    body: JSON.stringify({ queries: [
+      { id: 'song-a', params: 'q=first&source=query' },
+      { id: 'song-b', params: 'q=second&source=query' },
+    ] }),
+  });
+  const response = await search.POST(request);
+  assert.equal(response.status, 200);
+  const data = await response.json();
+  assert.deepEqual(data.results.map(item => item.id), ['song-a', 'song-b']);
+  assert.ok(data.results.every(item => item.status === 200 && item.result.success));
+  assert.ok(calls.some(call => call.url.includes('first')));
+  assert.ok(calls.some(call => call.url.includes('second')));
+});
+
+test('taiko search excludes sets without a native taiko difficulty in GET and POST', async () => {
+  const set = (id, modes) => ({
+    id, title: 'Back Here Again', artist: 'EggPlantEgg', creator: 'mapper', status: 'ranked',
+    beatmaps: modes.map((mode, index) => ({ id: id * 10 + index, mode, version: mode, difficulty_rating: 3 })),
+  });
+  const standardOnly = set(2086155, ['osu']);
+  const mixed = set(2086156, ['osu', 'taiko']);
+  const withoutDifficulties = set(2086157, []);
+  withOsu(() => Response.json({ beatmapsets: [standardOnly, mixed, withoutDifficulties], total: 3 }));
+  const params = 'q=EggPlantEgg+Back+Here+Again&title=Back+Here+Again&artist=EggPlantEgg&source=spotify&mode=taiko&status=any';
+  const get = await search.GET(clientFor()(`/api/osu/search?${params}`));
+  assert.equal(get.status, 200);
+  const single = await get.json();
+  assert.deepEqual(single.beatmapsets.map(item => item.id), [mixed.id]);
+  assert.deepEqual(single.beatmapsets[0].difficulties.map(item => item.mode), ['taiko']);
+
+  const post = await search.POST(new Request('http://localhost/api/osu/search', {
+    method: 'POST',
+    headers: { 'content-type': 'application/json', 'x-forwarded-for': '198.51.100.245' },
+    body: JSON.stringify({ queries: [{ id: 'song-1', params }] }),
+  }));
+  assert.equal(post.status, 200);
+  assert.deepEqual((await post.json()).results[0].result.beatmapsets.map(item => item.id), [mixed.id]);
+});
+
+test('batch search stops at three upstream searches and cancels them on disconnect', async () => {
+  const controller = new AbortController();
+  let started = 0;
+  let threeStarted;
+  const ready = new Promise(resolve => { threeStarted = resolve; });
+  const calls = withOsu((_url, init) => new Promise((resolve, reject) => {
+    started += 1;
+    if (started === 3) threeStarted();
+    init.signal.addEventListener('abort', () => reject(new DOMException('Aborted', 'AbortError')), { once: true });
+  }));
+  const request = new Request('http://localhost/api/osu/search', {
+    method: 'POST',
+    headers: { 'content-type': 'application/json', 'x-forwarded-for': '198.51.100.243' },
+    signal: controller.signal,
+    body: JSON.stringify({ queries: Array.from({ length: 10 }, (_, i) => ({ id: `song-${i}`, params: `q=song-${i}` })) }),
+  });
+  const pending = search.POST(request);
+  await ready;
+  controller.abort();
+  const response = await pending;
+  const data = await response.json();
+  assert.equal(data.results.length, 10);
+  assert.equal(started, 3);
+  assert.ok(data.results.every(item => item.status === 502 || item.status === 504));
+  assert.ok(calls.filter(call => call.url.includes('/beatmapsets/search')).every(call => call.init.signal.aborted));
+});
+
+test('a batch spends the same shared search budget as ten single searches', async () => {
+  const calls = withOsu(() => Response.json({ beatmapsets: [], total: 0 }));
+  const headers = { 'content-type': 'application/json', 'x-forwarded-for': '198.51.100.244' };
+  const body = JSON.stringify({ queries: Array.from({ length: 10 }, (_, i) => ({ id: `song-${i}`, params: `q=song-${i}` })) });
+  const request = () => new Request('http://localhost/api/osu/search', { method: 'POST', headers, body });
+  for (let i = 0; i < 6; i += 1) {
+    const response = await search.POST(request());
+    assert.ok((await response.json()).results.every(item => item.status === 200));
+  }
+  const upstreamBefore = calls.length;
+  const blocked = await search.POST(request());
+  assert.ok((await blocked.json()).results.every(item => item.status === 429));
+  assert.equal(calls.length, upstreamBefore);
+  const single = await search.GET(new Request('http://localhost/api/osu/search?q=single', { headers }));
+  assert.equal(single.status, 429);
+});
+
 test('a malformed userId is a 400 before any upstream call (F-22)', async () => {
   const calls = withOsu(() => Response.json([]));
   const req = clientFor();

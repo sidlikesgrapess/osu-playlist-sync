@@ -33,7 +33,7 @@ import { readPlaylistFiles, combinePlaylists, failureMessage } from '@/lib/expor
 import { buildSearchRequest } from '@/lib/searchRequest';
 import { visibleItemsFor } from '@/lib/collection';
 import { truncationMessage } from '@/lib/truncationNotice';
-import { createSearchPacer, pacedRequest } from '@/lib/searchPacer';
+import { createSearchPacer, pacedRequest, SEARCH_RATE } from '@/lib/searchPacer';
 import { selectedBeatmapEntries, matchedBeatmapUnion, soleOwnerSides, zipBaseTitle } from '@/lib/selection';
 import { playerViewScreen, isRetainedPlayer } from '@/lib/playerView';
 
@@ -181,6 +181,7 @@ export default function Home() {
   const songsRef = useRef(songs);
   // Bumped whenever the song list is dropped, so a search batch can tell its rows are gone.
   const songListGenerationRef = useRef(0);
+  const activeSearchRequestsRef = useRef(new Set());
   useEffect(() => { songsRef.current = songs; }, [songs]);
 
   // Player section loads (F-13). Each `${userId}:${type}` key has its own generation and
@@ -649,83 +650,120 @@ export default function Home() {
 
     const targets = updated.filter(s => targetSet.has(s.id));
     let completedCount = 0;
-    const concurrency = 3;
-    let currentIndex = 0;
     // A playlist dropped since this batch began (a new playlist, the trash) no longer holds
     // these rows, so their queued requests are skipped instead of spending the budget.
     const generation = songListGenerationRef.current;
     const listDropped = () => songListGenerationRef.current !== generation;
 
-    // One search, its outcome written onto the row. The request waits its turn in the
-    // shared pacer, and a 429 is retried there after its Retry-After; only a row whose
-    // retries ran out ends as rate-limited.
-    const searchOne = async (targetSong) => {
+    const applyResult = (songId, result) => {
+      const matched = result.beatmapsets?.[0] || null;
+      if (isAutoSelectable(matched)) setPlaylistSelectedIds(curr => new Set(curr).add(songId));
+      setSongs(prev => prev.map(s => s.id === songId ? {
+        ...s,
+        hasSearched: true,
+        isSearching: false,
+        matchedBeatmap: matched,
+        allMatches: result.beatmapsets || [],
+        rejection: result.rejection || null,
+        searchError: null,
+      } : s));
+    };
+
+    const retryRateLimited = async (song) => {
       try {
-        const queryParams = buildSearchRequest(targetSong, {
+        const queryParams = buildSearchRequest(song, {
           mode: currentMode,
           status: currentStatus,
           strictness: currentStrictness,
         });
-
         const outcome = await pacedSearch(queryParams, { shouldSkip: listDropped });
-        if (outcome.skipped) return;
-        const { res, result } = outcome;
-
-        // Demo mode is an answer (there is simply no key to search with), not a failure.
-        if (!result.isDemo && (!res.ok || !result.success)) {
-          markSearchFailed(targetSong.id, outcome.rateLimited ? 'rate-limited' : 'failed');
-          return;
-        }
-
-        setSongs(prev => prev.map(s => {
-          if (s.id === targetSong.id) {
-            const hasMatch = result.beatmapsets && result.beatmapsets.length > 0;
-            const matched = hasMatch ? result.beatmapsets[0] : null;
-            // A result that failed the artist gate, or matched on title alone, is shown but
-            // never pre-selected: it must not slip into a bulk download just because it was
-            // displayed.
-            if (isAutoSelectable(matched)) {
-              setPlaylistSelectedIds(curr => new Set(curr).add(s.id));
-            }
-            return {
-              ...s,
-              hasSearched: true,
-              isSearching: false,
-              matchedBeatmap: matched,
-              allMatches: result.beatmapsets || [],
-              rejection: result.rejection || null,
-              searchError: null,
-            };
-          }
-          return s;
-        }));
-      } catch (err) {
-        console.warn(`Search failed for ${targetSong.title}:`, err);
-        markSearchFailed(targetSong.id, 'failed');
+        if (outcome.skipped || listDropped()) return;
+        if (outcome.res.ok && outcome.result.success) applyResult(song.id, outcome.result);
+        else markSearchFailed(song.id, outcome.rateLimited ? 'rate-limited' : 'failed');
+      } catch (error) {
+        console.warn('Search retry failed:', error);
+        if (!listDropped()) markSearchFailed(song.id, 'failed');
       }
     };
 
-    async function searchNext() {
-      if (currentIndex >= targets.length) return;
-      const targetSong = targets[currentIndex++];
+    for (let start = 0; start < targets.length;) {
+      // Send the grants left in this minute now instead of holding a partly reserved
+      // group until the next window. The server still limits each song separately.
+      const room = Math.max(1, SEARCH_RATE.limit - searchPacer.inWindow);
+      const group = targets.slice(start, start + Math.min(10, room));
+      // Reserve one grant per song. A batch is one browser request but still spends one
+      // osu! search budget per song, including searches launched from other page controls.
+      let skipped = false;
+      for (const song of group) {
+        if (!(await searchPacer.acquire({ shouldSkip: listDropped }))) {
+          skipped = true;
+          break;
+        }
+      }
+      if (skipped || listDropped()) break;
 
-      await searchOne(targetSong);
-
-      completedCount++;
+      const controller = new AbortController();
+      activeSearchRequestsRef.current.add(controller);
+      try {
+        const queries = group.map(song => ({
+          id: song.id,
+          params: buildSearchRequest(song, {
+            mode: currentMode,
+            status: currentStatus,
+            strictness: currentStrictness,
+          }).toString(),
+        }));
+        const response = await fetch('/api/osu/search', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ queries }),
+          signal: controller.signal,
+        });
+        const batch = await response.json();
+        if (listDropped()) break;
+        if (batch.isDemo) {
+          setSongs(prev => prev.map(s => targetSet.has(s.id) ? { ...s, isSearching: false } : s));
+          setErrorMessage('Beatmap search needs osu! API credentials.');
+          setIsSetupOpen(true);
+          setIsSearching(false);
+          return;
+        }
+        if (!response.ok || !Array.isArray(batch.results)) {
+          if (response.status === 429) searchPacer.penalize(Number(response.headers.get('Retry-After')) || 1);
+          for (const song of group) {
+            if (response.status === 429) await retryRateLimited(song);
+            else markSearchFailed(song.id, 'failed');
+          }
+        } else {
+          const outcomes = new Map(batch.results.map(item => [item.id, item]));
+          for (const song of group) {
+            const outcome = outcomes.get(song.id);
+            if (outcome?.status === 429) {
+              searchPacer.penalize(outcome.retryAfterSec || 1);
+              await retryRateLimited(song);
+            } else if (outcome?.status === 200 && outcome.result?.success) {
+              applyResult(song.id, outcome.result);
+            } else {
+              markSearchFailed(song.id, 'failed');
+            }
+          }
+        }
+      } catch (err) {
+        console.warn('Batch search failed:', err);
+        if (listDropped()) break;
+        for (const song of group) markSearchFailed(song.id, 'failed');
+      } finally {
+        activeSearchRequestsRef.current.delete(controller);
+      }
+      completedCount += group.length;
+      start += group.length;
       setSearchProgress(Math.round((completedCount / targets.length) * 100));
-
-      await searchNext();
     }
 
-    const pool = [];
-    for (let i = 0; i < Math.min(concurrency, targets.length); i++) {
-      pool.push(searchNext());
+    if (!listDropped()) {
+      setIsSearching(false);
+      osuAudio.playSuccess();
     }
-
-    await Promise.all(pool);
-
-    setIsSearching(false);
-    osuAudio.playSuccess();
   };
 
   // A search with no answer leaves the row matchless, and a matchless row is never selected.
@@ -775,6 +813,10 @@ export default function Home() {
   const rematchVisiblePage = (nextMode, nextStatus, nextThreshold) => {
     if (songs.length === 0) return;
 
+    songListGenerationRef.current += 1;
+    for (const controller of activeSearchRequestsRef.current) controller.abort();
+    activeSearchRequestsRef.current.clear();
+    setIsSearching(false);
     const reset = songs.map(s => ({ ...s, ...blankMatchState() }));
     setSongs(reset);
     setPlaylistSelectedIds(new Set());
@@ -912,6 +954,7 @@ export default function Home() {
       ? { ...s, cleanQuery: customQuery, ...(manualQuery ? { manualQuery } : {}), isSearching: true }
       : s));
 
+    const generation = songListGenerationRef.current;
     try {
       const queryParams = buildSearchRequest(song, {
         mode,
@@ -920,14 +963,20 @@ export default function Home() {
         manualQuery,
       });
 
-      const generation = songListGenerationRef.current;
       const outcome = await pacedSearch(queryParams, {
         shouldSkip: () => songListGenerationRef.current !== generation,
       });
-      if (outcome.skipped) return;
+      if (outcome.skipped || songListGenerationRef.current !== generation) return;
       const { res, result } = outcome;
 
-      if (!result.isDemo && (!res.ok || !result.success)) {
+      if (result.isDemo) {
+        setSongs(prev => prev.map(s => s.id === songId ? { ...s, isSearching: false } : s));
+        setErrorMessage('Beatmap search needs osu! API credentials.');
+        setIsSetupOpen(true);
+        return;
+      }
+
+      if (!res.ok || !result.success) {
         markSearchFailed(songId, outcome.rateLimited ? 'rate-limited' : 'failed');
         return;
       }
@@ -955,7 +1004,7 @@ export default function Home() {
       osuAudio.playSuccess();
     } catch (err) {
       console.error('Manual search failed:', err);
-      markSearchFailed(songId, 'failed');
+      if (songListGenerationRef.current === generation) markSearchFailed(songId, 'failed');
     }
   };
 
@@ -1053,7 +1102,10 @@ export default function Home() {
   // tells an in-flight playlist search (item 08's pacer) its rows are gone.
   const dropPlaylist = () => {
     songListGenerationRef.current += 1;
+    for (const controller of activeSearchRequestsRef.current) controller.abort();
+    activeSearchRequestsRef.current.clear();
     cancelBatchHolding('playlist');
+    setIsSearching(false);
     setSongs([]);
     setPlaylistSelectedIds(new Set());
     setPlaylistMeta(null);

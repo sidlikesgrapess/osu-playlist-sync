@@ -26,6 +26,7 @@ test('matchesCollectionFilters: ranked means Ranked & Loved, and mode reads the 
   assert.equal(matchesCollectionFilters(graveyard, 'all', 'ranked'), false);
   assert.equal(matchesCollectionFilters(graveyard, 'taiko', 'any'), true);
   assert.equal(matchesCollectionFilters(graveyard, 'osu', 'any'), false);
+  assert.equal(matchesCollectionFilters({ status: 'ranked', difficulties: [] }, 'taiko', 'any'), false);
 });
 
 test('dedupeByBeatmapset keeps the higher pp row, merges difficulties and sums playcounts', () => {

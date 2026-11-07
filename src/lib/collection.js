@@ -24,7 +24,7 @@ export function matchesCollectionFilters(beatmapset, mode, status) {
 
   if (mode && mode !== 'all') {
     const modes = (beatmapset.difficulties || []).map(d => d.mode).filter(Boolean);
-    if (modes.length > 0 && !modes.includes(mode)) return false;
+    if (!modes.includes(mode)) return false;
   }
 
   return true;
